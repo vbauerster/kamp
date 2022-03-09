@@ -2,15 +2,24 @@ mod argv;
 mod cmd;
 
 use anyhow::Result;
+use argv::{Kampliment, SubCommand::*};
 use cmd::Context;
 
 fn main() -> Result<()> {
-    use argv::{Kampliment, SubCommand::*};
     let kamp: Kampliment = argh::from_env();
+    let mut ctx = match kamp.session.map(Context::new) {
+        Some(ctx) => ctx,
+        None => Context::from_env()?,
+    };
+    ctx.set_client_if_any(kamp.client);
     match kamp.subcommand {
-        Env(opt) => {
-            let cmd = cmd::Env::from(opt);
-            cmd.run(Context::from_env()?);
+        Edit(opt) => {
+            let cmd = format!("edit -existing '{}'", opt.file_name);
+            ctx.send(&cmd)?;
+        }
+        Ctx(_) => {
+            println!("session: {}", ctx.session);
+            println!("client: {}", ctx.client.as_deref().unwrap_or_default());
         }
     };
 

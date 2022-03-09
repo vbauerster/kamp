@@ -18,14 +18,20 @@ pub(super) struct Kampliment {
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand)]
 pub(super) enum SubCommand {
-    Env(EnvOptions),
+    Edit(EditOptions),
+    Ctx(CtxOptions),
 }
 
-/// print env
+/// show execution context
 #[derive(FromArgs, PartialEq, Debug)]
-#[argh(subcommand, name = "env")]
-pub(crate) struct EnvOptions {
-    /// json output
-    #[argh(switch, short = 'j')]
-    json: bool,
+#[argh(subcommand, name = "ctx")]
+pub(crate) struct CtxOptions {}
+
+/// edit a file
+#[derive(FromArgs, PartialEq, Debug)]
+#[argh(subcommand, name = "edit")]
+pub(crate) struct EditOptions {
+    /// file name
+    #[argh(positional)]
+    pub file_name: String,
 }
