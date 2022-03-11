@@ -14,7 +14,7 @@ fn main() -> Result<()> {
     ctx.set_client_if_any(kamp.client);
     match kamp.subcommand {
         Edit(opt) => {
-            let cmd = format!("edit -existing '{}'", opt.file_name);
+            let cmd = format!("edit -existing '{}'; echo -to-file %opt{{kamp_out}}", opt.file_name);
             ctx.send(&cmd)?;
         }
         Ctx(_) => {
