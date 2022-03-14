@@ -2,7 +2,6 @@
 // pub(super) use ctx::Ctx;
 
 use crossbeam_channel::Sender;
-use std::fs::File;
 use std::io::prelude::*;
 use std::thread;
 
@@ -18,7 +17,7 @@ pub enum Error {
     IOError(#[from] std::io::Error),
 
     #[error("kak exited with error: {0}")]
-    KakProcessFailure(std::process::ExitStatus),
+    KakProcess(std::process::ExitStatus),
 
     #[error("kak eval error: {0}")]
     KakEvalCatch(String),
@@ -52,7 +51,6 @@ impl Context {
     }
     pub fn send(&self, body: &str) -> Result<String, Error> {
         let buffer: Option<String> = None;
-
         let buffer = buffer.as_deref().and_then(|arg| {
             let switch = " -buffer ";
             let mut buf = String::with_capacity(switch.len() + arg.len());
@@ -70,17 +68,40 @@ impl Context {
 
         let cmd = format!(
             // "try %§ eval{} {} § catch %§ echo -debug %val{{error}} §",
-            "try %§ eval{} {} § catch %§ echo -to-file %opt{{kamp_err}} %val{{error}} §",
+            "try %§ eval{} {} § catch %§ echo -debug kamp: %val{{error}}; echo -to-file %opt{{kamp_err}} %val{{error}} §",
             buffer.or(client).unwrap_or_default(),
             body
         );
 
-        dbg!(&cmd);
-        kak_exec(&self.session, &cmd)?;
-
         let (s, r) = crossbeam_channel::bounded(0);
         let err_jh = read_output(&self.session, true, s.clone());
         let out_jh = read_output(&self.session, false, s);
+
+        dbg!(&cmd);
+        kak_p(&self.session, &cmd)?;
+
+        let res = r.recv().map_err(anyhow::Error::new)?;
+
+        let jh = if res.is_err() { err_jh } else { out_jh };
+        jh.join()
+            .expect("output reader thread halted in unexpected way")?;
+        res
+    }
+    pub fn connect(&self, body: &str) -> Result<String, Error> {
+        // let jh = thread::spawn(move || kak_c(&self.session, body));
+
+        let cmd = format!(
+            "try %§ {} § catch %§ echo -debug kamp: %val{{error}}; echo -to-file %opt{{kamp_err}} %val{{error}}; quit 1 §",
+            body
+        );
+
+        let (s, r) = crossbeam_channel::bounded(2);
+        let err_jh = read_output(&self.session, true, s.clone());
+        let out_jh = read_output(&self.session, false, s);
+
+        dbg!(&cmd);
+        // blocking call in case of success
+        kak_c(&self.session, &cmd)?;
 
         let res = r.recv().map_err(anyhow::Error::new)?;
 
@@ -91,7 +112,7 @@ impl Context {
     }
 }
 
-fn kak_exec<T: AsRef<[u8]>>(session: &str, cmd: T) -> Result<(), Error> {
+fn kak_p<T: AsRef<[u8]>>(session: &str, cmd: T) -> Result<(), Error> {
     use std::process::{Command, Stdio};
 
     let mut child = Command::new("kak")
@@ -106,7 +127,7 @@ fn kak_exec<T: AsRef<[u8]>>(session: &str, cmd: T) -> Result<(), Error> {
             use std::io::{Error, ErrorKind};
             Err(Error::new(
                 ErrorKind::Other,
-                "kak's process stdin has not been captured",
+                "cannot capture stdin of kak process",
             ))?
         }
     };
@@ -116,7 +137,23 @@ fn kak_exec<T: AsRef<[u8]>>(session: &str, cmd: T) -> Result<(), Error> {
     let status = child.wait()?;
 
     if !status.success() {
-        Err(Error::KakProcessFailure(status))?;
+        Err(Error::KakProcess(status))?;
+    }
+
+    Ok(())
+}
+
+fn kak_c(session: &str, e_cmd: &str) -> Result<(), Error> {
+    use std::process::Command;
+    let status = Command::new("kak")
+        .arg("-c")
+        .arg(session)
+        .arg("-e")
+        .arg(e_cmd)
+        .status()?;
+
+    if !status.success() {
+        Err(Error::KakProcess(status))?;
     }
 
     Ok(())
@@ -134,7 +171,7 @@ fn read_output(
         path.push(session.to_owned() + "-kamp-out");
     }
     thread::spawn(move || {
-        let mut file = File::open(path)?;
+        let mut file = std::fs::File::open(path)?;
         let mut buf = String::new();
         file.read_to_string(&mut buf)?;
         send_ch

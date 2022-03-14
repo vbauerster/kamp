@@ -1,6 +1,8 @@
 mod argv;
 mod cmd;
 
+use std::fmt::Write;
+
 use anyhow::Result;
 use argv::{Kampliment, SubCommand::*};
 use cmd::Context;
@@ -14,8 +16,19 @@ fn main() -> Result<()> {
     ctx.set_client_if_any(kamp.client);
     match kamp.subcommand {
         Edit(opt) => {
-            let cmd = format!("edit -existing '{}'; echo -to-file %opt{{kamp_out}}", opt.file_name);
-            ctx.send(&cmd)?;
+            let mut buf = String::from("edit ");
+            if let Some(p) = opt.file {
+                buf.write_fmt(format_args!("-existing '{}'", p.display()))?;
+            } else {
+                buf.push_str("-scratch");
+            }
+            buf.push_str("; echo -to-file %opt{kamp_out}");
+            if ctx.client.is_some() {
+                ctx.send(&buf)?;
+            } else {
+                buf.push_str("; echo -to-file %opt{kamp_err}");
+                ctx.connect(&buf)?;
+            }
         }
         Ctx(_) => {
             println!("session: {}", ctx.session);
