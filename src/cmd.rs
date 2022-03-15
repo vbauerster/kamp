@@ -89,40 +89,46 @@ impl Context {
     }
     pub fn connect(&self, body: &str) -> Result<(), Error> {
         let kak_jh = thread::spawn({
-            let cmd = format!(
-            "try %§ {} § catch %§ echo -debug kamp: %val{{error}}; echo -to-file %opt{{kamp_err}} %val{{error}}; quit 1 §",
-            body
-        );
-            dbg!(&cmd);
             let session = self.session.clone();
+            let cmd = format!(
+                "try %§ {} § catch %§ echo -debug kamp: %val{{error}}; echo -to-file %opt{{kamp_err}} %val{{error}}; quit 1 §",
+                body
+            );
             move || kak_c(&session, &cmd)
         });
 
         let (s, r) = crossbeam_channel::bounded(0);
         let err_jh = read_output(&self.session, true, s.clone());
-        let out_jh = read_output(&self.session, false, s);
+        let out_jh = read_output(&self.session, false, s.clone());
 
-        let res = r.recv().map_err(anyhow::Error::new)?;
-        let jh = match res {
-            Ok(_) => {
-                let mut path = std::env::temp_dir();
-                path.push(self.session.clone() + "-kamp-err");
-                std::fs::OpenOptions::new()
-                    .write(true)
-                    .open(path)
-                    .and_then(|mut f| f.write_all(b""))?;
-                eprintln!("write done");
-                let tmp = r.recv().map_err(anyhow::Error::new)?;
-                eprintln!("{:?}", tmp);
-                out_jh
+        for (i, res) in r.iter().enumerate() {
+            match res {
+                Ok(_) => {
+                    let mut path = std::env::temp_dir();
+                    path.push(self.session.clone() + "-kamp-err");
+                    std::fs::OpenOptions::new()
+                        .write(true)
+                        .open(path)
+                        .and_then(|mut f| f.write_all(b""))?;
+                }
+                Err(e) if i == 0 => {
+                    return err_jh
+                        .join()
+                        .unwrap()
+                        .and(kak_jh.join().expect("couldn't join kak thread"))
+                        .map_err(|_| e);
+                }
+                Err(_) => {
+                    return out_jh
+                        .join()
+                        .unwrap()
+                        .and(err_jh.join().unwrap())
+                        .and(kak_jh.join().expect("couldn't join kak thread"));
+                }
             }
-            Err(_) => err_jh,
-        };
+        }
 
-        jh.join()
-            .expect("output reader thread halted in unexpected way")
-            .and(res.map(|_| ()))
-            .and(kak_jh.join().expect("couldn't join kak thread"))
+        Ok(())
     }
 }
 
