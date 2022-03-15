@@ -24,9 +24,8 @@ fn main() -> Result<()> {
             }
             buf.push_str("; echo -to-file %opt{kamp_out}");
             if ctx.client.is_some() {
-                ctx.send(&buf)?;
+                let _r = ctx.send(&buf)?;
             } else {
-                buf.push_str("; echo -to-file %opt{kamp_err}");
                 ctx.connect(&buf)?;
             }
         }

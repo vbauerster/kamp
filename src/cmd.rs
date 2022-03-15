@@ -87,28 +87,42 @@ impl Context {
             .expect("output reader thread halted in unexpected way")?;
         res
     }
-    pub fn connect(&self, body: &str) -> Result<String, Error> {
-        // let jh = thread::spawn(move || kak_c(&self.session, body));
-
-        let cmd = format!(
+    pub fn connect(&self, body: &str) -> Result<(), Error> {
+        let kak_jh = thread::spawn({
+            let cmd = format!(
             "try %§ {} § catch %§ echo -debug kamp: %val{{error}}; echo -to-file %opt{{kamp_err}} %val{{error}}; quit 1 §",
             body
         );
+            dbg!(&cmd);
+            let session = self.session.clone();
+            move || kak_c(&session, &cmd)
+        });
 
-        let (s, r) = crossbeam_channel::bounded(2);
+        let (s, r) = crossbeam_channel::bounded(0);
         let err_jh = read_output(&self.session, true, s.clone());
         let out_jh = read_output(&self.session, false, s);
 
-        dbg!(&cmd);
-        // blocking call in case of success
-        kak_c(&self.session, &cmd)?;
-
         let res = r.recv().map_err(anyhow::Error::new)?;
+        let jh = match res {
+            Ok(_) => {
+                let mut path = std::env::temp_dir();
+                path.push(self.session.clone() + "-kamp-err");
+                std::fs::OpenOptions::new()
+                    .write(true)
+                    .open(path)
+                    .and_then(|mut f| f.write_all(b""))?;
+                eprintln!("write done");
+                let tmp = r.recv().map_err(anyhow::Error::new)?;
+                eprintln!("{:?}", tmp);
+                out_jh
+            }
+            Err(_) => err_jh,
+        };
 
-        let jh = if res.is_err() { err_jh } else { out_jh };
         jh.join()
-            .expect("output reader thread halted in unexpected way")?;
-        res
+            .expect("output reader thread halted in unexpected way")
+            .and(res.map(|_| ()))
+            .and(kak_jh.join().expect("couldn't join kak thread"))
     }
 }
 
@@ -159,21 +173,24 @@ fn kak_c(session: &str, e_cmd: &str) -> Result<(), Error> {
     Ok(())
 }
 
-fn read_output(
-    session: &str,
+fn read_output<S: Into<String>>(
+    session: S,
     is_err: bool,
     send_ch: Sender<Result<String, Error>>,
 ) -> thread::JoinHandle<Result<(), Error>> {
     let mut path = std::env::temp_dir();
     if is_err {
-        path.push(session.to_owned() + "-kamp-err");
+        path.push(session.into() + "-kamp-err");
     } else {
-        path.push(session.to_owned() + "-kamp-out");
+        path.push(session.into() + "-kamp-out");
     }
     thread::spawn(move || {
-        let mut file = std::fs::File::open(path)?;
+        eprintln!("start read: {}", path.display());
         let mut buf = String::new();
-        file.read_to_string(&mut buf)?;
+        std::fs::OpenOptions::new()
+            .read(true)
+            .open(path)
+            .and_then(|mut f| f.read_to_string(&mut buf))?;
         send_ch
             .send(if is_err {
                 Err(Error::KakEvalCatch(buf))
@@ -181,6 +198,7 @@ fn read_output(
                 Ok(buf)
             })
             .map_err(anyhow::Error::new)?;
+        eprintln!("{} read thread done", if is_err { "err" } else { "out" });
         Ok(())
     })
 }
