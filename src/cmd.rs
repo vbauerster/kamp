@@ -2,7 +2,9 @@
 // pub(super) use ctx::Ctx;
 
 use crossbeam_channel::Sender;
+use std::borrow::Cow;
 use std::io::prelude::*;
+use std::path::{Path, PathBuf};
 use std::thread;
 
 const KAKOUNE_SESSION: &str = "KAKOUNE_SESSION";
@@ -27,16 +29,20 @@ pub enum Error {
 }
 
 #[derive(Debug)]
-pub(super) struct Context {
+pub(super) struct Context<'a> {
     pub session: String,
     pub client: Option<String>,
+    out_path: Cow<'a, Path>,
 }
 
-impl Context {
+impl Context<'_> {
     pub fn new(session: String) -> Self {
+        let mut path = std::env::temp_dir();
+        path.push(session.clone() + "-kamp");
         Context {
             session,
             client: None,
+            out_path: Cow::from(path),
         }
     }
     pub fn from_env() -> Result<Self, Error> {
@@ -74,8 +80,8 @@ impl Context {
         );
 
         let (s, r) = crossbeam_channel::bounded(0);
-        let err_jh = read_output(&self.session, true, s.clone());
-        let out_jh = read_output(&self.session, false, s);
+        let err_jh = self.read_output(true, s.clone());
+        let out_jh = self.read_output(false, s.clone());
 
         dbg!(&cmd);
         kak_p(&self.session, &cmd)?;
@@ -98,17 +104,15 @@ impl Context {
         });
 
         let (s, r) = crossbeam_channel::bounded(0);
-        let err_jh = read_output(&self.session, true, s.clone());
-        let out_jh = read_output(&self.session, false, s.clone());
+        let err_jh = self.read_output(true, s.clone());
+        let out_jh = self.read_output(false, s.clone());
 
         for (i, res) in r.iter().enumerate() {
             match res {
                 Ok(_) => {
-                    let mut path = std::env::temp_dir();
-                    path.push(self.session.clone() + "-kamp-err");
                     std::fs::OpenOptions::new()
                         .write(true)
-                        .open(path)
+                        .open(self.get_out_path(true))
                         .and_then(|mut f| f.write_all(b""))?;
                 }
                 Err(e) if i == 0 => {
@@ -129,6 +133,40 @@ impl Context {
         }
 
         Ok(())
+    }
+}
+
+impl Context<'_> {
+    fn get_out_path(&self, err_out: bool) -> PathBuf {
+        if err_out {
+            self.out_path.with_extension("err")
+        } else {
+            self.out_path.with_extension("out")
+        }
+    }
+    fn read_output(
+        &self,
+        err_out: bool,
+        send_ch: Sender<Result<String, Error>>,
+    ) -> thread::JoinHandle<Result<(), Error>> {
+        let file_path = self.get_out_path(err_out);
+        thread::spawn(move || {
+            eprintln!("start read: {}", file_path.display());
+            let mut buf = String::new();
+            std::fs::OpenOptions::new()
+                .read(true)
+                .open(file_path)
+                .and_then(|mut f| f.read_to_string(&mut buf))?;
+            send_ch
+                .send(if err_out {
+                    Err(Error::KakEvalCatch(buf))
+                } else {
+                    Ok(buf)
+                })
+                .map_err(anyhow::Error::new)?;
+            eprintln!("{} read thread done", if err_out { "err" } else { "out" });
+            Ok(())
+        })
     }
 }
 
@@ -177,34 +215,4 @@ fn kak_c(session: &str, e_cmd: &str) -> Result<(), Error> {
     }
 
     Ok(())
-}
-
-fn read_output<S: Into<String>>(
-    session: S,
-    is_err: bool,
-    send_ch: Sender<Result<String, Error>>,
-) -> thread::JoinHandle<Result<(), Error>> {
-    let mut path = std::env::temp_dir();
-    if is_err {
-        path.push(session.into() + "-kamp-err");
-    } else {
-        path.push(session.into() + "-kamp-out");
-    }
-    thread::spawn(move || {
-        eprintln!("start read: {}", path.display());
-        let mut buf = String::new();
-        std::fs::OpenOptions::new()
-            .read(true)
-            .open(path)
-            .and_then(|mut f| f.read_to_string(&mut buf))?;
-        send_ch
-            .send(if is_err {
-                Err(Error::KakEvalCatch(buf))
-            } else {
-                Ok(buf)
-            })
-            .map_err(anyhow::Error::new)?;
-        eprintln!("{} read thread done", if is_err { "err" } else { "out" });
-        Ok(())
-    })
 }
