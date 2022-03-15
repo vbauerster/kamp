@@ -157,7 +157,7 @@ fn kak_p<T: AsRef<[u8]>>(session: &str, cmd: T) -> Result<(), Error> {
     let status = child.wait()?;
 
     if !status.success() {
-        Err(Error::KakProcess(status))?;
+        return Err(Error::KakProcess(status));
     }
 
     Ok(())
@@ -173,7 +173,7 @@ fn kak_c(session: &str, e_cmd: &str) -> Result<(), Error> {
         .status()?;
 
     if !status.success() {
-        Err(Error::KakProcess(status))?;
+        return Err(Error::KakProcess(status));
     }
 
     Ok(())
