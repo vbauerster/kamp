@@ -1,5 +1,4 @@
 use argh::FromArgs;
-use std::path::PathBuf;
 
 /// Kakoune kampliment
 #[derive(FromArgs, PartialEq, Debug)]
@@ -34,5 +33,5 @@ pub(crate) struct CtxOptions {}
 pub(crate) struct EditOptions {
     /// path to file
     #[argh(positional)]
-    pub file: Option<PathBuf>,
+    pub files: Vec<String>,
 }

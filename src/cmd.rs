@@ -45,10 +45,15 @@ impl Context<'_> {
             out_path: Cow::from(path),
         }
     }
-    pub fn from_env() -> Result<Self, Error> {
-        let mut ctx = std::env::var(KAKOUNE_SESSION).map(Context::new)?;
-        ctx.set_client_if_any(std::env::var(KAKOUNE_CLIENT).ok());
-        Ok(ctx)
+    pub fn from_env() -> Option<Self> {
+        use std::env::var;
+        var(KAKOUNE_SESSION)
+            .map(Context::new)
+            .ok()
+            .and_then(|mut ctx| {
+                ctx.client = var(KAKOUNE_CLIENT).ok();
+                Some(ctx)
+            })
     }
     pub fn set_client_if_any(&mut self, client: Option<String>) {
         if client.is_some() {
@@ -73,15 +78,16 @@ impl Context<'_> {
         });
 
         let cmd = format!(
-            // "try %§ eval{} {} § catch %§ echo -debug %val{{error}} §",
-            "try %§ eval{} {} § catch %§ echo -debug kamp: %val{{error}}; echo -to-file %opt{{kamp_err}} %val{{error}} §",
+            // "try %§ eval{} {} § catch %§ echo -debug kamp: %val{{error}}; echo -to-file %opt{{kamp_err}} %val{{error}} §",
+            "eval{} -verbatim -- try %§ {} § catch %§ echo -debug kamp: %val{{error}}; echo -to-file %opt{{kamp_err}} %val{{error}} §",
             buffer.or(client).unwrap_or_default(),
             body
         );
 
-        let (s, r) = crossbeam_channel::bounded(0);
-        let err_jh = self.read_output(true, s.clone());
-        let out_jh = self.read_output(false, s.clone());
+        let (s0, r) = crossbeam_channel::bounded(0);
+        let s1 = s0.clone();
+        let out_jh = self.read_output(false, s0);
+        let err_jh = self.read_output(true, s1);
 
         dbg!(&cmd);
         kak_p(&self.session, &cmd)?;
@@ -89,9 +95,7 @@ impl Context<'_> {
         let res = r.recv().map_err(anyhow::Error::new)?;
 
         let jh = if res.is_err() { err_jh } else { out_jh };
-        jh.join()
-            .expect("output reader thread halted in unexpected way")?;
-        res
+        jh.join().unwrap().and(res)
     }
     pub fn connect(&self, body: &str) -> Result<(), Error> {
         let kak_jh = thread::spawn({
@@ -100,12 +104,14 @@ impl Context<'_> {
                 "try %§ {} § catch %§ echo -debug kamp: %val{{error}}; echo -to-file %opt{{kamp_err}} %val{{error}}; quit 1 §",
                 body
             );
+            dbg!(&cmd);
             move || kak_c(&session, &cmd)
         });
 
-        let (s, r) = crossbeam_channel::bounded(0);
-        let err_jh = self.read_output(true, s.clone());
-        let out_jh = self.read_output(false, s.clone());
+        let (s0, r) = crossbeam_channel::bounded(0);
+        let s1 = s0.clone();
+        let out_jh = self.read_output(false, s0);
+        let err_jh = self.read_output(true, s1);
 
         for (i, res) in r.iter().enumerate() {
             match res {
