@@ -23,8 +23,7 @@ fn main() -> Result<()> {
         }
         Edit(opt) => {
             if let Some(ctx) = ctx {
-                let cmd = cmd::Edit::new(opt.files);
-                cmd.run(ctx)?;
+                cmd::edit(ctx, opt.files)?;
             } else {
                 kamp::proxy(opt.files)?;
             }
