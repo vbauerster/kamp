@@ -40,14 +40,13 @@ fn main() -> Result<()> {
                         for (i, item) in name.splitn(2, "+").enumerate() {
                             match i {
                                 0 => {
-                                    // edit.push_str("'''");
                                     edit.push_str("'");
                                     edit.push_str(item);
                                     edit.push_str("'");
                                 }
                                 1 => item
                                     .splitn(2, ":")
-                                    .filter_map(|s| s.parse::<i32>().ok())
+                                    .take_while(|&s| s.parse::<i32>().is_ok())
                                     .for_each(|n| {
                                         edit.push_str(" ");
                                         edit.push_str(&n.to_string());
