@@ -27,20 +27,15 @@ impl Context<'_> {
             out_path: Cow::from(path),
         }
     }
-    pub fn from_env() -> Option<Self> {
+    pub fn from_env(client: Option<String>) -> Option<Self> {
         use std::env::var;
         var(KAKOUNE_SESSION)
             .map(Context::new)
             .ok()
             .and_then(|mut ctx| {
-                ctx.client = var(KAKOUNE_CLIENT).ok();
+                ctx.client = client.or_else(|| var(KAKOUNE_CLIENT).ok());
                 Some(ctx)
             })
-    }
-    pub fn set_client_if_any(&mut self, client: Option<String>) {
-        if client.is_some() {
-            self.client = client;
-        }
     }
     pub fn send(&self, body: &str) -> Result<String, Error> {
         let buffer: Option<String> = None;

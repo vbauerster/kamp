@@ -11,11 +11,7 @@ fn main() -> Result<()> {
     let ctx = kampliment
         .session
         .map(Context::new)
-        .or_else(Context::from_env)
-        .and_then(|mut ctx| {
-            ctx.set_client_if_any(kampliment.client);
-            Some(ctx)
-        });
+        .or_else(|| Context::from_env(kampliment.client));
 
     match kampliment.subcommand {
         Init(opt) => {
