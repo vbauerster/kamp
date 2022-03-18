@@ -1,10 +1,9 @@
 use std::io::Write;
 
 use super::error::Error;
+use std::process::{Command, Stdio};
 
-pub(crate) fn kak_p<T: AsRef<[u8]>>(session: &str, cmd: T) -> Result<(), Error> {
-    use std::process::{Command, Stdio};
-
+pub(crate) fn pipe<T: AsRef<[u8]>>(session: &str, cmd: T) -> Result<(), Error> {
     let mut child = Command::new("kak")
         .arg("-p")
         .arg(session)
@@ -33,14 +32,23 @@ pub(crate) fn kak_p<T: AsRef<[u8]>>(session: &str, cmd: T) -> Result<(), Error> 
     Ok(())
 }
 
-pub(crate) fn kak_c(session: &str, e_cmd: &str) -> Result<(), Error> {
-    use std::process::Command;
+pub(crate) fn connect(session: &str, e_cmd: &str) -> Result<(), Error> {
     let status = Command::new("kak")
         .arg("-c")
         .arg(session)
         .arg("-e")
         .arg(e_cmd)
         .status()?;
+
+    if !status.success() {
+        return Err(Error::KakProcess(status));
+    }
+
+    Ok(())
+}
+
+pub(crate) fn proxy(args: Vec<String>) -> Result<(), Error> {
+    let status = Command::new("kak").args(args).status()?;
 
     if !status.success() {
         return Err(Error::KakProcess(status));

@@ -18,9 +18,15 @@ pub(super) struct Kampliment {
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand)]
 pub(super) enum SubCommand {
+    Init(InitOptions),
     Edit(EditOptions),
     Ctx(CtxOptions),
 }
+
+/// kakoune init
+#[derive(FromArgs, PartialEq, Debug)]
+#[argh(subcommand, name = "init")]
+pub(crate) struct InitOptions {}
 
 /// show execution context
 #[derive(FromArgs, PartialEq, Debug)]

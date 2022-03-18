@@ -1,8 +1,5 @@
-
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    // #[error("no session in context")]
-    // NoSession(#[from] std::env::VarError),
     #[error(transparent)]
     IOError(#[from] std::io::Error),
 

@@ -71,7 +71,7 @@ impl Context<'_> {
         let err_jh = self.read_output(true, s1);
 
         dbg!(&cmd);
-        kak::kak_p(&self.session, &cmd)?;
+        kak::pipe(&self.session, &cmd)?;
 
         let res = r.recv().map_err(anyhow::Error::new)?;
 
@@ -86,7 +86,7 @@ impl Context<'_> {
                 body
             );
             dbg!(&cmd);
-            move || kak::kak_c(&session, &cmd)
+            move || kak::connect(&session, &cmd)
         });
 
         let (s0, r) = crossbeam_channel::bounded(0);
