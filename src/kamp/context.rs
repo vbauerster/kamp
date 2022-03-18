@@ -1,35 +1,17 @@
-// mod ctx;
-// pub(super) use ctx::Ctx;
-
 use crossbeam_channel::Sender;
 use std::borrow::Cow;
 use std::io::prelude::*;
 use std::path::{Path, PathBuf};
 use std::thread;
 
+use super::error::Error;
+use super::kak;
+
 const KAKOUNE_SESSION: &str = "KAKOUNE_SESSION";
 const KAKOUNE_CLIENT: &str = "KAKOUNE_CLIENT";
 
-#[derive(thiserror::Error, Debug)]
-pub enum Error {
-    #[error("no session in context")]
-    NoSession(#[from] std::env::VarError),
-
-    #[error(transparent)]
-    IOError(#[from] std::io::Error),
-
-    #[error("kak exited with error: {0}")]
-    KakProcess(std::process::ExitStatus),
-
-    #[error("kak eval error: {0}")]
-    KakEvalCatch(String),
-
-    #[error(transparent)]
-    Other(#[from] anyhow::Error), // source and Display delegate to anyhow::Error
-}
-
 #[derive(Debug)]
-pub(super) struct Context<'a> {
+pub(crate) struct Context<'a> {
     pub session: String,
     pub client: Option<String>,
     out_path: Cow<'a, Path>,
@@ -78,7 +60,6 @@ impl Context<'_> {
         });
 
         let cmd = format!(
-            // "try %§ eval{} {} § catch %§ echo -debug kamp: %val{{error}}; echo -to-file %opt{{kamp_err}} %val{{error}} §",
             "eval{} -verbatim -- try %§ {} § catch %§ echo -debug kamp: %val{{error}}; echo -to-file %opt{{kamp_err}} %val{{error}} §",
             buffer.or(client).unwrap_or_default(),
             body
@@ -90,7 +71,7 @@ impl Context<'_> {
         let err_jh = self.read_output(true, s1);
 
         dbg!(&cmd);
-        kak_p(&self.session, &cmd)?;
+        kak::kak_p(&self.session, &cmd)?;
 
         let res = r.recv().map_err(anyhow::Error::new)?;
 
@@ -105,7 +86,7 @@ impl Context<'_> {
                 body
             );
             dbg!(&cmd);
-            move || kak_c(&session, &cmd)
+            move || kak::kak_c(&session, &cmd)
         });
 
         let (s0, r) = crossbeam_channel::bounded(0);
@@ -174,51 +155,4 @@ impl Context<'_> {
             Ok(())
         })
     }
-}
-
-fn kak_p<T: AsRef<[u8]>>(session: &str, cmd: T) -> Result<(), Error> {
-    use std::process::{Command, Stdio};
-
-    let mut child = Command::new("kak")
-        .arg("-p")
-        .arg(session)
-        .stdin(Stdio::piped())
-        .spawn()?;
-
-    let kak_stdin = match child.stdin.as_mut() {
-        Some(stdin) => stdin,
-        None => {
-            use std::io::{Error, ErrorKind};
-            Err(Error::new(
-                ErrorKind::Other,
-                "cannot capture stdin of kak process",
-            ))?
-        }
-    };
-
-    kak_stdin.write_all(cmd.as_ref())?;
-
-    let status = child.wait()?;
-
-    if !status.success() {
-        return Err(Error::KakProcess(status));
-    }
-
-    Ok(())
-}
-
-fn kak_c(session: &str, e_cmd: &str) -> Result<(), Error> {
-    use std::process::Command;
-    let status = Command::new("kak")
-        .arg("-c")
-        .arg(session)
-        .arg("-e")
-        .arg(e_cmd)
-        .status()?;
-
-    if !status.success() {
-        return Err(Error::KakProcess(status));
-    }
-
-    Ok(())
 }
