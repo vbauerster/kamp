@@ -1,6 +1,7 @@
 use crate::argv::KeyValue;
 
-const KAKOUNE_INIT: &str = r#"define-command -hidden kamp-init %{
+const KAKOUNE_INIT: &str = r#"
+define-command -hidden -override kamp-init %{
     declare-option -hidden str kamp_out
     declare-option -hidden str kamp_err
     evaluate-commands %sh{
@@ -12,7 +13,7 @@ const KAKOUNE_INIT: &str = r#"define-command -hidden kamp-init %{
     }
 }
 
-define-command -hidden kamp-end %{
+define-command -hidden -override kamp-end %{
     nop %sh{ rm -f "$kak_opt_kamp_out" "$kak_opt_kamp_err" }
 }
 
@@ -21,8 +22,6 @@ hook global KakEnd .* kamp-end
 "#;
 
 pub(crate) fn init(export: Vec<KeyValue>) {
-    println!("{}", KAKOUNE_INIT);
-
     let user_exports = export.into_iter().fold(String::new(), |mut buf, next| {
         buf.push_str("export ");
         buf.push_str(&next.key);
@@ -45,4 +44,6 @@ pub(crate) fn init(export: Vec<KeyValue>) {
         "$@"
     }} -- %val{{session}} %val{{client}} %arg{{@}}
 }} -docstring 'run Kakoune command in connected context'"#, user_exports);
+
+    println!("{}", KAKOUNE_INIT);
 }
