@@ -18,8 +18,8 @@ fn main() -> Result<()> {
         });
 
     match kampliment.subcommand {
-        Init(_) => {
-            cmd::init();
+        Init(opt) => {
+            cmd::init(opt.export);
         }
         Edit(opt) => {
             if let Some(ctx) = ctx {

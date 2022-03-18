@@ -1,3 +1,5 @@
+use crate::argv::KeyValue;
+
 const KAKOUNE_INIT: &str = r#"define-command -hidden kamp-init %{
     declare-option -hidden str kamp_out
     declare-option -hidden str kamp_err
@@ -18,6 +20,29 @@ hook global KakBegin .* kamp-init
 hook global KakEnd .* kamp-end
 "#;
 
-pub(crate) fn init() {
+pub(crate) fn init(export: Vec<KeyValue>) {
     println!("{}", KAKOUNE_INIT);
+
+    let user_exports = export.into_iter().fold(String::new(), |mut buf, next| {
+        buf.push_str("export ");
+        buf.push_str(&next.key);
+        buf.push_str("='");
+        buf.push_str(&next.value);
+        buf.push_str("'\n");
+        (0..8).for_each(|_| buf.push(' '));
+        buf
+    });
+
+    #[rustfmt::skip]
+    println!(r#"define-command -override kamp-connect -params 1.. -command-completion %{{
+    %arg{{1}} sh -c %{{
+        {}export KAKOUNE_SESSION="$1"
+        export KAKOUNE_CLIENT="$2"
+        shift 3
+
+        [ $# = 0 ] && set "$SHELL"
+
+        "$@"
+    }} -- %val{{session}} %val{{client}} %arg{{@}}
+}} -docstring 'run Kakoune command in connected context'"#, user_exports);
 }
