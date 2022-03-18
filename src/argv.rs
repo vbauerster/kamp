@@ -4,11 +4,11 @@ use argh::{FromArgValue, FromArgs};
 #[derive(FromArgs, PartialEq, Debug)]
 pub(super) struct Kampliment {
     /// session
-    #[argh(option)]
+    #[argh(option, short = 's')]
     pub session: Option<String>,
 
     /// client
-    #[argh(option)]
+    #[argh(option, short = 'c')]
     pub client: Option<String>,
 
     #[argh(subcommand)]
