@@ -17,6 +17,11 @@ fn main() -> Result<()> {
         Init(opt) => {
             cmd::init(opt.export);
         }
+        Attach(_) => {
+            if let Some(ctx) = ctx {
+                cmd::attach(ctx)?;
+            }
+        }
         Edit(opt) => {
             if let Some(ctx) = ctx {
                 cmd::edit(ctx, opt.files)?;

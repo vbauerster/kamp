@@ -19,6 +19,7 @@ pub(super) struct Kampliment {
 #[argh(subcommand)]
 pub(super) enum SubCommand {
     Init(InitOptions),
+    Attach(AttachOptions),
     Edit(EditOptions),
     Ctx(CtxOptions),
 }
@@ -36,6 +37,11 @@ pub(crate) struct InitOptions {
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "ctx")]
 pub(crate) struct CtxOptions {}
+
+/// attach to a context session
+#[derive(FromArgs, PartialEq, Debug)]
+#[argh(subcommand, name = "attach")]
+pub(crate) struct AttachOptions {}
 
 /// edit a file
 #[derive(FromArgs, PartialEq, Debug)]
