@@ -21,6 +21,7 @@ pub(super) enum SubCommand {
     Init(InitOptions),
     Attach(AttachOptions),
     Edit(EditOptions),
+    Get(GetOptions),
     Ctx(CtxOptions),
 }
 
@@ -28,7 +29,7 @@ pub(super) enum SubCommand {
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "init")]
 pub(crate) struct InitOptions {
-    /// export 'VAR=VALUE'
+    /// inject 'export VAR=VALUE' into kamp-connect command
     #[argh(option, short = 'e')]
     pub export: Vec<KeyValue>,
 }
@@ -38,7 +39,7 @@ pub(crate) struct InitOptions {
 #[argh(subcommand, name = "ctx")]
 pub(crate) struct CtxOptions {}
 
-/// attach to a context session
+/// attach to a session in context
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "attach")]
 pub(crate) struct AttachOptions {}
@@ -48,8 +49,65 @@ pub(crate) struct AttachOptions {}
 #[argh(subcommand, name = "edit")]
 pub(crate) struct EditOptions {
     /// path to file
-    #[argh(positional)]
+    #[argh(positional, arg_name = "file")]
     pub files: Vec<String>,
+}
+
+/// get state from a session in context
+#[derive(FromArgs, PartialEq, Debug)]
+#[argh(subcommand, name = "get")]
+pub(crate) struct GetOptions {
+    /// quoting style (raw|kakoune|shell), default is raw
+    #[argh(option, default = r#"String::from("raw")"#)]
+    pub quoting: String,
+
+    #[argh(subcommand)]
+    pub subcommand: GetSubCommand,
+}
+
+#[derive(FromArgs, PartialEq, Debug)]
+#[argh(subcommand)]
+pub(crate) enum GetSubCommand {
+    Val(ValueName),
+    Opt(OptionName),
+    Reg(RegisterName),
+    Shell(ShellCmdName),
+}
+
+/// value name
+#[derive(FromArgs, PartialEq, Debug)]
+#[argh(subcommand, name = "val")]
+pub(crate) struct ValueName {
+    /// value name
+    #[argh(positional)]
+    pub name: String,
+}
+
+/// option name
+#[derive(FromArgs, PartialEq, Debug)]
+#[argh(subcommand, name = "opt")]
+pub(crate) struct OptionName {
+    /// option name
+    #[argh(positional)]
+    pub name: String,
+}
+
+/// register name
+#[derive(FromArgs, PartialEq, Debug)]
+#[argh(subcommand, name = "reg")]
+pub(crate) struct RegisterName {
+    /// register name
+    #[argh(positional)]
+    pub name: String,
+}
+
+/// shell command
+#[derive(FromArgs, PartialEq, Debug)]
+#[argh(subcommand, name = "shell")]
+pub(crate) struct ShellCmdName {
+    /// shell command
+    #[argh(positional, arg_name = "command")]
+    pub name: String,
 }
 
 #[derive(PartialEq, Debug)]

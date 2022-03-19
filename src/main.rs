@@ -29,6 +29,10 @@ fn main() -> Result<()> {
                 kamp::proxy(opt.files)?;
             }
         }
+        Get(opt) => {
+            let res = cmd::Get::from(opt.subcommand).run(ctx?, &opt.quoting)?;
+            println!("{}", res);
+        }
         Ctx(_) => {
             let ctx = ctx?;
             println!("session: {}", ctx.session);
