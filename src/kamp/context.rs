@@ -18,24 +18,20 @@ pub(crate) struct Context<'a> {
 }
 
 impl Context<'_> {
-    pub fn new(session: String) -> Self {
+    pub fn new(session: String, client: Option<String>) -> Self {
         let mut path = std::env::temp_dir();
         path.push(session.clone() + "-kamp");
         Context {
             session,
-            client: None,
+            client,
             out_path: Cow::from(path),
         }
     }
     pub fn from_env(client: Option<String>) -> Option<Self> {
         use std::env::var;
         var(KAKOUNE_SESSION)
-            .map(Context::new)
+            .map(|s| Context::new(s, client.or_else(|| var(KAKOUNE_CLIENT).ok())))
             .ok()
-            .and_then(|mut ctx| {
-                ctx.client = client.or_else(|| var(KAKOUNE_CLIENT).ok());
-                Some(ctx)
-            })
     }
     pub fn send(&self, body: &str) -> Result<String, Error> {
         let buffer: Option<String> = None;

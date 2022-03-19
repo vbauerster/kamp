@@ -1,41 +1,38 @@
 mod argv;
 mod kamp;
 
-use anyhow::{bail, Result};
+use anyhow::{Error, Result};
 use argv::{Kampliment, SubCommand::*};
 use kamp::{cmd, Context};
 
 fn main() -> Result<()> {
     let kampliment: Kampliment = argh::from_env();
+    let mut client = kampliment.client;
 
     let ctx = kampliment
         .session
-        .map(Context::new)
-        .or_else(|| Context::from_env(kampliment.client));
+        .map(|s| Context::new(s, client.take()))
+        .or_else(|| Context::from_env(client.take()))
+        .ok_or_else(|| Error::msg("no session in context"));
 
     match kampliment.subcommand {
         Init(opt) => {
             cmd::init(opt.export);
         }
         Attach(_) => {
-            if let Some(ctx) = ctx {
-                cmd::attach(ctx)?;
-            }
+            cmd::attach(ctx?)?;
         }
         Edit(opt) => {
-            if let Some(ctx) = ctx {
+            if let Ok(ctx) = ctx {
                 cmd::edit(ctx, opt.files)?;
             } else {
                 kamp::proxy(opt.files)?;
             }
         }
         Ctx(_) => {
-            if let Some(ctx) = ctx {
-                println!("session: {}", ctx.session);
-                println!("client: {}", ctx.client.unwrap_or_default());
-            } else {
-                bail!("no session in context");
-            }
+            let ctx = ctx?;
+            println!("session: {}", ctx.session);
+            println!("client: {}", ctx.client.unwrap_or_default());
         }
     }
 
