@@ -33,26 +33,30 @@ impl Context<'_> {
             .map(|s| Context::new(s, client.or_else(|| var(KAKOUNE_CLIENT).ok())))
             .ok()
     }
-    pub fn send(&self, body: &str) -> Result<String, Error> {
-        let buffer: Option<String> = None;
-        let buffer = buffer.as_deref().and_then(|arg| {
-            let switch = " -buffer ";
-            let mut buf = String::with_capacity(switch.len() + arg.len());
-            buf.push_str(switch);
-            buf.push_str(arg);
-            Some(buf)
-        });
-        let client = self.client.as_deref().and_then(|arg| {
-            let switch = " -try-client ";
-            let mut buf = String::with_capacity(switch.len() + arg.len());
-            buf.push_str(switch);
-            buf.push_str(arg);
-            Some(buf)
-        });
+    pub fn send(&self, body: &str, buffer: Option<String>) -> Result<String, Error> {
+        let context = buffer
+            .as_deref()
+            .and_then(|arg| {
+                let switch = " -buffer ";
+                let mut buf = String::with_capacity(switch.len() + arg.len());
+                buf.push_str(switch);
+                buf.push_str(arg);
+                Some(buf)
+            })
+            .or_else(|| {
+                self.client.as_deref().and_then(|arg| {
+                    let switch = " -try-client ";
+                    let mut buf = String::with_capacity(switch.len() + arg.len());
+                    buf.push_str(switch);
+                    buf.push_str(arg);
+                    Some(buf)
+                })
+            })
+            .unwrap_or_default();
 
         let cmd = format!(
             "eval{} -verbatim -- try %§ {} § catch %§ echo -debug kamp: %val{{error}}; echo -to-file %opt{{kamp_err}} %val{{error}} §",
-            buffer.or(client).unwrap_or_default(),
+            context,
             body
         );
 

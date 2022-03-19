@@ -61,8 +61,12 @@ pub(crate) struct EditOptions {
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "get")]
 pub(crate) struct GetOptions {
+    /// buffer context
+    #[argh(option, short = 'b')]
+    pub buffer: Option<String>,
+
     /// quoting style (raw|kakoune|shell), default is raw
-    #[argh(option, default = r#"String::from("raw")"#)]
+    #[argh(option, short = 'q', default = r#"String::from("raw")"#)]
     pub quoting: String,
 
     #[argh(subcommand)]

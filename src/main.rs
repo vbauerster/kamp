@@ -30,7 +30,7 @@ fn main() -> Result<()> {
             }
         }
         Get(opt) => {
-            let res = cmd::Get::from(opt.subcommand).run(ctx?, &opt.quoting)?;
+            let res = cmd::Get::from(opt.subcommand).run(ctx?, &opt.quoting, opt.buffer)?;
             println!("{}", res);
         }
         Ctx(_) => {
