@@ -18,10 +18,9 @@ define-command -hidden -override kamp-end %{
 }
 
 hook global KakBegin .* kamp-init
-hook global KakEnd .* kamp-end
-"#;
+hook global KakEnd .* kamp-end"#;
 
-pub(crate) fn init(export: Vec<KeyValue>) {
+pub(crate) fn init(export: Vec<KeyValue>, alias: bool) {
     let user_exports = export.into_iter().fold(String::new(), |mut buf, next| {
         buf.push_str("export ");
         buf.push_str(&next.key);
@@ -46,4 +45,8 @@ pub(crate) fn init(export: Vec<KeyValue>) {
 }} -docstring 'run Kakoune command in connected context'"#, user_exports);
 
     println!("{}", KAKOUNE_INIT);
+
+    if alias {
+        println!("alias global connect kamp-connect");
+    }
 }

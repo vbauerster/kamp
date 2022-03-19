@@ -17,7 +17,7 @@ fn main() -> Result<()> {
 
     match kampliment.subcommand {
         Init(opt) => {
-            cmd::init(opt.export);
+            cmd::init(opt.export, opt.alias);
         }
         Attach(_) => {
             cmd::attach(ctx?)?;

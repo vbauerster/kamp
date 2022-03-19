@@ -29,7 +29,11 @@ pub(super) enum SubCommand {
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "init")]
 pub(crate) struct InitOptions {
-    /// inject 'export VAR=VALUE' into kamp-connect command
+    /// alias global connect kamp-connect
+    #[argh(switch, short = 'a')]
+    pub alias: bool,
+
+    /// inject 'export VAR=VALUE' into the kamp-connect
     #[argh(option, short = 'e')]
     pub export: Vec<KeyValue>,
 }
