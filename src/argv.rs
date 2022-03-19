@@ -107,7 +107,7 @@ pub(crate) struct RegisterName {
 
 /// shell command
 #[derive(FromArgs, PartialEq, Debug)]
-#[argh(subcommand, name = "shell")]
+#[argh(subcommand, name = "sh")]
 pub(crate) struct ShellCmdName {
     /// shell command
     #[argh(positional, arg_name = "command")]
