@@ -34,7 +34,7 @@ impl Context<'_> {
             .ok()
     }
     pub fn send(&self, body: &str, buffer: Option<String>) -> Result<String, Error> {
-        let mut cmd = String::from("try %{\n  eval");
+        let mut cmd = String::from("try %{ eval");
         if let Some(buffer) = buffer.as_deref() {
             cmd.push_str(" -buffer ");
             cmd.push_str(buffer);
@@ -42,9 +42,9 @@ impl Context<'_> {
             cmd.push_str(" -client ");
             cmd.push_str(client);
         }
-        cmd.push_str(" -- ");
+        cmd.push_str(" %{\n");
         cmd.push_str(body);
-        cmd.push_str("\n} catch %{\n");
+        cmd.push_str("}} catch %{\n");
         cmd.push_str("  echo -debug kamp: %val{error}\n");
         cmd.push_str("  echo -to-file %opt{kamp_err} %val{error}\n");
         cmd.push_str("}");
@@ -65,12 +65,12 @@ impl Context<'_> {
     pub fn connect(&self, body: &str) -> Result<(), Error> {
         let kak_jh = thread::spawn({
             let session = self.session.clone();
-            let mut cmd = String::from("try %{\n  ");
+            let mut cmd = String::from("try %{ eval -try-client '' %{\n");
             cmd.push_str(body);
-            // cmd.push_str("; echo -to-file %opt{kamp_out} __END__\n");
-            cmd.push_str("} catch %{\n");
+            cmd.push_str("}} catch %{\n");
             cmd.push_str("  echo -debug kamp: %val{error}\n");
             cmd.push_str("  echo -to-file %opt{kamp_err} %val{error}\n");
+            cmd.push_str("  quit 1\n");
             cmd.push_str("}");
             eprintln!("connect: {}", cmd);
             move || kak::connect(&session, &cmd)
