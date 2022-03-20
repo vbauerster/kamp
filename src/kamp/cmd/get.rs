@@ -29,9 +29,9 @@ impl Get {
         quoting: &str,
         buffer: Option<String>,
     ) -> Result<String, Error> {
-        let mut buf = String::from("echo -quoting ");
+        let mut buf = String::from("  echo -quoting ");
         buf.push_str(quoting);
-        buf.push_str(" -to-file %opt{kamp_out} '%");
+        buf.push_str(" -to-file %opt{kamp_out} %");
         match self {
             Get::Val(name) => {
                 buf.push_str("val{");
@@ -50,7 +50,7 @@ impl Get {
                 buf.push_str(name);
             }
         }
-        buf.push_str("}'");
+        buf.push_str("}\n");
         ctx.send(&buf, buffer)
     }
 }
