@@ -18,9 +18,9 @@ pub(crate) fn edit(ctx: Context, files: Vec<String>) -> Result<(), Error> {
             for (i, item) in name.splitn(2, "+").enumerate() {
                 match i {
                     0 => {
-                        edit.push_str("'");
+                        edit.push_str("%{'");
                         edit.push_str(item);
-                        edit.push_str("'");
+                        edit.push_str("'}");
                     }
                     1 => item
                         .splitn(2, ":")

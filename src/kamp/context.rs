@@ -34,38 +34,27 @@ impl Context<'_> {
             .ok()
     }
     pub fn send(&self, body: &str, buffer: Option<String>) -> Result<String, Error> {
-        let context = buffer
-            .as_deref()
-            .and_then(|arg| {
-                let switch = " -buffer ";
-                let mut buf = String::with_capacity(switch.len() + arg.len());
-                buf.push_str(switch);
-                buf.push_str(arg);
-                Some(buf)
-            })
-            .or_else(|| {
-                self.client.as_deref().and_then(|arg| {
-                    let switch = " -try-client ";
-                    let mut buf = String::with_capacity(switch.len() + arg.len());
-                    buf.push_str(switch);
-                    buf.push_str(arg);
-                    Some(buf)
-                })
-            })
-            .unwrap_or_default();
-
-        let cmd = format!(
-            "eval{} -verbatim -- try %§ {} § catch %§ echo -debug kamp: %val{{error}}; echo -to-file %opt{{kamp_err}} %val{{error}} §",
-            context,
-            body
-        );
+        let mut cmd = String::from("try %{\n  eval");
+        if let Some(buffer) = buffer.as_deref() {
+            cmd.push_str(" -buffer ");
+            cmd.push_str(buffer);
+        } else if let Some(client) = self.client.as_deref() {
+            cmd.push_str(" -client ");
+            cmd.push_str(client);
+        }
+        cmd.push_str(" -- ");
+        cmd.push_str(body);
+        cmd.push_str("\n} catch %{\n");
+        cmd.push_str("  echo -debug kamp: %val{error}\n");
+        cmd.push_str("  echo -to-file %opt{kamp_err} %val{error}\n");
+        cmd.push_str("}");
 
         let (s0, r) = crossbeam_channel::bounded(0);
         let s1 = s0.clone();
-        let out_jh = self.read_output(false, s0);
-        let err_jh = self.read_output(true, s1);
+        let out_jh = read_out(self.get_out_path(false), s0);
+        let err_jh = read_err(self.get_out_path(true), s1);
 
-        dbg!(&cmd);
+        eprintln!("send: {}", cmd);
         kak::pipe(&self.session, &cmd)?;
 
         let res = r.recv().map_err(anyhow::Error::new)?;
@@ -76,18 +65,21 @@ impl Context<'_> {
     pub fn connect(&self, body: &str) -> Result<(), Error> {
         let kak_jh = thread::spawn({
             let session = self.session.clone();
-            let cmd = format!(
-                "try %§ {} § catch %§ echo -debug kamp: %val{{error}}; echo -to-file %opt{{kamp_err}} %val{{error}}; quit 1 §",
-                body
-            );
-            dbg!(&cmd);
+            let mut cmd = String::from("try %{\n  ");
+            cmd.push_str(body);
+            // cmd.push_str("; echo -to-file %opt{kamp_out} __END__\n");
+            cmd.push_str("} catch %{\n");
+            cmd.push_str("  echo -debug kamp: %val{error}\n");
+            cmd.push_str("  echo -to-file %opt{kamp_err} %val{error}\n");
+            cmd.push_str("}");
+            eprintln!("connect: {}", cmd);
             move || kak::connect(&session, &cmd)
         });
 
         let (s0, r) = crossbeam_channel::bounded(0);
         let s1 = s0.clone();
-        let out_jh = self.read_output(false, s0);
-        let err_jh = self.read_output(true, s1);
+        let out_jh = read_out(self.get_out_path(false), s0);
+        let err_jh = read_err(self.get_out_path(true), s1);
 
         for (i, res) in r.iter().enumerate() {
             match res {
@@ -126,28 +118,68 @@ impl Context<'_> {
             self.out_path.with_extension("out")
         }
     }
-    fn read_output(
-        &self,
-        err_out: bool,
-        send_ch: Sender<Result<String, Error>>,
-    ) -> thread::JoinHandle<Result<(), Error>> {
-        let file_path = self.get_out_path(err_out);
-        thread::spawn(move || {
-            eprintln!("start read: {}", file_path.display());
-            let mut buf = String::new();
-            std::fs::OpenOptions::new()
-                .read(true)
-                .open(file_path)
-                .and_then(|mut f| f.read_to_string(&mut buf))?;
-            send_ch
-                .send(if err_out {
-                    Err(Error::KakEvalCatch(buf))
-                } else {
-                    Ok(buf)
-                })
-                .map_err(anyhow::Error::new)?;
-            eprintln!("{} read thread done", if err_out { "err" } else { "out" });
-            Ok(())
-        })
-    }
 }
+
+fn read_err(
+    file_path: PathBuf,
+    send_ch: Sender<Result<String, Error>>,
+) -> thread::JoinHandle<Result<(), Error>> {
+    eprintln!("start read: {}", file_path.display());
+    thread::spawn(move || {
+        let mut buf = String::new();
+        std::fs::OpenOptions::new()
+            .read(true)
+            .open(&file_path)
+            .and_then(|mut f| f.read_to_string(&mut buf))?;
+        eprintln!("err read done!");
+        send_ch
+            .send(Err(Error::KakEvalCatch(buf)))
+            .map_err(anyhow::Error::new)?;
+        Ok(())
+    })
+}
+
+fn read_out(
+    file_path: PathBuf,
+    send_ch: Sender<Result<String, Error>>,
+) -> thread::JoinHandle<Result<(), Error>> {
+    eprintln!("start read: {}", file_path.display());
+    thread::spawn(move || {
+        let mut buf = String::new();
+        std::fs::OpenOptions::new()
+            .read(true)
+            .open(&file_path)
+            .and_then(|mut f| f.read_to_string(&mut buf))?;
+        eprintln!("out read done!");
+        send_ch.send(Ok(buf)).map_err(anyhow::Error::new)?;
+        Ok(())
+    })
+}
+
+// fn read_out(
+//     file_path: PathBuf,
+//     send_ch: Sender<Result<String, Error>>,
+// ) -> thread::JoinHandle<Result<(), Error>> {
+//     eprintln!("start read: {}", file_path.display());
+//     thread::spawn(move || {
+//         let mut res = String::new();
+//         loop {
+//             let mut buf = String::new();
+//             std::fs::OpenOptions::new()
+//                 .read(true)
+//                 .open(&file_path)
+//                 .and_then(|mut f| f.read_to_string(&mut buf))?;
+//             if buf == "__END__" {
+//                 eprintln!("out read done!");
+//                 break;
+//             } else {
+//                 eprintln!("{:?}", buf);
+//                 res.push_str(&buf);
+//                 res.push_str("\n");
+//                 buf.clear();
+//             }
+//         }
+//         send_ch.send(Ok(res)).map_err(anyhow::Error::new)?;
+//         Ok(())
+//     })
+// }
