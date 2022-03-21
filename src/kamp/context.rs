@@ -149,16 +149,14 @@ fn read_out(
     eprintln!("start read: {}", file_path.display());
     thread::spawn(move || {
         let mut buf = String::new();
+        let mut f = std::fs::OpenOptions::new().read(true).open(&file_path)?;
         loop {
-            std::fs::OpenOptions::new()
-                .read(true)
-                .open(&file_path)
-                .and_then(|mut f| f.read_to_string(&mut buf))?;
+            f.read_to_string(&mut buf)?;
             if buf.ends_with(END_TOKEN) {
                 buf = buf.trim_end_matches(END_TOKEN).into();
                 break;
             }
-            eprintln!("out read: {:?}", buf);
+            // eprintln!("out read: {:?}", buf);
         }
         eprintln!("out read done!");
         send_ch.send(Ok(buf)).map_err(anyhow::Error::new)?;
