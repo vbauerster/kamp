@@ -1,7 +1,6 @@
 use crossbeam_channel::Sender;
-use std::borrow::Cow;
 use std::io::prelude::*;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::thread;
 
 use super::error::Error;
@@ -12,20 +11,20 @@ const KAKOUNE_CLIENT: &str = "KAKOUNE_CLIENT";
 const END_TOKEN: &str = "<<END>>";
 
 #[derive(Debug)]
-pub(crate) struct Context<'a> {
+pub(crate) struct Context {
     pub session: String,
     pub client: Option<String>,
-    out_path: Cow<'a, Path>,
+    out_path: PathBuf,
 }
 
-impl Context<'_> {
+impl Context {
     pub fn new(session: String, client: Option<String>) -> Self {
-        let mut path = std::env::temp_dir();
-        path.push(session.clone() + "-kamp");
+        let mut out_path = std::env::temp_dir();
+        out_path.push(session.clone() + "-kamp");
         Context {
             session,
             client,
-            out_path: Cow::from(path),
+            out_path,
         }
     }
     pub fn from_env(client: Option<String>) -> Option<Self> {
@@ -120,7 +119,7 @@ impl Context<'_> {
     }
 }
 
-impl Context<'_> {
+impl Context {
     fn get_out_path(&self, err_out: bool) -> PathBuf {
         if err_out {
             self.out_path.with_extension("err")
