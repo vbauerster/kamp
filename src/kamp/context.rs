@@ -55,7 +55,7 @@ impl Context {
             eprintln!("send: {}", cmd);
 
             let session = self.session.clone();
-            move || kak::pipe(&session, cmd)
+            move || kak::pipe(&session, &cmd)
         });
 
         let (s0, r) = crossbeam_channel::bounded(1);
@@ -82,7 +82,7 @@ impl Context {
             cmd.push_str("}");
             eprintln!("connect: {}", cmd);
             let session = self.session.clone();
-            move || kak::connect(&session, cmd)
+            move || kak::connect(&session, &cmd)
         });
 
         let (s0, r) = crossbeam_channel::bounded(0);
