@@ -64,11 +64,15 @@ impl Context {
         let err_jh = read_err(self.get_out_path(true), s1);
 
         let res = r.recv().map_err(anyhow::Error::new)?;
-        let jh = if res.is_err() { err_jh } else { out_jh };
-        jh.join()
-            .unwrap()
-            .and(kak_jh.join().expect("couldn't join kak thread"))
-            .and(res)
+
+        if res.is_err() {
+            err_jh.join().unwrap()?;
+        } else {
+            out_jh.join().unwrap()?;
+        }
+
+        kak_jh.join().unwrap()?;
+        res
     }
 
     pub fn connect(&self, body: &str) -> Result<(), Error> {
@@ -79,43 +83,33 @@ impl Context {
             cmd.push_str("  echo -debug kamp: %val{error}\n");
             cmd.push_str("  echo -to-file %opt{kamp_err} %val{error}\n");
             cmd.push_str("  quit 1\n");
-            cmd.push_str("}");
+            cmd.push_str("}\n");
+            cmd.push_str("echo -to-file %opt{kamp_out} ");
+            cmd.push_str(END_TOKEN);
+
             eprintln!("connect: {}", cmd);
             let session = self.session.clone();
             move || kak::connect(&session, &cmd)
         });
 
-        let (s0, r) = crossbeam_channel::bounded(0);
+        let (s0, r) = crossbeam_channel::bounded(1);
         let s1 = s0.clone();
         let out_jh = read_out(self.get_out_path(false), s0);
         let err_jh = read_err(self.get_out_path(true), s1);
 
-        for (i, res) in r.iter().enumerate() {
-            match res {
-                Ok(_) => {
-                    std::fs::OpenOptions::new()
-                        .write(true)
-                        .open(self.get_out_path(true))
-                        .and_then(|mut f| f.write_all(b""))?;
-                }
-                Err(e) if i == 0 => {
-                    return err_jh
-                        .join()
-                        .unwrap()
-                        .and(kak_jh.join().expect("couldn't join kak thread"))
-                        .map_err(|_| e);
-                }
-                Err(_) => {
-                    return out_jh
-                        .join()
-                        .unwrap()
-                        .and(err_jh.join().unwrap())
-                        .and(kak_jh.join().expect("couldn't join kak thread"));
-                }
-            }
-        }
+        let res = r.recv().map_err(anyhow::Error::new)?;
 
-        Ok(())
+        if let Err(e) = res {
+            err_jh.join().unwrap()?;
+            kak_jh.join().unwrap().map_err(|_| e)
+        } else {
+            std::fs::OpenOptions::new()
+                .write(true)
+                .open(self.get_out_path(true))
+                .and_then(|mut f| f.write_all(b""))?;
+            out_jh.join().unwrap()?;
+            kak_jh.join().unwrap()
+        }
     }
 }
 
