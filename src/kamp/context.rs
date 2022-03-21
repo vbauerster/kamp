@@ -14,17 +14,17 @@ const END_TOKEN: &str = "<<END>>";
 pub(crate) struct Context {
     pub session: String,
     pub client: Option<String>,
-    out_path: PathBuf,
+    path: PathBuf,
 }
 
 impl Context {
     pub fn new(session: String, client: Option<String>) -> Self {
-        let mut out_path = std::env::temp_dir();
-        out_path.push(session.clone() + "-kamp");
+        let mut path = std::env::temp_dir();
+        path.push(session.clone() + "-kamp");
         Context {
             session,
             client,
-            out_path,
+            path,
         }
     }
     pub fn from_env(client: Option<String>) -> Option<Self> {
@@ -116,9 +116,9 @@ impl Context {
 impl Context {
     fn get_out_path(&self, err_out: bool) -> PathBuf {
         if err_out {
-            self.out_path.with_extension("err")
+            self.path.with_extension("err")
         } else {
-            self.out_path.with_extension("out")
+            self.path.with_extension("out")
         }
     }
 }
