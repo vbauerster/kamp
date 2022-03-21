@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::{ffi::OsStr, io::Write};
 
 use super::error::Error;
 use std::process::{Command, Stdio};
@@ -32,7 +32,7 @@ pub(crate) fn pipe<T: AsRef<[u8]>>(session: &str, cmd: T) -> Result<(), Error> {
     Ok(())
 }
 
-pub(crate) fn connect(session: &str, e_cmd: &str) -> Result<(), Error> {
+pub(crate) fn connect<S: AsRef<OsStr>>(session: &str, e_cmd: S) -> Result<(), Error> {
     let status = Command::new("kak")
         .arg("-c")
         .arg(session)

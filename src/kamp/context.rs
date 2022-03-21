@@ -56,7 +56,7 @@ impl Context<'_> {
             eprintln!("send: {}", cmd);
 
             let session = self.session.clone();
-            move || kak::pipe(&session, &cmd)
+            move || kak::pipe(&session, cmd)
         });
 
         let (s0, r) = crossbeam_channel::bounded(1);
@@ -74,7 +74,6 @@ impl Context<'_> {
 
     pub fn connect(&self, body: &str) -> Result<(), Error> {
         let kak_jh = thread::spawn({
-            let session = self.session.clone();
             let mut cmd = String::from("try %{ eval -try-client '' %{\n");
             cmd.push_str(body);
             cmd.push_str("}} catch %{\n");
@@ -83,7 +82,8 @@ impl Context<'_> {
             cmd.push_str("  quit 1\n");
             cmd.push_str("}");
             eprintln!("connect: {}", cmd);
-            move || kak::connect(&session, &cmd)
+            let session = self.session.clone();
+            move || kak::connect(&session, cmd)
         });
 
         let (s0, r) = crossbeam_channel::bounded(0);
