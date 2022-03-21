@@ -35,7 +35,6 @@ pub(crate) fn edit(ctx: Context, files: Vec<String>) -> Result<(), Error> {
             buf.push_str("\n");
         }
     }
-    buf.push_str("  echo -to-file %opt{kamp_out}\n");
     if ctx.client.is_some() {
         ctx.send(&buf, None).map(|_| ())
     } else {
