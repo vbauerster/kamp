@@ -46,25 +46,6 @@ impl Get {
             }
         }
         buf.push_str("}\n");
-        ctx.send(&buf, to_csv_buffers(buffers))
+        ctx.send(&buf, super::to_csv_buffers(buffers))
     }
-}
-
-fn to_csv_buffers(buffers: Vec<String>) -> Option<String> {
-    let buffers = buffers.into_iter().filter(|s| s != "*").collect::<Vec<_>>();
-    if buffers.is_empty() {
-        return None;
-    }
-    let mut res =
-        buffers
-            .iter()
-            .take(buffers.len() - 1)
-            .fold(String::from("'"), |mut buf, next| {
-                buf.push_str(next);
-                buf.push_str(",");
-                buf
-            });
-    res.push_str(&buffers[buffers.len() - 1]);
-    res.push_str("'");
-    Some(res)
 }
