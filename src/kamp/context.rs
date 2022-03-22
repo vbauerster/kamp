@@ -48,8 +48,8 @@ impl Context {
             cmd.push_str(" %{\n");
             cmd.push_str(body);
             cmd.push_str("}} catch %{\n");
-            cmd.push_str("  echo -debug kamp: %val{error}\n");
-            cmd.push_str("  echo -to-file %opt{kamp_err} %val{error}\n");
+            cmd.push_str("echo -debug kamp: %val{error}\n");
+            cmd.push_str("echo -to-file %opt{kamp_err} %val{error}\n");
             cmd.push_str("}\n");
             cmd.push_str("echo -to-file %opt{kamp_out} ");
             cmd.push_str(END_TOKEN);
@@ -82,9 +82,9 @@ impl Context {
             let mut cmd = String::from("try %{ eval -try-client '' %{\n");
             cmd.push_str(body);
             cmd.push_str("}} catch %{\n");
-            cmd.push_str("  echo -debug kamp: %val{error}\n");
-            cmd.push_str("  echo -to-file %opt{kamp_err} %val{error}\n");
-            cmd.push_str("  quit 1\n");
+            cmd.push_str("echo -debug kamp: %val{error}\n");
+            cmd.push_str("echo -to-file %opt{kamp_err} %val{error}\n");
+            cmd.push_str("quit 1\n");
             cmd.push_str("}\n");
             cmd.push_str("echo -to-file %opt{kamp_out} ");
             cmd.push_str(END_TOKEN);

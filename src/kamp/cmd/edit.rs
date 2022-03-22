@@ -4,7 +4,7 @@ use super::Error;
 pub(crate) fn edit(ctx: Context, files: Vec<String>) -> Result<(), Error> {
     let mut buf = String::new();
     if files.is_empty() {
-        buf.push_str("  edit -scratch\n");
+        buf.push_str("edit -scratch\n");
     } else {
         let names = files.iter().fold(String::new(), |mut buf, item| {
             if !item.starts_with("+") {
@@ -14,7 +14,7 @@ pub(crate) fn edit(ctx: Context, files: Vec<String>) -> Result<(), Error> {
             buf
         });
         for name in names.split("\n").skip_while(|&s| s.is_empty()) {
-            buf.push_str("  edit -existing ");
+            buf.push_str("edit -existing ");
             for (i, item) in name.splitn(2, "+").enumerate() {
                 match i {
                     0 => {

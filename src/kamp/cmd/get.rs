@@ -24,7 +24,7 @@ impl From<GetSubCommand> for Get {
 
 impl Get {
     pub fn run(&self, ctx: Context, quoting: &str, buffers: Vec<String>) -> Result<String, Error> {
-        let mut buf = String::from("  echo -quoting ");
+        let mut buf = String::from("echo -quoting ");
         buf.push_str(quoting);
         buf.push_str(" -to-file %opt{kamp_out} %");
         match self {
