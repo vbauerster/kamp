@@ -63,17 +63,17 @@ pub(crate) struct EditOptions {
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "send")]
 pub(crate) struct SendOptions {
-    /// buffer context
-    #[argh(option, short = 'b', arg_name = "buffer")]
-    pub buffers: Vec<String>,
-
     /// all non debug buffers
     #[argh(switch, short = 'B')]
     pub all_buffers: bool,
 
+    /// buffer context
+    #[argh(option, short = 'b', arg_name = "buffer")]
+    pub buffers: Vec<String>,
+
     /// command to send
     #[argh(positional)]
-    pub command: String,
+    pub command: Vec<String>,
 }
 
 /// get state from a session in context

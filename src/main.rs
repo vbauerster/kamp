@@ -34,7 +34,7 @@ fn main() -> Result<()> {
                 opt.buffers.clear();
                 opt.buffers.push("*".into());
             }
-            cmd::send(ctx?, opt.buffers, &opt.command)?;
+            cmd::send(ctx?, opt.buffers, opt.command)?;
         }
         Get(opt) => {
             let res = cmd::Get::from(opt.subcommand).run(ctx?, opt.raw, opt.buffers)?;
