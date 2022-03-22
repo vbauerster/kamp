@@ -63,7 +63,7 @@ pub(crate) struct EditOptions {
 pub(crate) struct GetOptions {
     /// buffer context
     #[argh(option, short = 'b')]
-    pub buffer: Option<String>,
+    pub buffer: Vec<String>,
 
     /// quoting style (raw|kakoune|shell), default is raw
     #[argh(option, short = 'q', default = r#"String::from("raw")"#)]
