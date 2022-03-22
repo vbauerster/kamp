@@ -21,6 +21,7 @@ pub(super) enum SubCommand {
     Init(InitOptions),
     Attach(AttachOptions),
     Edit(EditOptions),
+    Send(SendOptions),
     Get(GetOptions),
     Ctx(CtxOptions),
 }
@@ -57,13 +58,30 @@ pub(crate) struct EditOptions {
     pub files: Vec<String>,
 }
 
+/// send command to a session in context
+#[derive(FromArgs, PartialEq, Debug)]
+#[argh(subcommand, name = "send")]
+pub(crate) struct SendOptions {
+    /// buffer context
+    #[argh(option, short = 'b', arg_name = "buffer")]
+    pub buffers: Vec<String>,
+
+    /// all non debug buffers
+    #[argh(switch, short = 'B')]
+    pub all_buffers: bool,
+
+    /// command to send
+    #[argh(positional)]
+    pub command: String,
+}
+
 /// get state from a session in context
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "get")]
 pub(crate) struct GetOptions {
     /// buffer context
-    #[argh(option, short = 'b')]
-    pub buffer: Vec<String>,
+    #[argh(option, short = 'b', arg_name = "buffer")]
+    pub buffers: Vec<String>,
 
     /// quoting style (raw|kakoune|shell), default is raw
     #[argh(option, short = 'q', default = r#"String::from("raw")"#)]

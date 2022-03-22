@@ -29,8 +29,15 @@ fn main() -> Result<()> {
                 kamp::proxy(opt.files)?;
             }
         }
+        Send(mut opt) => {
+            if opt.all_buffers {
+                opt.buffers.clear();
+                opt.buffers.push("*".into());
+            }
+            cmd::send(ctx?, opt.buffers, opt.command)?;
+        }
         Get(opt) => {
-            let res = cmd::Get::from(opt.subcommand).run(ctx?, &opt.quoting, opt.buffer)?;
+            let res = cmd::Get::from(opt.subcommand).run(ctx?, &opt.quoting, opt.buffers)?;
             println!("{}", res);
         }
         Ctx(_) => {
