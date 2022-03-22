@@ -45,9 +45,12 @@ impl Context {
                 cmd.push_str(" -client ");
                 cmd.push_str(client);
             }
-            cmd.push_str(" %{\n");
-            cmd.push_str(body);
-            cmd.push_str("}} catch %{\n");
+            cmd.push_str(" %{");
+            if !body.is_empty() {
+                cmd.push_str("\n");
+                cmd.push_str(body);
+            }
+            cmd.push_str("\n}} catch %{\n");
             cmd.push_str("echo -debug kamp: %val{error}\n");
             cmd.push_str("echo -to-file %opt{kamp_err} %val{error}\n");
             cmd.push_str("}\n");
@@ -79,9 +82,12 @@ impl Context {
 
     pub fn connect(&self, body: &str) -> Result<(), Error> {
         let kak_jh = thread::spawn({
-            let mut cmd = String::from("try %{ eval -try-client '' %{\n");
-            cmd.push_str(body);
-            cmd.push_str("}} catch %{\n");
+            let mut cmd = String::from("try %{ eval -try-client '' %{");
+            if !body.is_empty() {
+                cmd.push_str("\n");
+                cmd.push_str(body);
+            }
+            cmd.push_str("\n}} catch %{\n");
             cmd.push_str("echo -debug kamp: %val{error}\n");
             cmd.push_str("echo -to-file %opt{kamp_err} %val{error}\n");
             cmd.push_str("quit 1\n");

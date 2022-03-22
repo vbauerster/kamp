@@ -43,7 +43,7 @@ impl Get {
                 buf.push_str(name);
             }
         }
-        buf.push_str("}\n");
+        buf.push_str("}");
         let res = ctx.send(&buf, super::to_csv_buffers(buffers));
         if raw {
             res
