@@ -150,16 +150,15 @@ fn read_out(
     thread::spawn(move || {
         let mut buf = String::new();
         let mut f = std::fs::OpenOptions::new().read(true).open(&file_path)?;
-        loop {
+        let res = loop {
             f.read_to_string(&mut buf)?;
             if buf.ends_with(END_TOKEN) {
-                buf = buf.trim_end_matches(END_TOKEN).into();
-                break;
+                break buf.trim_end_matches(END_TOKEN);
             }
             // eprintln!("out read: {:?}", buf);
-        }
+        };
         eprintln!("out read done!");
-        send_ch.send(Ok(buf)).map_err(anyhow::Error::new)?;
+        send_ch.send(Ok(res.into())).map_err(anyhow::Error::new)?;
         Ok(())
     })
 }
