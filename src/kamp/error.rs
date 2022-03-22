@@ -9,6 +9,9 @@ pub enum Error {
     #[error("kak eval error: {0}")]
     KakEvalCatch(String),
 
+    #[error("invalid argument: {0}")]
+    InvalidArgument(String),
+
     #[error(transparent)]
     Other(#[from] anyhow::Error), // source and Display delegate to anyhow::Error
 }
