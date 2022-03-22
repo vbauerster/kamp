@@ -8,7 +8,7 @@ use super::kak;
 
 const KAKOUNE_SESSION: &str = "KAKOUNE_SESSION";
 const KAKOUNE_CLIENT: &str = "KAKOUNE_CLIENT";
-const END_TOKEN: &str = "<<END>>";
+const END_TOKEN: &str = "<<EEND>>";
 
 #[derive(Debug)]
 pub(crate) struct Context {
