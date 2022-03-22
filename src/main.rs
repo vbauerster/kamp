@@ -40,6 +40,10 @@ fn main() -> Result<()> {
             let res = cmd::Get::from(opt.subcommand).run(ctx?, &opt.quoting, opt.buffers)?;
             println!("{}", res);
         }
+        Cat(opt) => {
+            let res = cmd::cat(ctx?, opt.buffers)?;
+            print!("{}", res);
+        }
         Ctx(_) => {
             let ctx = ctx?;
             println!("session: {}", ctx.session);

@@ -23,6 +23,7 @@ pub(super) enum SubCommand {
     Edit(EditOptions),
     Send(SendOptions),
     Get(GetOptions),
+    Cat(CatOptions),
     Ctx(CtxOptions),
 }
 
@@ -89,6 +90,15 @@ pub(crate) struct GetOptions {
 
     #[argh(subcommand)]
     pub subcommand: GetSubCommand,
+}
+
+/// print buffer content
+#[derive(FromArgs, PartialEq, Debug)]
+#[argh(subcommand, name = "cat")]
+pub(crate) struct CatOptions {
+    /// buffer context
+    #[argh(option, short = 'b', arg_name = "buffer")]
+    pub buffers: Vec<String>,
 }
 
 #[derive(FromArgs, PartialEq, Debug)]
