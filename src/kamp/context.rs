@@ -27,12 +27,14 @@ impl Context {
             path,
         }
     }
+
     pub fn from_env(client: Option<String>) -> Option<Self> {
         use std::env::var;
         var(KAKOUNE_SESSION)
             .map(|s| Context::new(s, client.or_else(|| var(KAKOUNE_CLIENT).ok())))
             .ok()
     }
+
     pub fn send(&self, body: &str, buffer: Option<String>) -> Result<String, Error> {
         let kak_jh = thread::spawn({
             let mut cmd = String::from("try %{ eval");
