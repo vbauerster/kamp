@@ -5,4 +5,3 @@ mod kak;
 
 pub(super) use context::Context;
 pub(super) use kak::proxy;
-// pub(super) use error::Error;
