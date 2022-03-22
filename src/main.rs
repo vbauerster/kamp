@@ -37,7 +37,7 @@ fn main() -> Result<()> {
             cmd::send(ctx?, opt.buffers, &opt.command)?;
         }
         Get(opt) => {
-            let res = cmd::Get::from(opt.subcommand).run(ctx?, &opt.quoting, opt.buffers)?;
+            let res = cmd::Get::from(opt.subcommand).run(ctx?, opt.raw, opt.buffers)?;
             println!("{}", res);
         }
         Cat(opt) => {

@@ -80,13 +80,13 @@ pub(crate) struct SendOptions {
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "get")]
 pub(crate) struct GetOptions {
+    /// raw output
+    #[argh(switch, short = 'R')]
+    pub raw: bool,
+
     /// buffer context
     #[argh(option, short = 'b', arg_name = "buffer")]
     pub buffers: Vec<String>,
-
-    /// quoting style (raw|kakoune|shell), default is raw
-    #[argh(option, short = 'q', default = r#"String::from("raw")"#)]
-    pub quoting: String,
 
     #[argh(subcommand)]
     pub subcommand: GetSubCommand,
