@@ -1,4 +1,4 @@
-use crate::argv::KeyValue;
+use crate::kamp::argv::KeyValue;
 
 const KAKOUNE_INIT: &str = r#"
 define-command -hidden -override kamp-init %{

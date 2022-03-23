@@ -68,7 +68,9 @@ impl Context {
         let out_jh = read_out(self.get_out_path(false), s0);
         let err_jh = read_err(self.get_out_path(true), s1);
 
-        let res = r.recv().map_err(anyhow::Error::new)?;
+        let res = r
+            .recv()
+            .map_err(|_| Error::InvalidSession(self.session.clone()))?;
 
         if res.is_err() {
             err_jh.join().unwrap()?;
@@ -105,7 +107,9 @@ impl Context {
         let out_jh = read_out(self.get_out_path(false), s0);
         let err_jh = read_err(self.get_out_path(true), s1);
 
-        let res = r.recv().map_err(anyhow::Error::new)?;
+        let res = r
+            .recv()
+            .map_err(|_| Error::InvalidSession(self.session.clone()))?;
 
         if let Err(e) = res {
             err_jh.join().unwrap()?;

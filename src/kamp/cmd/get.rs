@@ -1,4 +1,4 @@
-use crate::argv::GetSubCommand;
+use crate::kamp::argv::GetSubCommand;
 
 use super::Context;
 use super::Error;
@@ -49,20 +49,14 @@ impl Get {
             res
         } else {
             res.map(|s| {
-                let filtered = s
-                    .split("'")
-                    .filter(|&s| !s.trim().is_empty())
-                    .collect::<Vec<_>>();
-                let mut res = filtered.iter().take(filtered.len() - 1).fold(
+                s.split("'").filter(|&s| !s.trim().is_empty()).fold(
                     String::new(),
                     |mut buf, next| {
                         buf.push_str(next);
                         buf.push_str("\n");
                         buf
                     },
-                );
-                res.push_str(&filtered[filtered.len() - 1]);
-                res
+                )
             })
         }
     }

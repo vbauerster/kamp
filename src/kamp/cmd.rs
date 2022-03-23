@@ -5,15 +5,15 @@ mod get;
 mod init;
 mod send;
 
-use super::context::Context;
-use super::error::Error;
+use super::Context;
+use super::Error;
 
-pub(crate) use attach::attach;
-pub(crate) use cat::cat;
-pub(crate) use edit::edit;
-pub(crate) use get::Get;
-pub(crate) use init::init;
-pub(crate) use send::send;
+pub(super) use attach::attach;
+pub(super) use cat::cat;
+pub(super) use edit::edit;
+pub(super) use get::Get;
+pub(super) use init::init;
+pub(super) use send::send;
 
 fn to_csv_buffers(buffers: Vec<String>) -> Option<String> {
     if buffers.is_empty() {
