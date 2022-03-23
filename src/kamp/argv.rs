@@ -63,10 +63,6 @@ pub(crate) struct EditOptions {
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "send")]
 pub(crate) struct SendOptions {
-    /// all non debug buffers
-    #[argh(switch, short = 'B')]
-    pub all_buffers: bool,
-
     /// buffer context
     #[argh(option, short = 'b', arg_name = "buffer")]
     pub buffers: Vec<String>,

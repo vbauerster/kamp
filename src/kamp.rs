@@ -28,13 +28,7 @@ pub(super) fn run() -> Result<Option<String>, Error> {
                 kak::proxy(opt.files).map(|_| None)
             }
         }
-        Send(mut opt) => {
-            if opt.all_buffers {
-                opt.buffers.clear();
-                opt.buffers.push("*".into());
-            }
-            cmd::send(ctx?, opt.buffers, opt.command).map(|_| None)
-        }
+        Send(opt) => cmd::send(ctx?, opt.buffers, opt.command).map(|_| None),
         Get(opt) => cmd::Get::from(opt.subcommand)
             .run(ctx?, opt.raw, opt.buffers)
             .map(Some),
