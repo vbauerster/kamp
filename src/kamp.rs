@@ -39,12 +39,6 @@ pub(super) fn run() -> Result<Option<String>, Error> {
             .run(ctx?, opt.raw, opt.buffers)
             .map(Some),
         Cat(opt) => cmd::cat(ctx?, opt.buffers).map(Some),
-        Ctx(_) => ctx.map(|ctx| {
-            use std::fmt::Write;
-            let mut buf = String::new();
-            writeln!(&mut buf, "session: {}", ctx.session).unwrap();
-            writeln!(&mut buf, "client: {}", ctx.client.unwrap_or_default()).unwrap();
-            Some(buf)
-        }),
+        Ctx(_) => cmd::ctx(ctx?).map(Some),
     }
 }

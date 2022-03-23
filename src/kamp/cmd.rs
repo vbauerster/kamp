@@ -1,5 +1,6 @@
 mod attach;
 mod cat;
+mod ctx;
 mod edit;
 mod get;
 mod init;
@@ -10,6 +11,7 @@ use super::Error;
 
 pub(super) use attach::attach;
 pub(super) use cat::cat;
+pub(super) use ctx::ctx;
 pub(super) use edit::edit;
 pub(super) use get::Get;
 pub(super) use init::init;
