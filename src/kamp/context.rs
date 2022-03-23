@@ -57,8 +57,6 @@ impl Context {
             cmd.push_str("echo -to-file %opt{kamp_out} ");
             cmd.push_str(END_TOKEN);
 
-            eprintln!("send: {}", cmd);
-
             let session = self.session.clone();
             move || kak::pipe(&session, &cmd)
         });
@@ -97,7 +95,6 @@ impl Context {
             cmd.push_str("echo -to-file %opt{kamp_out} ");
             cmd.push_str(END_TOKEN);
 
-            eprintln!("connect: {}", cmd);
             let session = self.session.clone();
             move || kak::connect(&session, &cmd)
         });
@@ -139,14 +136,12 @@ fn read_err(
     file_path: PathBuf,
     send_ch: Sender<Result<String, Error>>,
 ) -> thread::JoinHandle<Result<(), Error>> {
-    eprintln!("start read: {}", file_path.display());
     thread::spawn(move || {
         let mut buf = String::new();
         std::fs::OpenOptions::new()
             .read(true)
             .open(&file_path)
             .and_then(|mut f| f.read_to_string(&mut buf))?;
-        eprintln!("err read done!");
         send_ch
             .send(Err(Error::KakEvalCatch(buf)))
             .map_err(anyhow::Error::new)?;
@@ -158,7 +153,6 @@ fn read_out(
     file_path: PathBuf,
     send_ch: Sender<Result<String, Error>>,
 ) -> thread::JoinHandle<Result<(), Error>> {
-    eprintln!("start read: {}", file_path.display());
     thread::spawn(move || {
         let mut buf = String::new();
         let mut f = std::fs::OpenOptions::new().read(true).open(&file_path)?;
@@ -167,9 +161,7 @@ fn read_out(
             if buf.ends_with(END_TOKEN) {
                 break buf.trim_end_matches(END_TOKEN);
             }
-            // eprintln!("out read: {:?}", buf);
         };
-        eprintln!("out read done!");
         send_ch.send(Ok(res.into())).map_err(anyhow::Error::new)?;
         Ok(())
     })
