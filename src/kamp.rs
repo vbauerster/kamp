@@ -19,10 +19,7 @@ pub(super) fn run() -> Result<Option<String>, Error> {
         .ok_or_else(|| Error::NoSession);
 
     match kampliment.subcommand {
-        Init(opt) => {
-            cmd::init(opt.export, opt.alias);
-            Ok(None)
-        }
+        Init(opt) => cmd::init(opt.export, opt.alias).map(Some),
         Attach(_) => cmd::attach(ctx?).map(|_| None),
         Edit(opt) => {
             if let Ok(ctx) = ctx {

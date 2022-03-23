@@ -12,13 +12,14 @@ pub enum Error {
     #[error("invalid argument: {0}")]
     InvalidArgument(String),
 
-    // #[error("invalid session")]
-    // InvalidSession(#[from] crossbeam_channel::RecvError),
     #[error("invalid session: {0}")]
     InvalidSession(String),
 
     #[error(transparent)]
     IOError(#[from] std::io::Error),
+
+    #[error(transparent)]
+    FmtError(#[from] std::fmt::Error),
 
     #[error(transparent)]
     Other(#[from] anyhow::Error), // source and Display delegate to anyhow::Error

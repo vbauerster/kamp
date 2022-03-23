@@ -1,4 +1,6 @@
+use super::Error;
 use crate::kamp::argv::KeyValue;
+use std::fmt::Write;
 
 const KAKOUNE_INIT: &str = r#"
 define-command -hidden -override kamp-init %{
@@ -20,7 +22,7 @@ define-command -hidden -override kamp-end %{
 hook global KakBegin .* kamp-init
 hook global KakEnd .* kamp-end"#;
 
-pub(crate) fn init(export: Vec<KeyValue>, alias: bool) {
+pub(crate) fn init(export: Vec<KeyValue>, alias: bool) -> Result<String, Error> {
     let user_exports = export.into_iter().fold(String::new(), |mut buf, next| {
         buf.push_str("export ");
         buf.push_str(&next.key);
@@ -31,8 +33,10 @@ pub(crate) fn init(export: Vec<KeyValue>, alias: bool) {
         buf
     });
 
+    let mut buf = String::new();
+
     #[rustfmt::skip]
-    println!(r#"define-command -override kamp-connect -params 1.. -command-completion %{{
+    writeln!(&mut buf, r#"define-command -override kamp-connect -params 1.. -command-completion %{{
     %arg{{1}} sh -c %{{
         {}export KAKOUNE_SESSION="$1"
         export KAKOUNE_CLIENT="$2"
@@ -42,11 +46,13 @@ pub(crate) fn init(export: Vec<KeyValue>, alias: bool) {
 
         "$@"
     }} -- %val{{session}} %val{{client}} %arg{{@}}
-}} -docstring 'run Kakoune command in connected context'"#, user_exports);
+}} -docstring 'run Kakoune command in connected context'"#, user_exports)?;
 
-    println!("{}", KAKOUNE_INIT);
+    writeln!(&mut buf, "{}", KAKOUNE_INIT)?;
 
     if alias {
-        println!("alias global connect kamp-connect");
+        writeln!(&mut buf, "alias global connect kamp-connect")?;
     }
+
+    Ok(buf)
 }
