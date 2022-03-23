@@ -18,3 +18,6 @@ anyhow = "1.0.56"
 argh = "0.1.7"
 crossbeam-channel = "0.5.4"
 thiserror = "1.0.30"
+
+[profile.release]
+lto = true
