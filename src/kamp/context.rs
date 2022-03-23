@@ -48,14 +48,18 @@ impl Context {
             cmd.push_str(" %{");
             if !body.is_empty() {
                 cmd.push_str("\n");
+                if body.starts_with("kill") {
+                    // allow kamp to exit early, because after kill commands aren't executed
+                    write_end_token(&mut cmd);
+                    cmd.push_str("\n");
+                }
                 cmd.push_str(body);
             }
             cmd.push_str("\n}} catch %{\n");
             cmd.push_str("echo -debug kamp: %val{error}\n");
             cmd.push_str("echo -to-file %opt{kamp_err} %val{error}\n");
             cmd.push_str("}\n");
-            cmd.push_str("echo -to-file %opt{kamp_out} ");
-            cmd.push_str(END_TOKEN);
+            write_end_token(&mut cmd);
 
             let session = self.session.clone();
             move || kak::pipe(&session, &cmd)
@@ -92,8 +96,7 @@ impl Context {
             cmd.push_str("echo -to-file %opt{kamp_err} %val{error}\n");
             cmd.push_str("quit 1\n");
             cmd.push_str("}\n");
-            cmd.push_str("echo -to-file %opt{kamp_out} ");
-            cmd.push_str(END_TOKEN);
+            write_end_token(&mut cmd);
 
             let session = self.session.clone();
             move || kak::connect(&session, &cmd)
@@ -165,4 +168,9 @@ fn read_out(
         send_ch.send(Ok(res.into())).map_err(anyhow::Error::new)?;
         Ok(())
     })
+}
+
+fn write_end_token(buf: &mut String) {
+    buf.push_str("echo -to-file %opt{kamp_out} ");
+    buf.push_str(END_TOKEN);
 }
