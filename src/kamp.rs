@@ -29,6 +29,7 @@ pub(super) fn run() -> Result<Option<String>, Error> {
             }
         }
         Send(opt) => cmd::send(ctx?, opt.command, Some(opt.buffers)).map(|_| None),
+        List(_) => cmd::list().map(Some),
         Get(opt) => cmd::Get::from(opt.subcommand)
             .run(ctx?, opt.raw, Some(opt.buffers))
             .map(Some),

@@ -22,6 +22,7 @@ pub(super) enum SubCommand {
     Attach(AttachOptions),
     Edit(EditOptions),
     Send(SendOptions),
+    List(ListOptions),
     Get(GetOptions),
     Cat(CatOptions),
     Ctx(CtxOptions),
@@ -49,6 +50,11 @@ pub(crate) struct CtxOptions {}
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "attach")]
 pub(crate) struct AttachOptions {}
+
+/// list sessions
+#[derive(FromArgs, PartialEq, Debug)]
+#[argh(subcommand, name = "list")]
+pub(crate) struct ListOptions {}
 
 /// edit a file
 #[derive(FromArgs, PartialEq, Debug)]

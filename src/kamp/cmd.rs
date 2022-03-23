@@ -4,6 +4,7 @@ mod ctx;
 mod edit;
 mod get;
 mod init;
+mod list;
 mod send;
 
 use super::Context;
@@ -15,6 +16,7 @@ pub(super) use ctx::ctx;
 pub(super) use edit::edit;
 pub(super) use get::Get;
 pub(super) use init::init;
+pub(super) use list::list;
 pub(super) use send::send;
 
 fn to_csv_buffers(buffers: Vec<String>) -> Option<String> {
