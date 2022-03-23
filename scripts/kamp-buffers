@@ -1,0 +1,23 @@
+#!/bin/sh
+#
+# pick buffers
+#
+# requires:
+# - fzf (https://github.com/junegunn/fzf)
+# - bat (change to your liking) (https://github.com/sharkdp/bat)
+
+preview_cmd="bat --color=always --line-range=:500 --file-name {}"
+
+if [ "$1" = "nodebug" ]; then
+	buffers_cmd="kamp get -b '*' val bufname"
+else
+	buffers_cmd="kamp get val buflist"
+fi
+
+eval $buffers_cmd |
+	fzf --height 100% --prompt 'buf> ' --preview "kamp cat -b {} | $preview_cmd" \
+		--header="[c-x] delete" \
+		--bind="ctrl-x:execute-silent(kamp send -b {} delete-buffer)+reload($buffers_cmd)" |
+	while read -r name; do
+		kamp send "buffer '$name'"
+	done
