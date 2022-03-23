@@ -23,7 +23,12 @@ impl From<GetSubCommand> for Get {
 }
 
 impl Get {
-    pub fn run(&self, ctx: Context, raw: bool, buffers: Vec<String>) -> Result<String, Error> {
+    pub fn run(
+        &self,
+        ctx: Context,
+        raw: bool,
+        buffers: Option<Vec<String>>,
+    ) -> Result<String, Error> {
         let mut buf = String::from("echo -quoting kakoune -to-file %opt{kamp_out} %");
         match self {
             Get::Val(name) => {
@@ -44,7 +49,7 @@ impl Get {
             }
         }
         buf.push_str("}");
-        let res = ctx.send(&buf, super::to_csv_buffers(buffers));
+        let res = ctx.send(&buf, buffers.map(super::to_csv_buffers).flatten());
         if raw {
             res
         } else {

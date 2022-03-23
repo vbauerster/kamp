@@ -1,7 +1,11 @@
 use super::Context;
 use super::Error;
 
-pub(crate) fn send(ctx: Context, buffers: Vec<String>, cmd: Vec<String>) -> Result<(), Error> {
+pub(crate) fn send(
+    ctx: Context,
+    cmd: Vec<String>,
+    buffers: Option<Vec<String>>,
+) -> Result<(), Error> {
     if cmd.is_empty() {
         return Err(Error::InvalidArgument("some command is expected".into()));
     }
@@ -10,5 +14,6 @@ pub(crate) fn send(ctx: Context, buffers: Vec<String>, cmd: Vec<String>) -> Resu
         buf.push_str(" ");
         buf
     });
-    ctx.send(&cmd, super::to_csv_buffers(buffers)).map(|_| ())
+    ctx.send(&cmd, buffers.map(super::to_csv_buffers).flatten())
+        .map(|_| ())
 }

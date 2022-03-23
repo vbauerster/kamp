@@ -28,11 +28,11 @@ pub(super) fn run() -> Result<Option<String>, Error> {
                 kak::proxy(opt.files).map(|_| None)
             }
         }
-        Send(opt) => cmd::send(ctx?, opt.buffers, opt.command).map(|_| None),
+        Send(opt) => cmd::send(ctx?, opt.command, Some(opt.buffers)).map(|_| None),
         Get(opt) => cmd::Get::from(opt.subcommand)
-            .run(ctx?, opt.raw, opt.buffers)
+            .run(ctx?, opt.raw, Some(opt.buffers))
             .map(Some),
-        Cat(opt) => cmd::cat(ctx?, opt.buffers).map(Some),
+        Cat(opt) => cmd::cat(ctx?, Some(opt.buffers)).map(Some),
         Ctx(_) => cmd::ctx(ctx?).map(Some),
     }
 }
