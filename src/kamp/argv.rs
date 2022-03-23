@@ -83,7 +83,7 @@ pub(crate) struct SendOptions {
 #[argh(subcommand, name = "get")]
 pub(crate) struct GetOptions {
     /// raw output
-    #[argh(switch, short = 'R')]
+    #[argh(switch, short = 'r')]
     pub raw: bool,
 
     /// buffer context
