@@ -9,9 +9,6 @@ pub enum Error {
     #[error("kak eval error: {0}")]
     KakEvalCatch(String),
 
-    #[error("invalid argument: {0}")]
-    InvalidArgument(String),
-
     #[error("invalid session: {0}")]
     InvalidSession(String),
 

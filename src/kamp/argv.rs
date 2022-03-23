@@ -75,7 +75,7 @@ pub(crate) struct SendOptions {
 
     /// command to send
     #[argh(positional)]
-    pub command: Vec<String>,
+    pub command: String,
 }
 
 /// get state from a session in context
