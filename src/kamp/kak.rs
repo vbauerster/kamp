@@ -1,6 +1,6 @@
 use std::{ffi::OsStr, io::Write};
 
-use super::error::Error;
+use super::Error;
 use std::process::{Command, Stdio};
 
 pub(crate) fn pipe<S, T>(session: S, cmd: T) -> Result<(), Error>
