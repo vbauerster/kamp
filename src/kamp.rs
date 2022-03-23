@@ -9,16 +9,16 @@ use context::Context;
 use error::Error;
 
 pub(super) fn run() -> Result<Option<String>, Error> {
-    let kampliment: Kampliment = argh::from_env();
-    let mut client = kampliment.client;
+    let kamp: Kampliment = argh::from_env();
+    let mut client = kamp.client;
 
-    let ctx = kampliment
+    let ctx = kamp
         .session
         .map(|s| Context::new(s, client.take()))
         .or_else(|| Context::from_env(client.take()))
         .ok_or_else(|| Error::NoSession);
 
-    match kampliment.subcommand {
+    match kamp.subcommand {
         Init(opt) => cmd::init(opt.export, opt.alias).map(Some),
         Attach(_) => cmd::attach(ctx?).map(|_| None),
         Edit(opt) => {
