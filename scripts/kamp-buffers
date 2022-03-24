@@ -9,15 +9,15 @@
 preview_cmd="bat --color=always --line-range=:500 --file-name {}"
 
 if [ "$1" = "nodebug" ]; then
-	buffers_cmd="kamp get -b '*' val bufname"
+    buffers_cmd="kamp get -b '*' val bufname"
 else
-	buffers_cmd="kamp get val buflist"
+    buffers_cmd="kamp get val buflist"
 fi
 
 eval $buffers_cmd |
-	fzf --height 100% --prompt 'buf> ' --preview "kamp cat -b {} | $preview_cmd" \
-		--header="[c-x] delete" \
-		--bind="ctrl-x:execute-silent(kamp send -b {} delete-buffer)+reload($buffers_cmd)" |
-	while read -r name; do
-		kamp send "buffer '$name'"
-	done
+    fzf --height 100% --prompt 'buf> ' --preview "kamp cat -b {} | $preview_cmd" \
+        --header="[c-x] delete" \
+        --bind="ctrl-x:execute-silent(kamp send -b {} delete-buffer)+reload($buffers_cmd)" |
+    while read -r name; do
+        kamp send "buffer '$name'"
+    done
