@@ -25,11 +25,16 @@ impl From<GetSubCommand> for Get {
 impl Get {
     pub fn run(
         &self,
-        ctx: Context,
-        raw: bool,
+        ctx: &Context,
+        rawness: u8,
         buffers: Option<Vec<String>>,
     ) -> Result<String, Error> {
-        let mut buf = String::from("echo -quoting kakoune -to-file %opt{kamp_out} %");
+        let mut buf = String::from("echo -quoting ");
+        match rawness {
+            0 | 1 => buf.push_str("kakoune"),
+            _ => buf.push_str("raw"),
+        }
+        buf.push_str(" -to-file %opt{kamp_out} %");
         match self {
             Get::Val(name) => {
                 buf.push_str("val{");
@@ -50,7 +55,7 @@ impl Get {
         }
         buf.push_str("}");
         let res = ctx.send(&buf, buffers.map(super::to_csv_buffers).flatten());
-        if raw {
+        if rawness != 0 {
             res
         } else {
             res.map(|s| {
