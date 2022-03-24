@@ -49,7 +49,11 @@ pub(crate) struct CtxOptions {}
 /// attach to a session in context
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "attach")]
-pub(crate) struct AttachOptions {}
+pub(crate) struct AttachOptions {
+    /// switch to buffer
+    #[argh(option, short = 'b')]
+    pub buffer: Option<String>,
+}
 
 /// list sessions
 #[derive(FromArgs, PartialEq, Debug)]

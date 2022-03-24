@@ -20,7 +20,7 @@ pub(super) fn run() -> Result<Option<String>, Error> {
 
     match kamp.subcommand {
         Init(opt) => cmd::init(opt.export, opt.alias).map(Some),
-        Attach(_) => cmd::attach(&ctx?).map(|_| None),
+        Attach(opt) => cmd::attach(&ctx?, opt.buffer).map(|_| None),
         Edit(opt) => {
             if let Ok(ctx) = ctx {
                 cmd::edit(&ctx, opt.files).map(|_| None)
