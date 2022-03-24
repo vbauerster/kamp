@@ -7,8 +7,51 @@ use std::fmt::Write;
 #[allow(unused)]
 #[derive(Debug)]
 struct Session {
-    session: String,
-    clients: Vec<String>,
+    name: String,
+    clients: Vec<Client>,
+}
+
+impl Session {
+    fn new(name: String, clients: Vec<Client>) -> Self {
+        Session { name, clients }
+    }
+}
+
+#[allow(unused)]
+#[derive(Debug)]
+struct Client {
+    name: String,
+    buffile: String,
+}
+
+impl Client {
+    fn new(name: String, buffile: String) -> Self {
+        Client { name, buffile }
+    }
+}
+
+fn get_sessions() -> Result<Vec<Session>, Error> {
+    kak::sessions()?
+        .iter()
+        .map(|session| Context::new(String::from(session), None))
+        .map(|mut ctx| {
+            let session = ctx.session.clone();
+            Get::Val(String::from("client_list"))
+                .run(&ctx, 0, None)
+                .and_then(|clients| {
+                    let res = clients
+                        .lines()
+                        .map(|name| {
+                            ctx.client = Some(String::from(name));
+                            Get::Val(String::from("buffile"))
+                                .run(&ctx, 2, None)
+                                .map(|bf| Client::new(ctx.client.take().unwrap(), String::from(bf)))
+                        })
+                        .collect::<Result<Vec<_>, Error>>();
+                    res.map(|clients| Session::new(session, clients))
+                })
+        })
+        .collect()
 }
 
 pub(crate) fn list() -> Result<String, Error> {
@@ -17,20 +60,4 @@ pub(crate) fn list() -> Result<String, Error> {
         writeln!(&mut buf, "{:#?}", session)?;
     }
     Ok(buf)
-}
-
-fn get_sessions() -> Result<Vec<Session>, Error> {
-    kak::sessions()?
-        .iter()
-        .map(|session| Context::new(String::from(session), None))
-        .map(|ctx| {
-            let session = ctx.session.clone();
-            Get::Val(String::from("client_list"))
-                .run(ctx, false, None)
-                .map(|clients| Session {
-                    session: session,
-                    clients: clients.lines().map(String::from).collect(),
-                })
-        })
-        .collect()
 }
