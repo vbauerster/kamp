@@ -1,3 +1,7 @@
+use std::fmt::Write;
+use std::fs::canonicalize;
+use std::path::PathBuf;
+
 use super::Context;
 use super::Error;
 
@@ -18,9 +22,8 @@ pub(crate) fn edit(ctx: &Context, files: Vec<String>) -> Result<(), Error> {
             for (i, item) in name.splitn(2, "+").enumerate() {
                 match i {
                     0 => {
-                        buf.push_str("'");
-                        buf.push_str(item);
-                        buf.push_str("'");
+                        let p = canonicalize(item).unwrap_or_else(|_| PathBuf::from(item));
+                        write!(&mut buf, "'{}'", p.display())?;
                     }
                     1 => item
                         .splitn(2, ":")
