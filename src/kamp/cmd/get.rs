@@ -23,12 +23,7 @@ impl From<GetSubCommand> for Get {
 }
 
 impl Get {
-    pub fn run(
-        &self,
-        ctx: &Context,
-        rawness: u8,
-        buffers: Option<Vec<String>>,
-    ) -> Result<String, Error> {
+    pub fn run(&self, ctx: &Context, rawness: u8, buffer: Option<String>) -> Result<String, Error> {
         let mut buf = String::from("echo -quoting ");
         match rawness {
             0 | 1 => buf.push_str("kakoune"),
@@ -54,7 +49,7 @@ impl Get {
             }
         }
         buf.push_str("}");
-        let res = ctx.send(&buf, buffers.map(super::to_csv_buffers).flatten());
+        let res = ctx.send(&buf, buffer);
         if rawness != 0 {
             res
         } else {

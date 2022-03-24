@@ -28,12 +28,34 @@ pub(super) fn run() -> Result<Option<String>, Error> {
                 kak::proxy(opt.files).map(|_| None)
             }
         }
-        Send(opt) => cmd::send(&ctx?, &opt.command, Some(opt.buffers)).map(|_| None),
+        Send(opt) => cmd::send(&ctx?, &opt.command, to_csv_buffers(opt.buffers)).map(|_| None),
         List(_) => cmd::list().map(Some),
         Get(opt) => cmd::Get::from(opt.subcommand)
-            .run(&ctx?, opt.raw, Some(opt.buffers))
+            .run(&ctx?, opt.raw, to_csv_buffers(opt.buffers))
             .map(Some),
-        Cat(opt) => cmd::cat(&ctx?, Some(opt.buffers)).map(Some),
+        Cat(opt) => cmd::cat(&ctx?, to_csv_buffers(opt.buffers)).map(Some),
         Ctx(_) => cmd::ctx(&ctx?).map(Some),
     }
+}
+
+fn to_csv_buffers(buffers: Vec<String>) -> Option<String> {
+    if buffers.is_empty() {
+        return None;
+    }
+    if buffers[0] == "*" {
+        return Some("*".into());
+    }
+    let buffers = buffers.into_iter().filter(|s| s != "*").collect::<Vec<_>>();
+    let mut res =
+        buffers
+            .iter()
+            .take(buffers.len() - 1)
+            .fold(String::from("'"), |mut buf, next| {
+                buf.push_str(next);
+                buf.push_str(",");
+                buf
+            });
+    res.push_str(&buffers[buffers.len() - 1]);
+    res.push_str("'");
+    Some(res)
 }
