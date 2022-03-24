@@ -17,6 +17,17 @@ pub(crate) struct Context {
     path: PathBuf,
 }
 
+impl std::fmt::Display for Context {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "session: {}\nclient: {}",
+            self.session,
+            self.client.as_deref().unwrap_or_default()
+        )
+    }
+}
+
 impl Context {
     pub fn new(session: String, client: Option<String>) -> Self {
         let mut path = std::env::temp_dir();

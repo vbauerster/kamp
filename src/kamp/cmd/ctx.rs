@@ -4,11 +4,6 @@ use std::fmt::Write;
 
 pub(crate) fn ctx(ctx: &Context) -> Result<String, Error> {
     let mut buf = String::new();
-    writeln!(&mut buf, "session: {}", ctx.session)?;
-    writeln!(
-        &mut buf,
-        "client: {}",
-        ctx.client.as_deref().unwrap_or_default()
-    )?;
+    writeln!(&mut buf, "{}", ctx)?;
     Ok(buf)
 }
