@@ -35,6 +35,7 @@ pub(super) fn run() -> Result<Option<String>, Error> {
             .map(Some),
         Cat(opt) => cmd::cat(&ctx?, to_csv_buffers(opt.buffers)).map(Some),
         Ctx(_) => cmd::ctx(&ctx?).map(Some),
+        Version(_) => cmd::version().map(Some),
     }
 }
 
