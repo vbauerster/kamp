@@ -20,20 +20,20 @@ pub(super) fn run() -> Result<Option<String>, Error> {
 
     match kamp.subcommand {
         Init(opt) => cmd::init(opt.export, opt.alias).map(Some),
-        Attach(_) => cmd::attach(ctx?).map(|_| None),
+        Attach(_) => cmd::attach(&ctx?).map(|_| None),
         Edit(opt) => {
             if let Ok(ctx) = ctx {
-                cmd::edit(ctx, opt.files).map(|_| None)
+                cmd::edit(&ctx, opt.files).map(|_| None)
             } else {
                 kak::proxy(opt.files).map(|_| None)
             }
         }
-        Send(opt) => cmd::send(ctx?, &opt.command, Some(opt.buffers)).map(|_| None),
+        Send(opt) => cmd::send(&ctx?, &opt.command, Some(opt.buffers)).map(|_| None),
         List(_) => cmd::list().map(Some),
         Get(opt) => cmd::Get::from(opt.subcommand)
             .run(&ctx?, opt.raw, Some(opt.buffers))
             .map(Some),
-        Cat(opt) => cmd::cat(ctx?, Some(opt.buffers)).map(Some),
-        Ctx(_) => cmd::ctx(ctx?).map(Some),
+        Cat(opt) => cmd::cat(&ctx?, Some(opt.buffers)).map(Some),
+        Ctx(_) => cmd::ctx(&ctx?).map(Some),
     }
 }

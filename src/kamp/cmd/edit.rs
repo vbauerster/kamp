@@ -1,7 +1,7 @@
 use super::Context;
 use super::Error;
 
-pub(crate) fn edit(ctx: Context, files: Vec<String>) -> Result<(), Error> {
+pub(crate) fn edit(ctx: &Context, files: Vec<String>) -> Result<(), Error> {
     let mut buf = String::new();
     if files.is_empty() {
         buf.push_str("edit -scratch");
