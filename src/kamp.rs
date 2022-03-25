@@ -23,7 +23,7 @@ pub(super) fn run() -> Result<Option<String>, Error> {
         Attach(opt) => cmd::attach(&ctx?, opt.buffer).map(|_| None),
         Edit(opt) => {
             if let Ok(ctx) = ctx {
-                cmd::edit(&ctx, opt.files).map(|_| None)
+                cmd::edit(&ctx, opt.file, opt.coordinates).map(|_| None)
             } else {
                 kak::proxy(opt.files).map(|_| None)
             }

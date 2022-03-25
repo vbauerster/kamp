@@ -9,6 +9,9 @@ pub enum Error {
     #[error("invalid context: either client or buffer is required")]
     InvalidContext,
 
+    #[error("invalid coordinates")]
+    InvalidCoordinates { source: std::num::ParseIntError },
+
     #[error("kak exited with error: {0}")]
     KakProcess(std::process::ExitStatus),
 
