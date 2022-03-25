@@ -1,0 +1,21 @@
+#!/bin/sh
+#
+# attach session and pick buffer
+#
+# requires:
+# - fzf (https://github.com/junegunn/fzf)
+# - bat (change to your liking) (https://github.com/sharkdp/bat)
+
+preview_cmd="bat --color=always --line-range=:500 --file-name {}"
+
+kak -l |
+    fzf --height 100% --prompt 'session> ' --preview "kamp -s {} list" \
+        --header="[c-x] kill" \
+        --bind="ctrl-x:execute-silent(kamp -s {} send kill)+reload(kak -l)" |
+    while read -r session; do
+        kamp -s "$session" get -b '*' val buffile |
+            fzf --height 100% --prompt 'buffer> ' --preview "kamp -s $session cat -b {} | $preview_cmd" |
+            while read -r name; do
+                kamp -s "$session" attach -b "$name"
+            done
+    done

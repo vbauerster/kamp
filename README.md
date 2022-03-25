@@ -49,10 +49,11 @@ alias kbd='cd "${"$(kval buffile)"%/*}"'
 
 ## Provided scripts
 
-| script                                 | function     |
-| -------------------------------------- | ------------ |
-| [`kamp-buffers`](scripts/kamp-buffers) | pick buffers |
-| [`kamp-files`](scripts/kamp-files)     | pick files   |
+| script                                   | function                       |
+| ---------------------------------------- | ------------------------------ |
+| [`kamp-buffers`](scripts/kamp-buffers)   | pick buffers                   |
+| [`kamp-files`](scripts/kamp-files)       | pick files                     |
+| [`kamp-sessions`](scripts/kamp-sessions) | attach session and pick buffer |
 
 ## Similar projects
 
