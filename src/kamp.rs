@@ -30,7 +30,13 @@ pub(super) fn run() -> Result<Option<String>, Error> {
             }
         }
         Send(opt) => cmd::send(&ctx?, &opt.command, to_csv_buffers(opt.buffers)).map(|_| None),
-        List(_) => cmd::list().map(Some),
+        List(opt) => {
+            if opt.all {
+                cmd::list_all(ctx.ok()).map(Some)
+            } else {
+                cmd::list(&mut ctx?).map(Some)
+            }
+        }
         Get(opt) => cmd::Get::from(opt.subcommand)
             .run(&ctx?, opt.raw, to_csv_buffers(opt.buffers))
             .map(Some),

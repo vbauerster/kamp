@@ -30,34 +30,63 @@ impl Client {
     }
 }
 
-fn get_sessions() -> Result<Vec<Session>, Error> {
+fn get_all_sessions() -> Result<Vec<Session>, Error> {
     kak::sessions()?
         .iter()
-        .map(|session| Context::new(String::from(session), None))
-        .map(|mut ctx| {
-            let session = ctx.session.clone();
-            Get::Val(String::from("client_list"))
-                .run(&ctx, 0, None)
-                .and_then(|clients| {
-                    let res = clients
-                        .lines()
-                        .map(|name| {
-                            ctx.client = Some(String::from(name));
-                            Get::Val(String::from("buffile"))
-                                .run(&ctx, 2, None)
-                                .map(|bf| Client::new(ctx.client.take().unwrap(), String::from(bf)))
-                        })
-                        .collect::<Result<Vec<_>, Error>>();
-                    res.map(|clients| Session::new(session, clients))
-                })
+        .map(|session| {
+            let mut ctx = Context::new(String::from(session), None);
+            get_ctx_session(&mut ctx)
         })
         .collect()
 }
 
-pub(crate) fn list() -> Result<String, Error> {
+fn get_all_sessions_but(session: &str) -> Result<Vec<Session>, Error> {
+    kak::sessions()?
+        .iter()
+        .filter(|&s| s != session)
+        .map(|session| {
+            let mut ctx = Context::new(String::from(session), None);
+            get_ctx_session(&mut ctx)
+        })
+        .collect()
+}
+
+fn get_ctx_session(ctx: &mut Context) -> Result<Session, Error> {
+    Get::Val(String::from("client_list"))
+        .run(&ctx, 0, None)
+        .and_then(|clients| {
+            let res = clients
+                .lines()
+                .map(|name| {
+                    ctx.client = Some(String::from(name));
+                    Get::Val(String::from("buffile"))
+                        .run(&ctx, 2, None)
+                        .map(|bf| Client::new(ctx.client.take().unwrap(), String::from(bf)))
+                })
+                .collect::<Result<Vec<_>, Error>>();
+            res.map(|clients| Session::new(ctx.session.clone(), clients))
+        })
+}
+
+pub(crate) fn list_all(ctx: Option<Context>) -> Result<String, Error> {
     let mut buf = String::new();
-    for session in get_sessions()? {
-        writeln!(&mut buf, "{:#?}", session)?;
+    if let Some(mut ctx) = ctx {
+        for session in get_all_sessions_but(&ctx.session)? {
+            writeln!(&mut buf, "{:#?}", session)?;
+        }
+        let current = list(&mut ctx)?;
+        buf.push_str(&current);
+    } else {
+        for session in get_all_sessions()? {
+            writeln!(&mut buf, "{:#?}", session)?;
+        }
     }
+    Ok(buf)
+}
+
+pub(crate) fn list(ctx: &mut Context) -> Result<String, Error> {
+    let mut buf = String::new();
+    let session = get_ctx_session(ctx)?;
+    writeln!(&mut buf, "{:#?}", session)?;
     Ok(buf)
 }

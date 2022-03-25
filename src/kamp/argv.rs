@@ -64,7 +64,11 @@ pub(crate) struct AttachOptions {
 /// list sessions
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "list")]
-pub(crate) struct ListOptions {}
+pub(crate) struct ListOptions {
+    /// switch to buffer
+    #[argh(switch, short = 'a')]
+    pub all: bool,
+}
 
 /// edit a file
 #[derive(FromArgs, PartialEq, Debug)]

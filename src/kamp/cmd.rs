@@ -17,6 +17,6 @@ pub(super) use ctx::ctx;
 pub(super) use edit::edit;
 pub(super) use get::Get;
 pub(super) use init::init;
-pub(super) use list::list;
+pub(super) use list::*;
 pub(super) use send::send;
 pub(super) use version::version;
