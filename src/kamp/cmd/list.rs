@@ -30,20 +30,13 @@ impl Client {
     }
 }
 
-fn get_all_sessions() -> Result<Vec<Session>, Error> {
+fn get_sessions<P>(predicate: P) -> Result<Vec<Session>, Error>
+where
+    P: FnMut(&&str) -> bool,
+{
     kak::sessions()?
         .iter()
-        .map(|session| {
-            let mut ctx = Context::new(String::from(session), None);
-            get_ctx_session(&mut ctx)
-        })
-        .collect()
-}
-
-fn get_all_sessions_but(session: &str) -> Result<Vec<Session>, Error> {
-    kak::sessions()?
-        .iter()
-        .filter(|&s| s != session)
+        .filter(predicate)
         .map(|session| {
             let mut ctx = Context::new(String::from(session), None);
             get_ctx_session(&mut ctx)
@@ -71,13 +64,13 @@ fn get_ctx_session(ctx: &mut Context) -> Result<Session, Error> {
 pub(crate) fn list_all(ctx: Option<Context>) -> Result<String, Error> {
     let mut buf = String::new();
     if let Some(mut ctx) = ctx {
-        for session in get_all_sessions_but(&ctx.session)? {
+        for session in get_sessions(|&s| s != &ctx.session)? {
             writeln!(&mut buf, "{:#?}", session)?;
         }
         let current = list(&mut ctx)?;
         buf.push_str(&current);
     } else {
-        for session in get_all_sessions()? {
+        for session in get_sessions(|_| true)? {
             writeln!(&mut buf, "{:#?}", session)?;
         }
     }
