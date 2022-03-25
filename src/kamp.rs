@@ -25,7 +25,8 @@ pub(super) fn run() -> Result<Option<String>, Error> {
             if let Ok(ctx) = ctx {
                 cmd::edit(&ctx, opt.file, opt.coordinates).map(|_| None)
             } else {
-                kak::proxy(opt.files).map(|_| None)
+                let args = vec![opt.file, opt.coordinates.unwrap_or_default()];
+                kak::proxy(args).map(|_| None)
             }
         }
         Send(opt) => cmd::send(&ctx?, &opt.command, to_csv_buffers(opt.buffers)).map(|_| None),
