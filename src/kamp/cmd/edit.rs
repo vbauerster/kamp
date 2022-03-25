@@ -1,22 +1,28 @@
 use std::fmt::Write;
 use std::fs::canonicalize;
+use std::num::ParseIntError;
 use std::path::PathBuf;
 
 use super::Context;
 use super::Error;
 
-pub(crate) fn edit(ctx: &Context, file: String, coordinates: Option<String>) -> Result<(), Error> {
-    let mut buf = String::from("edit -existing ");
-    let p = canonicalize(&file).unwrap_or_else(|_| PathBuf::from(&file));
-    write!(&mut buf, "'{}'", p.display())?;
-    let res = coordinates.as_deref().and_then(parse);
-    if let Some(res) = res {
-        let v = res.map_err(|source| Error::InvalidCoordinates { source })?;
-        for coord in v {
-            write!(&mut buf, " {}", coord)?;
+type ParseResult<T> = Result<T, ParseIntError>;
+
+pub(crate) fn edit(ctx: &Context, file: String, coord: Option<String>) -> Result<(), Error> {
+    let mut buf = String::from("edit ");
+    let (file, coord) = check_both(file, coord);
+    if file.starts_with('+') {
+        buf.push_str("-scratch");
+    } else {
+        let p = canonicalize(&file).unwrap_or_else(|_| PathBuf::from(&file));
+        write!(&mut buf, "-existing '{}'", p.display())?;
+        if let Some(coord) = coord {
+            let v = coord.map_err(|source| Error::InvalidCoordinates { source })?;
+            for coord in v {
+                write!(&mut buf, " {}", coord)?;
+            }
         }
     }
-    // eprintln!("edit: {:?}", buf);
     if ctx.client.is_some() {
         ctx.send(&buf, None).map(|_| ())
     } else {
@@ -24,16 +30,80 @@ pub(crate) fn edit(ctx: &Context, file: String, coordinates: Option<String>) -> 
     }
 }
 
-type ParseResult<T> = Result<T, std::num::ParseIntError>;
+fn check_both(file: String, coord: Option<String>) -> (String, Option<ParseResult<Vec<i32>>>) {
+    let res = coord.as_deref().and_then(parse);
+    if res.is_none() && coord.is_some() {
+        return check_both(coord.unwrap(), Some(file));
+    }
+    (file, res)
+}
 
-fn parse(coordinates: &str) -> Option<ParseResult<Vec<i32>>> {
-    if !coordinates.starts_with('+') {
+fn parse(coord: &str) -> Option<ParseResult<Vec<i32>>> {
+    if !coord.starts_with('+') {
         return None;
     }
-    // parsing '+n' is ok so no need to slice &coordinates[1..]
-    let res = coordinates
+    // parsing first value as '+n' so '+:<n>' will fail
+    let res = coord
         .splitn(2, ':')
+        .take_while(|&s| !s.is_empty())
         .map(|s| s.parse())
         .collect::<ParseResult<Vec<_>>>();
     Some(res)
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn check_both_coord_none() {
+        assert_eq!(
+            (String::from("file"), None),
+            check_both(String::from("file"), None)
+        );
+    }
+
+    #[test]
+    fn check_both_invalid_coord_full() {
+        let (_, coord) = check_both(String::new(), Some(String::from("+a:b")));
+        assert!(coord.unwrap().is_err());
+    }
+
+    #[test]
+    fn check_both_invalid_coord_line() {
+        let (_, coord) = check_both(String::new(), Some(String::from("+a:4")));
+        assert!(coord.unwrap().is_err());
+    }
+
+    #[test]
+    fn check_both_invalid_coord_col() {
+        let (_, coord) = check_both(String::new(), Some(String::from("+12:a")));
+        assert!(coord.unwrap().is_err());
+    }
+
+    #[test]
+    fn check_both_coord_full() {
+        let (_, coord) = check_both(String::new(), Some(String::from("+12:4")));
+        assert_eq!(Some(Ok(vec![12, 4])), coord);
+    }
+
+    #[test]
+    fn check_both_coord_line() {
+        let (_, coord) = check_both(String::new(), Some(String::from("+12")));
+        assert_eq!(Some(Ok(vec![12])), coord);
+    }
+
+    #[test]
+    fn check_both_coord_line_with_ending_colon() {
+        let (_, coord) = check_both(String::new(), Some(String::from("+12:")));
+        assert_eq!(Some(Ok(vec![12])), coord);
+    }
+
+    #[test]
+    fn check_both_coord_full_reversed() {
+        let expected_file = "file";
+        let (file, coord) = check_both(String::from("+12:4"), Some(String::from(expected_file)));
+        assert_eq!(expected_file, file.as_str());
+        assert_eq!(Some(Ok(vec![12, 4])), coord);
+    }
 }
