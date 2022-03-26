@@ -45,7 +45,7 @@ fn parse(coord: &str) -> Option<ParseResult<Vec<i32>>> {
     // parsing first value as '+n' so '+:<n>' will fail
     let res = coord
         .splitn(2, ':')
-        .take_while(|&s| !s.is_empty())
+        .take_while(|&s| !s.is_empty()) // make sure '+n:' is valid
         .map(|s| s.parse())
         .collect::<ParseResult<Vec<_>>>();
     Some(res)
