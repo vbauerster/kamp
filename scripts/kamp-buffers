@@ -5,19 +5,27 @@
 # requires:
 # - fzf (https://github.com/junegunn/fzf)
 # - bat (change to your liking) (https://github.com/sharkdp/bat)
+#
+# optional param: $1 = session
+# optional param: $2 = action_xxx
 
-preview_cmd="bat --color=always --line-range=:500 --file-name {}"
+session="${1:-$KAKOUNE_SESSION}"
+buffers_cmd="kamp -s $session get -b \* val bufname"
+preview_cmd="kamp -s $session cat -b {} | bat --color=always --line-range=:500 --file-name {}"
+delete_cmd="kamp -s $session send -b {} delete-buffer"
 
-if [ "$1" = "nodebug" ]; then
-    buffers_cmd="kamp get -b '*' val bufname"
-else
-    buffers_cmd="kamp get val buflist"
-fi
+action_send() {
+    kamp -s "$1" -c "${KAKOUNE_CLIENT:-client0}" send "buffer '$2'"
+}
+
+action_attach() {
+    kamp -s "$1" attach -b "$2"
+}
 
 eval $buffers_cmd |
-    fzf --height 100% --prompt 'buf> ' --preview "kamp cat -b {} | $preview_cmd" \
+    fzf --height 100% --prompt 'buf> ' --preview "$preview_cmd" \
         --header="[c-x] delete" \
-        --bind="ctrl-x:execute-silent(kamp send -b {} delete-buffer)+reload($buffers_cmd)" |
-    while read -r name; do
-        kamp send "buffer '$name'"
+        --bind="ctrl-x:execute-silent($delete_cmd)+reload($buffers_cmd)" |
+    while read -r bufname; do
+        "${2:-action_send}" "$session" "$bufname"
     done
