@@ -7,7 +7,7 @@
 # - fzf (https://github.com/junegunn/fzf)
 # - bat (change to your liking) (https://github.com/sharkdp/bat)
 
-preview_cmd="bat --color=always --line-range=:500 {}"
+preview_cmd='bat --color=always --line-range=:500 {}'
 
 fd --type file . "$@" |
     fzf --multi --prompt 'files> ' --preview "$preview_cmd" |

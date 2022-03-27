@@ -6,13 +6,13 @@
 # - fzf (https://github.com/junegunn/fzf)
 # - kamp-buffers
 
-sessions_cmd="kak -l"
-preview_cmd="kamp -s {} list"
-kill_cmd="kamp -s {} send kill"
+sessions_cmd='kak -l'
+preview_cmd='kamp -s {} list'
+kill_cmd='kamp -s {} send kill'
 
 eval $sessions_cmd |
     fzf --prompt 'session> ' --preview "$preview_cmd" \
-        --header="[c-x] kill" \
+        --header='[c-x] kill' \
         --bind="ctrl-x:execute-silent($kill_cmd)+reload($sessions_cmd)" |
     while read -r session; do
         kamp-buffers attach "$session"

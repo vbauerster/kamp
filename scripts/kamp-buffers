@@ -24,7 +24,7 @@ attach() {
 
 eval $buffers_cmd |
     fzf --prompt 'buf> ' --preview "$preview_cmd" \
-        --header="[c-x] delete" \
+        --header='[c-x] delete' \
         --bind="ctrl-x:execute-silent($delete_cmd)+reload($buffers_cmd)" |
     while read -r bufname; do
         "${1:-send}" "$session" "$bufname"
