@@ -104,7 +104,8 @@ pub(crate) struct GetOptions {
     #[argh(switch, short = 'r')]
     pub raw: u8,
 
-    /// buffer context
+    /// buffer context, repeat for several buffers
+    /// or * for all non-debug buffers
     #[argh(option, short = 'b', arg_name = "buffer")]
     pub buffers: Vec<String>,
 
