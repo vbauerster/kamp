@@ -10,7 +10,7 @@
 preview_cmd="bat --color=always --line-range=:500 {}"
 
 fd --type file . "$@" |
-    fzf --multi --height 100% --prompt 'files> ' --preview "$preview_cmd" |
+    fzf --multi --prompt 'files> ' --preview "$preview_cmd" |
     while read -r file; do
         kamp edit "$file"
     done
