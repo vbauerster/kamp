@@ -50,11 +50,11 @@ alias kft='kamp get -b \* opt filetype | sort | uniq' # list file types you're w
 
 ## Provided scripts
 
-| script                                   | function                       |
-| ---------------------------------------- | ------------------------------ |
-| [`kamp-buffers`](scripts/kamp-buffers)   | pick buffers                   |
-| [`kamp-files`](scripts/kamp-files)       | pick files                     |
-| [`kamp-sessions`](scripts/kamp-sessions) | attach session and pick buffer |
+| script                                   | function                         |
+| ---------------------------------------- | -------------------------------- |
+| [`kamp-buffers`](scripts/kamp-buffers)   | pick buffers                     |
+| [`kamp-files`](scripts/kamp-files)       | pick files                       |
+| [`kamp-sessions`](scripts/kamp-sessions) | attach session and pick a buffer |
 
 ## Similar projects
 
