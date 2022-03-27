@@ -15,5 +15,5 @@ eval $sessions_cmd |
         --header="[c-x] kill" \
         --bind="ctrl-x:execute-silent($kill_cmd)+reload($sessions_cmd)" |
     while read -r session; do
-        kamp-buffers "$session" action_attach
+        kamp-buffers attach "$session"
     done
