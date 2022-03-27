@@ -54,6 +54,7 @@ alias kft='kamp get -b \* opt filetype | sort | uniq' # list file types you're w
 | ---------------------------------------- | -------------------------------- |
 | [`kamp-buffers`](scripts/kamp-buffers)   | pick buffers                     |
 | [`kamp-files`](scripts/kamp-files)       | pick files                       |
+| [`kamp-gitls`](scripts/kamp-gitls)       | pick from `git ls-files`         |
 | [`kamp-sessions`](scripts/kamp-sessions) | attach session and pick a buffer |
 
 ## Similar projects
