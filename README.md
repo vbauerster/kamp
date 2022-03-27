@@ -39,12 +39,12 @@ export EDITOR='kamp edit'
 Some useful aliases:
 
 ```sh
-alias k="kamp edit"
+alias k='kamp edit'
 alias kval='kamp get val'
 alias kopt='kamp get opt'
 alias kreg='kamp get reg'
-alias kwd="cd $(kamp get sh pwd)"
-alias kbd='cd "${"$(kval buffile)"%/*}"'
+alias kcd-pwd='cd $(kamp get sh pwd)'
+alias kcd-buf='cd "$(dirname $(kamp get val buffile))"'
 alias kft='kamp get -b \* opt filetype | sort | uniq' # list file types you're working on
 ```
 
