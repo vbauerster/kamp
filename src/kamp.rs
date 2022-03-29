@@ -16,7 +16,7 @@ pub(super) fn run() -> Result<Option<String>, Error> {
         .session
         .map(|s| Context::new(s, client.take()))
         .or_else(|| Context::from_env(client.take()))
-        .ok_or_else(|| Error::NoSession);
+        .ok_or(Error::NoSession);
 
     match kamp.subcommand {
         Init(opt) => cmd::init(opt.export, opt.alias).map(Some),
