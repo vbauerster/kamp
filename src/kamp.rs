@@ -60,10 +60,10 @@ fn to_csv_buffers(buffers: Vec<String>) -> Option<String> {
             .take(buffers.len() - 1)
             .fold(String::from("'"), |mut buf, next| {
                 buf.push_str(next);
-                buf.push_str(",");
+                buf.push(',');
                 buf
             });
     res.push_str(&buffers[buffers.len() - 1]);
-    res.push_str("'");
+    res.push('\'');
     Some(res)
 }

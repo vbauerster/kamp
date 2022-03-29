@@ -58,11 +58,11 @@ impl Context {
             }
             cmd.push_str(" %{");
             if !body.is_empty() {
-                cmd.push_str("\n");
+                cmd.push('\n');
                 if body.starts_with("kill") {
                     // allow kamp to exit early, because after kill commands aren't executed
                     write_end_token(&mut cmd);
-                    cmd.push_str("\n");
+                    cmd.push('\n');
                 }
                 cmd.push_str(body);
             }
@@ -99,7 +99,7 @@ impl Context {
         let kak_jh = thread::spawn({
             let mut cmd = String::from("try %{ eval -try-client '' %{");
             if !body.is_empty() {
-                cmd.push_str("\n");
+                cmd.push('\n');
                 cmd.push_str(body);
             }
             cmd.push_str("\n}} catch %{\n");

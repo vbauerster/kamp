@@ -48,17 +48,17 @@ impl Get {
                 buf.push_str(name);
             }
         }
-        buf.push_str("}");
+        buf.push('}');
         let res = ctx.send(&buf, buffer);
         if rawness != 0 {
             res
         } else {
             res.map(|s| {
-                s.split("'").filter(|&s| !s.trim().is_empty()).fold(
+                s.split('\'').filter(|&s| !s.trim().is_empty()).fold(
                     String::new(),
                     |mut buf, next| {
                         buf.push_str(next);
-                        buf.push_str("\n");
+                        buf.push('\n');
                         buf
                     },
                 )
