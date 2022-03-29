@@ -18,10 +18,7 @@ where
         Some(stdin) => stdin,
         None => {
             use std::io::{Error, ErrorKind};
-            Err(Error::new(
-                ErrorKind::Other,
-                "cannot capture stdin of kak process",
-            ))?
+            return Err(Error::new(ErrorKind::Other, "cannot capture stdin of kak process").into());
         }
     };
 
