@@ -54,7 +54,7 @@ fn get_ctx_session(ctx: &mut Context) -> Result<Session, Error> {
                     ctx.client = Some(String::from(name));
                     Get::Val(String::from("buffile"))
                         .run(ctx, 2, None)
-                        .map(|bf| Client::new(ctx.client.take().unwrap(), String::from(bf)))
+                        .map(|bf| Client::new(ctx.client.take().unwrap(), bf))
                 })
                 .collect::<Result<Vec<_>, Error>>();
             res.map(|clients| Session::new(ctx.session.clone(), clients))
