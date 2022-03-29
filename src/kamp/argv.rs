@@ -177,7 +177,7 @@ impl FromArgValue for KeyValue {
     fn from_arg_value(value: &str) -> Result<Self, String> {
         value
             .split_once('=')
-            .ok_or("invalid KEY=VALUE pair".into())
+            .ok_or_else(|| "invalid KEY=VALUE pair".into())
             .and_then(|kv| {
                 if kv.0.is_empty() || kv.0.contains(' ') {
                     Err("invalid key format".into())
