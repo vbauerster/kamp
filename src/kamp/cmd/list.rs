@@ -46,14 +46,14 @@ where
 
 fn get_ctx_session(ctx: &mut Context) -> Result<Session, Error> {
     Get::Val(String::from("client_list"))
-        .run(&ctx, 0, None)
+        .run(ctx, 0, None)
         .and_then(|clients| {
             let res = clients
                 .lines()
                 .map(|name| {
                     ctx.client = Some(String::from(name));
                     Get::Val(String::from("buffile"))
-                        .run(&ctx, 2, None)
+                        .run(ctx, 2, None)
                         .map(|bf| Client::new(ctx.client.take().unwrap(), String::from(bf)))
                 })
                 .collect::<Result<Vec<_>, Error>>();
