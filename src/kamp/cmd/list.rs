@@ -64,7 +64,7 @@ fn get_ctx_session(ctx: &mut Context) -> Result<Session, Error> {
 pub(crate) fn list_all(ctx: Option<Context>) -> Result<String, Error> {
     let mut buf = String::new();
     if let Some(mut ctx) = ctx {
-        for session in get_sessions(|&s| s != &ctx.session)? {
+        for session in get_sessions(|&s| s != ctx.session)? {
             writeln!(&mut buf, "{:#?}", session)?;
         }
         let current = list(&mut ctx)?;
