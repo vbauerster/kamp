@@ -19,10 +19,10 @@ pub enum Error {
     KakEvalCatch(String),
 
     #[error(transparent)]
-    IOError(#[from] std::io::Error),
+    IO(#[from] std::io::Error),
 
     #[error(transparent)]
-    FmtError(#[from] std::fmt::Error),
+    Fmt(#[from] std::fmt::Error),
 
     #[error(transparent)]
     Other(#[from] anyhow::Error), // source and Display delegate to anyhow::Error
