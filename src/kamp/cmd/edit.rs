@@ -32,8 +32,10 @@ pub(crate) fn edit(ctx: &Context, file: String, coord: Option<String>) -> Result
 
 fn check_both(file: String, coord: Option<String>) -> (String, Option<ParseResult<Vec<i32>>>) {
     let res = coord.as_deref().and_then(parse);
-    if res.is_none() && coord.is_some() {
-        return check_both(coord.unwrap(), Some(file));
+    if res.is_none() {
+        if let Some(coord) = coord {
+            return check_both(coord, Some(file));
+        }
     }
     (file, res)
 }
