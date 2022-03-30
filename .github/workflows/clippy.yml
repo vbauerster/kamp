@@ -1,0 +1,21 @@
+name: clippy
+
+on:
+  push:
+    branches:
+      - master
+    tags-ignore:
+      - v[0-9]+.*
+
+jobs:
+  check:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+      - run: rustup component add clippy
+      - uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-features
