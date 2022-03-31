@@ -26,10 +26,11 @@ The [scripts](scripts) need to be added to `$PATH` in order use them
 
 | script                                   | function                         |
 | ---------------------------------------- | -------------------------------- |
-| [`kamp-buffers`](scripts/kamp-buffers)   | pick buffers                     |
-| [`kamp-files`](scripts/kamp-files)       | pick files                       |
-| [`kamp-gitls`](scripts/kamp-gitls)       | pick from `git ls-files`         |
+| [`kamp-buffers`](scripts/kamp-buffers)   | pick buffers (fzf)               |
+| [`kamp-files`](scripts/kamp-files)       | pick files (fzf)                 |
+| [`kamp-gitls`](scripts/kamp-gitls)       | pick from `git ls-files` (fzf)   |
 | [`kamp-sessions`](scripts/kamp-sessions) | attach session and pick a buffer |
+| [`kamp-grep`](scripts/kamp-grep)         | grep interactively with fzf      |
 
 ### Kakoune mappings example
 
@@ -37,6 +38,7 @@ The [scripts](scripts) need to be added to `$PATH` in order use them
 map global normal -docstring 'terminal' <c-t> ': connect terminal<ret>'
 map global normal -docstring 'files'    <c-f> ': connect terminal-popup kamp-files<ret>'
 map global normal -docstring 'buffers'  <c-b> ': connect terminal-popup kamp-buffers<ret>'
+map global normal -docstring 'grep'     <c-g> ': connect terminal-popup kamp-grep<ret>'
 ```
 
 ## Shell integration
