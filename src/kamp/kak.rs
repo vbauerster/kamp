@@ -69,11 +69,7 @@ pub(crate) fn sessions() -> Result<Sessions, Error> {
 }
 
 pub(crate) fn proxy(args: Vec<String>) -> Result<(), Error> {
-    let status = Command::new("kak").args(args).status()?;
-
-    if !status.success() {
-        return Err(Error::KakProcess(status));
-    }
-
-    Ok(())
+    use std::os::unix::prelude::CommandExt;
+    let err = Command::new("kak").args(args).exec();
+    Err(err.into())
 }
