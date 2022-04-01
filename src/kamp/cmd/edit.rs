@@ -32,7 +32,7 @@ pub(crate) fn edit(ctx: &Context, file: String, coord: Option<String>) -> Result
 
 fn check_both(file: String, coord: Option<String>) -> (String, Option<ParseResult<Vec<i32>>>) {
     let res = coord.as_deref().and_then(parse);
-    if res.is_none() {
+    if res.is_none() && file.starts_with('+') {
         if let Some(coord) = coord {
             return check_both(coord, Some(file));
         }
@@ -56,6 +56,14 @@ fn parse(coord: &str) -> Option<ParseResult<Vec<i32>>> {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn check_both_valid_file_and_some_not_valid_coord() {
+        assert_eq!(
+            (String::from("file1"), None),
+            check_both(String::from("file1"), Some(String::from("file2")))
+        );
+    }
 
     #[test]
     fn check_both_coord_none() {
