@@ -75,12 +75,8 @@ pub(crate) struct ListOptions {
 #[argh(subcommand, name = "edit")]
 pub(crate) struct EditOptions {
     /// path to file
-    #[argh(positional)]
-    pub file: String,
-
-    /// optional coordinates
-    #[argh(positional, arg_name = "+<line>[:<col>]")]
-    pub coordinates: Option<String>,
+    #[argh(positional, arg_name = "file")]
+    pub files: Vec<String>,
 }
 
 /// send command to a session in context

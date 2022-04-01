@@ -23,10 +23,9 @@ pub(super) fn run() -> Result<Option<String>, Error> {
         Attach(opt) => cmd::attach(&ctx?, opt.buffer).map(|_| None),
         Edit(opt) => {
             if let Ok(ctx) = ctx {
-                cmd::edit(&ctx, opt.file, opt.coordinates).map(|_| None)
+                cmd::edit(&ctx, opt.files).map(|_| None)
             } else {
-                let args = vec![opt.file, opt.coordinates.unwrap_or_default()];
-                kak::proxy(args).map(|_| None)
+                kak::proxy(opt.files).map(|_| None)
             }
         }
         Send(opt) => cmd::send(&ctx?, &opt.command, to_csv_buffers(opt.buffers)).map(|_| None),
