@@ -35,10 +35,11 @@ The [scripts](scripts) need to be added to `$PATH` in order to use them.
 ### Kakoune mappings example
 
 ```kak
-map global normal -docstring 'terminal' <c-t> ': connect terminal<ret>'
-map global normal -docstring 'files'    <c-f> ': connect terminal-popup kamp-files<ret>'
-map global normal -docstring 'buffers'  <c-b> ': connect terminal-popup kamp-buffers<ret>'
-map global normal -docstring 'grep'     <c-g> ': connect terminal-popup kamp-grep<ret>'
+map global normal -docstring 'terminal'      <c-t> ': connect terminal<ret>'
+map global normal -docstring 'files'         <c-f> ': connect terminal-popup kamp-files<ret>'
+map global normal -docstring 'buffers'       <c-b> ': connect terminal-popup kamp-buffers<ret>'
+map global normal -docstring 'grep all'      <c-g> ': connect terminal-popup kamp-grep<ret>'
+map global normal -docstring 'grep filetype' <a-g> ': connect terminal-popup kamp-grep -t %opt{filetype}<ret>'
 ```
 
 ## Shell integration
