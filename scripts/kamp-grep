@@ -30,7 +30,7 @@ fzf \
               --color=always \
               --column \
               --with-filename \
-              --fixed-strings -- {q} "$@" || true \
+              --fixed-strings "$@" -- {q} || true
           ),enter:execute(
             kamp edit {1} +{2}:{3}
           )+abort' \
