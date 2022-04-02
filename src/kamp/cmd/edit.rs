@@ -34,7 +34,7 @@ pub(crate) fn edit(ctx: &Context, mut files: Vec<String>) -> Result<(), Error> {
     files.extend(tmp.into_iter().rev());
     for file in &files {
         let p = std::fs::canonicalize(file).unwrap_or_else(|_| PathBuf::from(file));
-        writeln!(buf, "edit -existing '{}'", p.display())?;
+        writeln!(&mut buf, "edit -existing '{}'", p.display())?;
     }
     buf.pop();
     buf.push_str(&append_buf);
