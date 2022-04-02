@@ -56,28 +56,24 @@ jobs:
       id: package
       shell: bash
       run: |
-        PKG_suffix=".tar.gz"
-        PKG_BASENAME=${PROJECT_NAME}-v${PROJECT_VERSION}-${{ matrix.target }}
-        PKG_NAME=${PKG_BASENAME}${PKG_suffix}
+        PKG_BASENAME="${PROJECT_NAME}-v${PROJECT_VERSION}-${{ matrix.target }}"
+        PKG_NAME="${PKG_BASENAME}.tar.gz"
 
-        PKG_STAGING="${{ env.INTERMEDIATES_DIR }}/package"
-        ARCHIVE_DIR="${PKG_STAGING}/${PKG_BASENAME}/"
-        mkdir -p "${ARCHIVE_DIR}"
+        ARCHIVE_DIR="$INTERMEDIATES_DIR/$PKG_BASENAME/"
+        mkdir -p "$ARCHIVE_DIR"
 
         # Binary
-        cp "target/${{ matrix.target }}/release/${PROJECT_NAME}" "$ARCHIVE_DIR"
+        cp "target/${{ matrix.target }}/release/$PROJECT_NAME" "$ARCHIVE_DIR"
 
         # README, LICENSE and CHANGELOG files
         cp "README.md" "UNLICENSE" "$ARCHIVE_DIR"
 
         # base compressed package
-        pushd "${PKG_STAGING}/" >/dev/null
-        tar -czf "${PKG_NAME}" "${PKG_BASENAME}"/*
-        popd >/dev/null
+        tar -C "$ARCHIVE_DIR" -czf "$INTERMEDIATES_DIR/$PKG_NAME" .
 
         # Let subsequent steps know where to find the compressed package
-        echo ::set-output name=PKG_NAME::${PKG_NAME}
-        echo ::set-output name=PKG_PATH::"${PKG_STAGING}/${PKG_NAME}"
+        echo ::set-output name=PKG_NAME::"$PKG_NAME"
+        echo ::set-output name=PKG_PATH::"$INTERMEDIATES_DIR/$PKG_NAME"
 
     - uses: actions/upload-artifact@v3
       with:
