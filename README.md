@@ -8,7 +8,7 @@ Kampliment is a tool to control [Kakoune](https://github.com/mawww/kakoune) edit
 
 Requires [Rust](https://www.rust-lang.org) installed on your system.
 
-Clone the repository and run `cargo install`
+Clone the repository and run `cargo install --path .`
 
 ## Kakoune integration
 
@@ -19,6 +19,17 @@ evaluate-commands %sh{
     kamp init -a -e EDITOR='kamp edit'
 }
 ```
+
+## Provided scripts
+
+The [scripts](scripts) need to be added to `$PATH` in order use them
+
+| script                                   | function                         |
+| ---------------------------------------- | -------------------------------- |
+| [`kamp-buffers`](scripts/kamp-buffers)   | pick buffers                     |
+| [`kamp-files`](scripts/kamp-files)       | pick files                       |
+| [`kamp-gitls`](scripts/kamp-gitls)       | pick from `git ls-files`         |
+| [`kamp-sessions`](scripts/kamp-sessions) | attach session and pick a buffer |
 
 ### Kakoune mappings example
 
@@ -47,15 +58,6 @@ alias kcd-pwd='cd "$(kamp get sh pwd)"'
 alias kcd-buf='cd "$(dirname $(kamp get val buffile))"'
 alias kft='kamp get -b \* opt filetype | sort | uniq' # list file types you're working on
 ```
-
-## Provided scripts
-
-| script                                   | function                         |
-| ---------------------------------------- | -------------------------------- |
-| [`kamp-buffers`](scripts/kamp-buffers)   | pick buffers                     |
-| [`kamp-files`](scripts/kamp-files)       | pick files                       |
-| [`kamp-gitls`](scripts/kamp-gitls)       | pick from `git ls-files`         |
-| [`kamp-sessions`](scripts/kamp-sessions) | attach session and pick a buffer |
 
 ## Similar projects
 
