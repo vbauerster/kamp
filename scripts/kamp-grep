@@ -23,9 +23,9 @@ fzf \
   --delimiter ':' \
   --ansi \
   --bind 'change:reload(
-            while read path;
-              do set -- "$@" "$path";
-            done < "$PATHS_PATH";
+            while read path; do
+              set -- "$@" "$path"
+            done < "$PATHS_PATH"
             rg \
               --color=always \
               --column \
@@ -34,7 +34,9 @@ fzf \
           ),enter:execute(
             kamp edit {1} +{2}:{3}
           )+abort' \
-  --preview 'highlight_line={2}; line_range_begin=$((highlight_line - (FZF_PREVIEW_LINES / 2))); \
+  --preview '
+      highlight_line={2}
+      line_range_begin=$((highlight_line - (FZF_PREVIEW_LINES / 2)))
       bat \
         --style=numbers \
         --color=always \
