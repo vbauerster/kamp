@@ -34,14 +34,11 @@ fzf \
           ),enter:execute(
             kamp edit {1} +{2}:{3}
           )+abort' \
-  --preview '
-      highlight_line={2} \
-      line_range_begin=$((line = highlight_line - (FZF_PREVIEW_LINES / 4) && line < 1 ? 1 : line)) \
-      line_range_end=$((line_range_begin + FZF_PREVIEW_LINES)) \
-      && bat \
+  --preview 'highlight_line={2}; line_range_begin=$((highlight_line - (FZF_PREVIEW_LINES / 2))); \
+      bat \
         --style=numbers \
         --color=always \
-        --line-range "$line_range_begin:$line_range_end" \
+        --line-range "$((line_range_begin < 0 ? 1 : line_range_begin)):+$FZF_PREVIEW_LINES" \
         --highlight-line {2} {1} 2> /dev/null' \
   --header='Select a file to open' \
   --prompt='(g)>'
