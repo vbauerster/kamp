@@ -22,7 +22,7 @@ evaluate-commands %sh{
 
 ## Provided scripts
 
-The [scripts](scripts) need to be added to `$PATH` in order use them
+The [scripts](scripts) need to be added to `$PATH` in order to use them.
 
 | script                                   | function                         |
 | ---------------------------------------- | -------------------------------- |
