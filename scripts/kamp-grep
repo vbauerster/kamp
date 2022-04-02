@@ -4,36 +4,24 @@
 #
 # Usage:
 #
-# kamp-grep [paths]
+# kamp-grep [options]
 
 # – fzf (https://github.com/junegunn/fzf)
+# https://github.com/junegunn/fzf/blob/master/CHANGELOG.md#0190
+
 # – ripgrep (https://github.com/BurntSushi/ripgrep)
+# 'rg --no-heading --with-filename' are default when not printing to a terminal
+# 'rg --column' implies --line-number
 
-# Not pretty but robust.
-# https://github.com/junegunn/fzf/issues/2581
-export PATHS_PATH=$(mktemp)
-trap 'rm "$PATHS_PATH"' EXIT
-for path do
-  echo "$path" >> "$PATHS_PATH"
-done
+# $@ is meant to pass extra options to rg, not a query and not a path
+rg_cmd="rg --color=always --column --fixed-strings $@"
 
-SHELL=sh \
+FZF_DEFAULT_COMMAND="$rg_cmd || true" \
 fzf \
   --phony \
   --delimiter ':' \
   --ansi \
-  --bind 'change:reload(
-            while read path; do
-              set -- "$@" "$path"
-            done < "$PATHS_PATH"
-            rg \
-              --color=always \
-              --column \
-              --with-filename \
-              --fixed-strings "$@" -- {q} || true
-          ),enter:execute(
-            kamp edit {1} +{2}:{3}
-          )+abort' \
+  --bind "change:reload($rg_cmd -- {q} || true),enter:execute(kamp edit {1} +{2}:{3})+abort" \
   --preview '
       highlight_line={2}
       line_range_begin=$((highlight_line - (FZF_PREVIEW_LINES / 2)))
