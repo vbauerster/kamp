@@ -29,6 +29,7 @@ fzf \
       highlight_line={2}
       line_range_begin=$((highlight_line - (FZF_PREVIEW_LINES / 2)))
       bat \
+        --terminal-width $FZF_PREVIEW_COLUMNS \
         --style=numbers \
         --color=always \
         --line-range "$((line_range_begin < 0 ? 1 : line_range_begin)):+$FZF_PREVIEW_LINES" \
