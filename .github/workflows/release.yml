@@ -1,8 +1,5 @@
 name: release
 
-env:
-  INTERMEDIATES_DIR: "_intermediates"
-
 on:
   push:
     tags:
@@ -56,6 +53,7 @@ jobs:
       id: package
       shell: bash
       run: |
+        INTERMEDIATES_DIR="${TMPDIR:-/tmp/}"
         PKG_BASENAME="${PROJECT_NAME}-v${PROJECT_VERSION}-${{ matrix.target }}"
         PKG_NAME="${PKG_BASENAME}.tar.gz"
 
