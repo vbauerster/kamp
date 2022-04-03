@@ -18,7 +18,7 @@
 # $@ is meant to pass extra options to rg, not a query and not a path
 rg_cmd="rg --color=always --column --fixed-strings $@"
 
-FZF_DEFAULT_COMMAND="$rg_cmd || true" \
+FZF_DEFAULT_COMMAND="$rg_cmd --files" \
 fzf \
   --phony \
   --delimiter ':' \
