@@ -15,6 +15,9 @@
 
 # - bat (https://github.com/sharkdp/bat)
 
+# define SHELL so --preview arguments do not error if current SHELL is not POSIX
+SHELL=/bin/sh
+
 # $@ is meant to pass extra options to rg, not a query and not a path
 rg_cmd="rg --color=always --column --fixed-strings $@"
 
