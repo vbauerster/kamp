@@ -33,4 +33,4 @@ fzf \
         --line-range "$((line_range_begin < 0 ? 1 : line_range_begin)):+$FZF_PREVIEW_LINES" \
         --highlight-line {2} {1} 2> /dev/null' \
   --header='type to grep' \
-  --prompt='grep>'
+  --prompt='grep> '
