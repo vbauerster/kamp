@@ -66,6 +66,9 @@ jobs:
         # README, LICENSE and CHANGELOG files
         cp "README.md" "UNLICENSE" "$ARCHIVE_DIR"
 
+        # include scripts dir
+        tar -cf - scripts | tar -C "$ARCHIVE_DIR" -xf -
+
         # base compressed package
         tar -C "$ARCHIVE_DIR" -czf "$INTERMEDIATES_DIR/$PKG_NAME" .
 
