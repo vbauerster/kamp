@@ -1,5 +1,6 @@
 use std::fmt::Write;
 use std::num::ParseIntError;
+use std::path::Path;
 use std::path::PathBuf;
 
 use super::Context;
@@ -14,10 +15,19 @@ pub(crate) fn edit(ctx: &Context, mut files: Vec<String>) -> Result<(), Error> {
     for i in 0..2 {
         match files.pop() {
             Some(coord) if coord.starts_with('+') => {
-                let v =
-                    parse(&coord).map_err(|source| Error::InvalidCoordinates { coord, source })?;
-                for coord in v {
-                    write!(&mut append_buf, " {}", coord)?;
+                match parse(&coord) {
+                    Err(source) => {
+                        if Path::new(&coord).exists() {
+                            tmp.push(coord);
+                        } else {
+                            return Err(Error::InvalidCoordinates { coord, source });
+                        }
+                    }
+                    Ok(v) => {
+                        for coord in v {
+                            write!(&mut append_buf, " {}", coord)?;
+                        }
+                    }
                 }
             }
             Some(file) => {
