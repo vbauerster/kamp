@@ -6,48 +6,49 @@ use std::path::PathBuf;
 use super::Context;
 use super::Error;
 
-pub(crate) fn edit(ctx: &Context, mut files: Vec<String>) -> Result<(), Error> {
+pub(crate) fn edit(ctx: &Context, files: Vec<String>) -> Result<(), Error> {
     let mut buf = String::new();
-    let mut append_buf = String::new();
+    let mut coord_buf = String::new();
     let mut tmp = Vec::new();
-    files.reverse();
+    let mut i = 0;
 
-    for i in 0..2 {
-        match files.pop() {
-            Some(coord) if coord.starts_with('+') => {
-                match parse(&coord) {
-                    Err(source) => {
-                        if Path::new(&coord).exists() {
-                            tmp.push(coord);
-                        } else {
-                            return Err(Error::InvalidCoordinates { coord, source });
-                        }
-                    }
-                    Ok(v) => {
-                        for coord in v {
-                            write!(&mut append_buf, " {}", coord)?;
-                        }
-                    }
+    for item in files.iter().take(2) {
+        i += 1;
+        if !item.starts_with('+') {
+            tmp.push(item);
+            continue;
+        }
+        match parse(item) {
+            Err(source) => {
+                if Path::new(item).exists() {
+                    tmp.push(item);
+                } else {
+                    return Err(Error::InvalidCoordinates {
+                        coord: item.clone(),
+                        source,
+                    });
                 }
             }
-            Some(file) => {
-                tmp.push(file);
-            }
-            None => {
-                if i == 0 {
-                    append_buf.push_str("edit -scratch");
-                    break;
+            Ok(v) if coord_buf.is_empty() => {
+                for item in v {
+                    write!(&mut coord_buf, " {}", item)?;
                 }
             }
+            Ok(_) => tmp.push(item),
         }
     }
-    files.extend(tmp.into_iter().rev());
-    for file in &files {
+
+    for file in files[i..].iter().rev().chain(tmp.into_iter().rev()) {
         let p = std::fs::canonicalize(file).unwrap_or_else(|_| PathBuf::from(file));
         writeln!(&mut buf, "edit -existing '{}'", p.display())?;
     }
     buf.pop();
-    buf.push_str(&append_buf);
+    buf.push_str(&coord_buf);
+
+    if buf.is_empty() {
+        buf.push_str("edit -scratch");
+    }
+
     if ctx.client.is_some() {
         ctx.send(&buf, None).map(|_| ())
     } else {
