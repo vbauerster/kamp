@@ -46,16 +46,14 @@ impl Context {
     }
 
     pub fn send(&self, body: &str, buffer: Option<String>) -> Result<String, Error> {
-        let mut cmd = String::from("try %{ eval");
-        if let Some(buffer) = buffer.as_deref() {
-            cmd.push_str(" -buffer ");
-            cmd.push_str(buffer);
-        } else if let Some(client) = self.client.as_deref() {
-            cmd.push_str(" -client ");
-            cmd.push_str(client);
-        } else {
-            return self.connect(body);
-        }
+        let eval_ctx = match (&buffer, &self.client) {
+            (None, None) => return self.connect(body),
+            (Some(b), _) => ("-buffer ", b),
+            (_, Some(c)) => ("-client ", c),
+        };
+        let mut cmd = String::from("try %{ eval ");
+        cmd.push_str(eval_ctx.0);
+        cmd.push_str(eval_ctx.1);
         cmd.push_str(" %{");
         if !body.is_empty() {
             cmd.push('\n');
