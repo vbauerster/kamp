@@ -1,8 +1,6 @@
 use std::process::{Command, ExitStatus, Stdio};
 use std::{ffi::OsStr, io::Write};
 
-use super::Error;
-
 pub(crate) fn pipe<S, T>(session: S, cmd: T) -> anyhow::Result<ExitStatus>
 where
     T: AsRef<[u8]>,
@@ -48,19 +46,23 @@ impl Sessions {
     }
 }
 
-pub(crate) fn sessions() -> Result<Sessions, Error> {
+pub(crate) fn sessions() -> anyhow::Result<Option<Sessions>> {
     let output = Command::new("kak").arg("-l").output()?;
 
     if !output.status.success() {
-        return Err(Error::KakProcess(output.status));
+        return Ok(None);
     }
 
-    String::from_utf8(output.stdout)
-        .map_err(|e| Error::Other(anyhow::Error::new(e)))
-        .map(Sessions)
+    let list = String::from_utf8(output.stdout)?;
+
+    Ok(if list.is_empty() {
+        None
+    } else {
+        Some(Sessions(list))
+    })
 }
 
-pub(crate) fn proxy(args: Vec<String>) -> Result<(), Error> {
+pub(crate) fn proxy(args: Vec<String>) -> anyhow::Result<()> {
     use std::os::unix::prelude::CommandExt;
     let err = Command::new("kak").args(args).exec();
     Err(err.into())
