@@ -106,20 +106,20 @@ impl Context {
         res
     }
 
-    pub fn connect(&self, body: &str) -> Result<(), Error> {
-        let kak_h = thread::spawn({
-            let mut cmd = String::from("try %{ eval -try-client '' %{");
-            if !body.is_empty() {
-                cmd.push('\n');
-                cmd.push_str(body);
-            }
-            cmd.push_str("\n}} catch %{\n");
-            cmd.push_str("echo -debug kamp: %val{error}\n");
-            cmd.push_str("echo -to-file %opt{kamp_err} %val{error}\n");
-            cmd.push_str("quit 1\n");
-            cmd.push_str("}\n");
-            write_end_token(&mut cmd);
+    pub fn connect(&self, body: &str) -> Result<String, Error> {
+        let mut cmd = String::from("try %{ eval -try-client '' %{");
+        if !body.is_empty() {
+            cmd.push('\n');
+            cmd.push_str(body);
+        }
+        cmd.push_str("\n}} catch %{\n");
+        cmd.push_str("echo -debug kamp: %val{error}\n");
+        cmd.push_str("echo -to-file %opt{kamp_err} %val{error}\n");
+        cmd.push_str("quit 1\n");
+        cmd.push_str("}\n");
+        write_end_token(&mut cmd);
 
+        let kak_h = thread::spawn({
             let session = self.session.clone();
             move || kak::connect(session, cmd)
         });
