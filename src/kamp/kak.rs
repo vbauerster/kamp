@@ -26,10 +26,6 @@ where
 
     let status = child.wait()?;
 
-    // if !status.success() {
-    //     return Err(Error::KakProcess(status));
-    // }
-
     Ok(status)
 }
 
@@ -40,10 +36,6 @@ pub(crate) fn connect<S: AsRef<OsStr>>(session: S, e_cmd: S) -> anyhow::Result<E
         .arg("-e")
         .arg(e_cmd)
         .status()?;
-
-    // if !status.success() {
-    //     return Err(Error::KakProcess(status));
-    // }
 
     Ok(status)
 }
