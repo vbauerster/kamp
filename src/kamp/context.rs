@@ -47,7 +47,7 @@ impl Context {
     }
 
     pub fn send(&self, body: &str, buffer: Option<String>) -> Result<String, Error> {
-        let kak_jh = thread::spawn({
+        let kak_h = thread::spawn({
             let mut cmd = String::from("try %{ eval");
             if let Some(buffer) = buffer.as_deref() {
                 cmd.push_str(" -buffer ");
@@ -78,25 +78,24 @@ impl Context {
 
         let (s0, r) = crossbeam_channel::bounded(1);
         let s1 = s0.clone();
-        let out_jh = read_out(self.get_out_path(false), s0);
-        let err_jh = read_err(self.get_out_path(true), s1);
+        let out_h = read_out(self.get_out_path(false), s0);
+        let err_h = read_err(self.get_out_path(true), s1);
 
         let res = r
             .recv()
             .map_err(|_| Error::InvalidSession(self.session.clone()))?;
 
         if res.is_err() {
-            err_jh.join().unwrap()?;
+            err_h.join().unwrap()?;
         } else {
-            out_jh.join().unwrap()?;
+            out_h.join().unwrap()?;
         }
 
-        kak_jh.join().unwrap()?;
-        res
+        kak_h.join().unwrap().and_then(|_| res)
     }
 
     pub fn connect(&self, body: &str) -> Result<(), Error> {
-        let kak_jh = thread::spawn({
+        let kak_h = thread::spawn({
             let mut cmd = String::from("try %{ eval -try-client '' %{");
             if !body.is_empty() {
                 cmd.push('\n');
@@ -115,23 +114,24 @@ impl Context {
 
         let (s0, r) = crossbeam_channel::bounded(1);
         let s1 = s0.clone();
-        let out_jh = read_out(self.get_out_path(false), s0);
-        let err_jh = read_err(self.get_out_path(true), s1);
+        let out_h = read_out(self.get_out_path(false), s0);
+        let err_h = read_err(self.get_out_path(true), s1);
 
         let res = r
             .recv()
             .map_err(|_| Error::InvalidSession(self.session.clone()))?;
 
         if let Err(e) = res {
-            err_jh.join().unwrap()?;
-            kak_jh.join().unwrap().map_err(|_| e)
+            err_h
+                .join()
+                .unwrap()
+                .and_then(|_| kak_h.join().unwrap().map_err(|_| e))
         } else {
             std::fs::OpenOptions::new()
                 .write(true)
                 .open(self.get_out_path(true))
                 .and_then(|mut f| f.write_all(b""))?;
-            out_jh.join().unwrap()?;
-            kak_jh.join().unwrap()
+            out_h.join().unwrap().and_then(|_| kak_h.join().unwrap())
         }
     }
 }
