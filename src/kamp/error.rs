@@ -15,9 +15,6 @@ pub enum Error {
         source: std::num::ParseIntError,
     },
 
-    #[error("kak exited with error: {0}")]
-    KakProcess(std::process::ExitStatus),
-
     #[error("kak eval error: {0}")]
     KakEvalCatch(String),
 
