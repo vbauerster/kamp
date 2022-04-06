@@ -19,12 +19,11 @@ pub(crate) struct Context {
 
 impl std::fmt::Display for Context {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "session: {}\nclient: {}",
-            self.session,
-            self.client.as_deref().unwrap_or_default()
-        )
+        write!(f, "session: {}", self.session)?;
+        if let Some(client) = &self.client {
+            write!(f, "\nclient: {}", client)?;
+        }
+        Ok(())
     }
 }
 
