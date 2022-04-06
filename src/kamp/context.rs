@@ -73,7 +73,7 @@ impl Context {
             write_end_token(&mut cmd);
 
             let session = self.session.clone();
-            move || kak::pipe(&session, &cmd)
+            move || kak::pipe(session, cmd)
         });
 
         let (s0, r) = crossbeam_channel::bounded(1);
@@ -110,7 +110,7 @@ impl Context {
             write_end_token(&mut cmd);
 
             let session = self.session.clone();
-            move || kak::connect(&session, &cmd)
+            move || kak::connect(session, cmd)
         });
 
         let (s0, r) = crossbeam_channel::bounded(1);
