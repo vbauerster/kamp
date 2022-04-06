@@ -3,8 +3,8 @@ pub enum Error {
     #[error("no session in context")]
     NoSession,
 
-    #[error("invalid session: {0}")]
-    InvalidSession(String),
+    #[error("invalid session {session:?} kak exited with code: {exit_code}")]
+    InvalidSession { session: String, exit_code: i32 },
 
     #[error("invalid context: either client or buffer is required")]
     InvalidContext,

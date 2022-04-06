@@ -47,31 +47,33 @@ impl Context {
     }
 
     pub fn send(&self, body: &str, buffer: Option<String>) -> Result<String, Error> {
-        let kak_h = thread::spawn({
-            let mut cmd = String::from("try %{ eval");
-            if let Some(buffer) = buffer.as_deref() {
-                cmd.push_str(" -buffer ");
-                cmd.push_str(buffer);
-            } else if let Some(client) = self.client.as_deref() {
-                cmd.push_str(" -client ");
-                cmd.push_str(client);
-            }
-            cmd.push_str(" %{");
-            if !body.is_empty() {
+        let mut cmd = String::from("try %{ eval");
+        if let Some(buffer) = buffer.as_deref() {
+            cmd.push_str(" -buffer ");
+            cmd.push_str(buffer);
+        } else if let Some(client) = self.client.as_deref() {
+            cmd.push_str(" -client ");
+            cmd.push_str(client);
+        } else {
+            todo!();
+        }
+        cmd.push_str(" %{");
+        if !body.is_empty() {
+            cmd.push('\n');
+            if body.starts_with("kill") {
+                // allow kamp to exit early, because after kill commands aren't executed
+                write_end_token(&mut cmd);
                 cmd.push('\n');
-                if body.starts_with("kill") {
-                    // allow kamp to exit early, because after kill commands aren't executed
-                    write_end_token(&mut cmd);
-                    cmd.push('\n');
-                }
-                cmd.push_str(body);
             }
-            cmd.push_str("\n}} catch %{\n");
-            cmd.push_str("echo -debug kamp: %val{error}\n");
-            cmd.push_str("echo -to-file %opt{kamp_err} %val{error}\n");
-            cmd.push_str("}\n");
-            write_end_token(&mut cmd);
+            cmd.push_str(body);
+        }
+        cmd.push_str("\n}} catch %{\n");
+        cmd.push_str("echo -debug kamp: %val{error}\n");
+        cmd.push_str("echo -to-file %opt{kamp_err} %val{error}\n");
+        cmd.push_str("}\n");
+        write_end_token(&mut cmd);
 
+        let kak_h = thread::spawn({
             let session = self.session.clone();
             move || kak::pipe(session, cmd)
         });
@@ -81,17 +83,27 @@ impl Context {
         let out_h = read_out(self.get_out_path(false), s0);
         let err_h = read_err(self.get_out_path(true), s1);
 
-        let res = r
-            .recv()
-            .map_err(|_| Error::InvalidSession(self.session.clone()))?;
-
-        if res.is_err() {
-            err_h.join().unwrap()?;
-        } else {
+        let res = match r.recv() {
+            Ok(res) => res,
+            Err(recv_err) => {
+                let status = kak_h.join().unwrap()?;
+                let err = match status.code() {
+                    Some(code) => Error::InvalidSession {
+                        session: self.session.clone(),
+                        exit_code: code,
+                    },
+                    None => Error::Other(anyhow::Error::new(recv_err)),
+                };
+                return Err(err);
+            }
+        };
+        if res.is_ok() {
             out_h.join().unwrap()?;
+        } else {
+            err_h.join().unwrap()?;
         }
-
-        kak_h.join().unwrap().and_then(|_| res)
+        kak_h.join().unwrap()?;
+        res
     }
 
     pub fn connect(&self, body: &str) -> Result<(), Error> {
@@ -117,22 +129,30 @@ impl Context {
         let out_h = read_out(self.get_out_path(false), s0);
         let err_h = read_err(self.get_out_path(true), s1);
 
-        let res = r
-            .recv()
-            .map_err(|_| Error::InvalidSession(self.session.clone()))?;
-
-        if let Err(e) = res {
-            err_h
-                .join()
-                .unwrap()
-                .and_then(|_| kak_h.join().unwrap().map_err(|_| e))
-        } else {
+        let res = match r.recv() {
+            Ok(res) => res,
+            Err(recv_err) => {
+                let status = kak_h.join().unwrap()?;
+                let err = match status.code() {
+                    Some(code) => Error::InvalidSession {
+                        session: self.session.clone(),
+                        exit_code: code,
+                    },
+                    None => Error::Other(anyhow::Error::new(recv_err)),
+                };
+                return Err(err);
+            }
+        };
+        if res.is_ok() {
             std::fs::OpenOptions::new()
                 .write(true)
                 .open(self.get_out_path(true))
                 .and_then(|mut f| f.write_all(b""))?;
-            out_h.join().unwrap().and_then(|_| kak_h.join().unwrap())
         }
+        out_h.join().unwrap()?;
+        err_h.join().unwrap()?;
+        kak_h.join().unwrap()?;
+        res.map(|_| ())
     }
 }
 
@@ -149,7 +169,7 @@ impl Context {
 fn read_err(
     file_path: PathBuf,
     send_ch: Sender<Result<String, Error>>,
-) -> thread::JoinHandle<Result<(), Error>> {
+) -> thread::JoinHandle<anyhow::Result<()>> {
     thread::spawn(move || {
         let mut buf = String::new();
         std::fs::OpenOptions::new()
@@ -158,15 +178,14 @@ fn read_err(
             .and_then(|mut f| f.read_to_string(&mut buf))?;
         send_ch
             .send(Err(Error::KakEvalCatch(buf)))
-            .map_err(anyhow::Error::new)?;
-        Ok(())
+            .map_err(anyhow::Error::new)
     })
 }
 
 fn read_out(
     file_path: PathBuf,
     send_ch: Sender<Result<String, Error>>,
-) -> thread::JoinHandle<Result<(), Error>> {
+) -> thread::JoinHandle<anyhow::Result<()>> {
     thread::spawn(move || {
         let mut buf = String::new();
         let mut f = std::fs::OpenOptions::new().read(true).open(&file_path)?;
@@ -176,8 +195,7 @@ fn read_out(
                 break buf.trim_end_matches(END_TOKEN);
             }
         };
-        send_ch.send(Ok(res.into())).map_err(anyhow::Error::new)?;
-        Ok(())
+        send_ch.send(Ok(res.into())).map_err(anyhow::Error::new)
     })
 }
 

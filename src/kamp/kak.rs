@@ -1,9 +1,9 @@
+use std::process::{Command, ExitStatus, Stdio};
 use std::{ffi::OsStr, io::Write};
 
 use super::Error;
-use std::process::{Command, Stdio};
 
-pub(crate) fn pipe<S, T>(session: S, cmd: T) -> Result<(), Error>
+pub(crate) fn pipe<S, T>(session: S, cmd: T) -> anyhow::Result<ExitStatus>
 where
     T: AsRef<[u8]>,
     S: AsRef<OsStr>,
@@ -26,14 +26,14 @@ where
 
     let status = child.wait()?;
 
-    if !status.success() {
-        return Err(Error::KakProcess(status));
-    }
+    // if !status.success() {
+    //     return Err(Error::KakProcess(status));
+    // }
 
-    Ok(())
+    Ok(status)
 }
 
-pub(crate) fn connect<S: AsRef<OsStr>>(session: S, e_cmd: S) -> Result<(), Error> {
+pub(crate) fn connect<S: AsRef<OsStr>>(session: S, e_cmd: S) -> anyhow::Result<ExitStatus> {
     let status = Command::new("kak")
         .arg("-c")
         .arg(session)
@@ -41,11 +41,11 @@ pub(crate) fn connect<S: AsRef<OsStr>>(session: S, e_cmd: S) -> Result<(), Error
         .arg(e_cmd)
         .status()?;
 
-    if !status.success() {
-        return Err(Error::KakProcess(status));
-    }
+    // if !status.success() {
+    //     return Err(Error::KakProcess(status));
+    // }
 
-    Ok(())
+    Ok(status)
 }
 
 pub(crate) struct Sessions(String);
