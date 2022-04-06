@@ -3,8 +3,8 @@ use std::io::prelude::*;
 use std::path::PathBuf;
 use std::thread;
 
-use super::error::Error;
 use super::kak;
+use super::Error;
 
 const KAKOUNE_SESSION: &str = "KAKOUNE_SESSION";
 const KAKOUNE_CLIENT: &str = "KAKOUNE_CLIENT";
