@@ -50,9 +50,7 @@ impl Get {
         }
         buf.push('}');
         let res = ctx.send(&buf, buffer);
-        if rawness != 0 {
-            res
-        } else {
+        if rawness == 0 {
             res.map(|s| {
                 s.split('\'').filter(|&s| !s.trim().is_empty()).fold(
                     String::new(),
@@ -63,6 +61,8 @@ impl Get {
                     },
                 )
             })
+        } else {
+            res
         }
     }
 }
