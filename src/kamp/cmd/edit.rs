@@ -49,11 +49,7 @@ pub(crate) fn edit(ctx: &Context, files: Vec<String>) -> Result<(), Error> {
         buf.push_str("edit -scratch");
     }
 
-    if ctx.client.is_some() {
-        ctx.send(&buf, None).map(|_| ())
-    } else {
-        ctx.connect(&buf)
-    }
+    ctx.send(&buf, None).map(|_| ())
 }
 
 // prerequisite: coord should start with '+'

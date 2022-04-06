@@ -55,7 +55,7 @@ impl Context {
             cmd.push_str(" -client ");
             cmd.push_str(client);
         } else {
-            todo!();
+            return self.connect(body);
         }
         cmd.push_str(" %{");
         if !body.is_empty() {
@@ -152,7 +152,7 @@ impl Context {
         out_h.join().unwrap()?;
         err_h.join().unwrap()?;
         kak_h.join().unwrap()?;
-        res.map(|_| ())
+        res
     }
 }
 
