@@ -47,16 +47,18 @@ impl Context {
 
     pub fn send(&self, body: &str, buffer: Option<String>) -> Result<String, Error> {
         let eval_ctx = match (&buffer, &self.client) {
-            (Some(b), _) => (" -buffer ", &b[..]),
-            (_, Some(c)) => (" -client ", &c[..]),
+            (Some(b), _) => Some((" -buffer ", b)),
+            (_, Some(c)) => Some((" -client ", c)),
             // 'get val client_list' for example doesn't need neither buffer nor client
-            (None, None) => ("", ""),
+            (None, None) => None,
         };
         let mut cmd = String::new();
         if !body.is_empty() {
             cmd.push_str("try %{ eval");
-            cmd.push_str(eval_ctx.0);
-            cmd.push_str(eval_ctx.1);
+            if let Some((ctx, name)) = eval_ctx {
+                cmd.push_str(ctx);
+                cmd.push_str(name);
+            }
             cmd.push_str(" %{\n");
             if body.starts_with("kill") {
                 // allow kamp to exit early, because after kill commands aren't executed
