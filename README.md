@@ -31,6 +31,7 @@ The [scripts](scripts) need to be added to `$PATH` in order to use them.
 | [`kamp-gitls`](scripts/kamp-gitls)       | pick from `git ls-files` (fzf)   |
 | [`kamp-sessions`](scripts/kamp-sessions) | attach session and pick a buffer |
 | [`kamp-grep`](scripts/kamp-grep)         | grep interactively with fzf      |
+| [`kamp-fifo`](scripts/kamp-fifo)         | pipe stdin into fifo buffer      |
 
 ### Kakoune mappings example
 
