@@ -104,7 +104,7 @@ impl Context {
         res
     }
 
-    pub fn connect(&self, body: &str) -> Result<String, Error> {
+    pub fn connect(&self, body: &str) -> Result<(), Error> {
         let mut cmd = String::new();
         if !body.is_empty() {
             cmd.push_str("try %{ eval -try-client '' %{\n");
@@ -150,7 +150,7 @@ impl Context {
         out_h.join().unwrap()?;
         err_h.join().unwrap()?;
         kak_h.join().unwrap()?;
-        res
+        res.map(|_| ())
     }
 }
 
