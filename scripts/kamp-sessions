@@ -12,7 +12,7 @@ sessions_cmd='kak -l'
 preview_cmd='kamp -s {} list'
 kill_cmd='kamp -s {} send kill'
 
-eval $sessions_cmd |
+eval "$sessions_cmd" |
     fzf --prompt 'session> ' --preview "$preview_cmd" \
         --header '[c-x] kill' \
         --bind "ctrl-x:execute-silent($kill_cmd)+reload($sessions_cmd)" |
