@@ -24,7 +24,7 @@ attach() {
     kamp -s "$1" attach -b "$2"
 }
 
-eval $buffers_cmd |
+eval "$buffers_cmd" |
     fzf --prompt 'buf> ' --preview "$preview_cmd" \
         --header '[c-x] delete' \
         --bind "ctrl-x:execute-silent($delete_cmd)+reload($buffers_cmd)" |
