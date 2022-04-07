@@ -47,13 +47,14 @@ impl Context {
 
     pub fn send(&self, body: &str, buffer: Option<String>) -> Result<String, Error> {
         let eval_ctx = match (&buffer, &self.client) {
-            (None, None) => return self.connect(body),
-            (Some(b), _) => ("-buffer ", b),
-            (_, Some(c)) => ("-client ", c),
+            (Some(b), _) => (" -buffer ", &b[..]),
+            (_, Some(c)) => (" -client ", &c[..]),
+            // 'get val client_list' for example doesn't need neither buffer nor client
+            (None, None) => ("", ""),
         };
         let mut cmd = String::new();
         if !body.is_empty() {
-            cmd.push_str("try %{ eval ");
+            cmd.push_str("try %{ eval");
             cmd.push_str(eval_ctx.0);
             cmd.push_str(eval_ctx.1);
             cmd.push_str(" %{\n");
