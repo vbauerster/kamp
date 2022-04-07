@@ -9,8 +9,10 @@
 # optional param: $1 = [send|attach]
 # optional param: $2 = session
 
+set -euf
+
 session="${2:-$KAKOUNE_SESSION}"
-buffers_cmd="kamp -s $session get -b \* val bufname"
+buffers_cmd="kamp -s $session get -b * val bufname"
 preview_cmd="kamp -s $session cat -b {} | bat --color=always --line-range=:500 --file-name {}"
 delete_cmd="kamp -s $session send -b {} delete-buffer"
 

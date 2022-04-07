@@ -6,6 +6,8 @@
 # - fzf (https://github.com/junegunn/fzf)
 # - bat (change to your liking) (https://github.com/sharkdp/bat)
 
+set -euf
+
 preview_cmd='bat --color=always --line-range=:500 {}'
 
 git ls-files . "$@" |
