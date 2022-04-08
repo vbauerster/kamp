@@ -40,7 +40,7 @@ pub(super) fn run() -> Result<Option<String>, Error> {
             if opt.all {
                 cmd::list_all(ctx.ok()).map(Some)
             } else {
-                cmd::list(&mut ctx?).map(Some)
+                cmd::list(&ctx?).map(Some)
             }
         }
         Get(opt) => cmd::Get::from(opt.subcommand)
