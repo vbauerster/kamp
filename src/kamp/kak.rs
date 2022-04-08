@@ -2,6 +2,30 @@ use anyhow::{bail, Result};
 use std::process::{Command, ExitStatus, Stdio};
 use std::{ffi::OsStr, io::Write};
 
+pub(crate) struct Sessions(String);
+
+impl Sessions {
+    pub fn iter(&self) -> impl Iterator<Item = &str> {
+        self.0.lines().collect::<Vec<_>>().into_iter()
+    }
+}
+
+pub(crate) fn sessions() -> Result<Sessions> {
+    let output = Command::new("kak").arg("-l").output()?;
+
+    if !output.status.success() {
+        if let Some(code) = output.status.code() {
+            bail!("kak exited with code: {}", code);
+        } else {
+            bail!("kak terminated by signal");
+        }
+    }
+
+    let list = String::from_utf8(output.stdout)?;
+
+    Ok(Sessions(list))
+}
+
 pub(crate) fn pipe<S, T>(session: S, cmd: T) -> Result<ExitStatus>
 where
     T: AsRef<[u8]>,
@@ -37,30 +61,6 @@ pub(crate) fn connect<S: AsRef<OsStr>>(session: S, e_cmd: S) -> Result<ExitStatu
         .status()?;
 
     Ok(status)
-}
-
-pub(crate) struct Sessions(String);
-
-impl Sessions {
-    pub fn iter(&self) -> impl Iterator<Item = &str> {
-        self.0.lines().collect::<Vec<_>>().into_iter()
-    }
-}
-
-pub(crate) fn sessions() -> Result<Sessions> {
-    let output = Command::new("kak").arg("-l").output()?;
-
-    if !output.status.success() {
-        if let Some(code) = output.status.code() {
-            bail!("kak exited with code: {}", code);
-        } else {
-            bail!("kak terminated by signal");
-        }
-    }
-
-    let list = String::from_utf8(output.stdout)?;
-
-    Ok(Sessions(list))
 }
 
 pub(crate) fn proxy(args: Vec<String>) -> Result<()> {
