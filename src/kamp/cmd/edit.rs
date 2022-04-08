@@ -52,6 +52,7 @@ pub(crate) fn edit(ctx: &Context, files: Vec<String>) -> Result<(), Error> {
     if ctx.client.is_none() {
         ctx.connect(&buf) // this one acts like attach
     } else {
+        buf.push_str("\nfocus");
         ctx.send(&buf, None).map(|_| ())
     }
 }
