@@ -7,15 +7,22 @@ mod kak;
 use argv::{Kampliment, SubCommand::*};
 use context::Context;
 use error::Error;
+use std::env::var;
+
+const KAKOUNE_SESSION: &str = "KAKOUNE_SESSION";
+const KAKOUNE_CLIENT: &str = "KAKOUNE_CLIENT";
 
 pub(super) fn run() -> Result<Option<String>, Error> {
     let kamp: Kampliment = argh::from_env();
-    let mut client = kamp.client;
+    let (session, client) = match (kamp.session, kamp.client) {
+        (Some(s), Some(c)) => (Some(s), Some(c)),
+        (Some(s), None) => (Some(s), None),
+        (None, Some(c)) => (var(KAKOUNE_SESSION).ok(), Some(c)),
+        (None, None) => (var(KAKOUNE_SESSION).ok(), var(KAKOUNE_CLIENT).ok()),
+    };
 
-    let ctx = kamp
-        .session
-        .map(|s| Context::new(s, client.take()))
-        .or_else(|| Context::from_env(client.take()))
+    let ctx = session
+        .map(|session| Context::new(session, client.as_deref()))
         .ok_or(Error::NoSession);
 
     match kamp.subcommand {

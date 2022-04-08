@@ -39,7 +39,7 @@ where
         .iter()
         .filter(predicate)
         .map(|session| {
-            let mut ctx = Context::new(String::from(session), None);
+            let mut ctx = Context::new(session, None);
             get_ctx_session(&mut ctx)
         })
         .collect()
@@ -52,24 +52,24 @@ fn get_ctx_session(ctx: &mut Context) -> Result<Session, Error> {
             clients
                 .lines()
                 .map(|name| {
-                    ctx.client = Some(name.into());
+                    let ctx = Context::new(ctx.session_as_ref(), Some(name.into()));
                     Get::new_val("buffile")
-                        .run(ctx, 2, None)
-                        .map(|bf| Client::new(ctx.client.take().unwrap(), bf))
+                        .run(&ctx, 2, None)
+                        .map(|bf| Client::new(name.into(), bf))
                 })
                 .collect::<Result<Vec<Client>, Error>>()
         })
         .and_then(|clients| {
             Get::new_sh("pwd")
                 .run(ctx, 2, None)
-                .map(|pwd| Session::new(ctx.session.clone(), pwd, clients))
+                .map(|pwd| Session::new(ctx.session_clone(), pwd, clients))
         })
 }
 
 pub(crate) fn list_all(ctx: Option<Context>) -> Result<String, Error> {
     let mut buf = String::new();
     if let Some(mut ctx) = ctx {
-        for session in get_sessions(|&s| s != ctx.session)? {
+        for session in get_sessions(|&s| s != ctx.session_as_ref())? {
             writeln!(&mut buf, "{:#?}", session)?;
         }
         let current = list(&mut ctx)?;

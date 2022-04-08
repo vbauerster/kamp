@@ -1,4 +1,5 @@
 use crossbeam_channel::Sender;
+use std::borrow::Cow;
 use std::io::prelude::*;
 use std::path::PathBuf;
 use std::thread;
@@ -6,18 +7,16 @@ use std::thread;
 use super::kak;
 use super::Error;
 
-const KAKOUNE_SESSION: &str = "KAKOUNE_SESSION";
-const KAKOUNE_CLIENT: &str = "KAKOUNE_CLIENT";
 const END_TOKEN: &str = "<<EEND>>";
 
 #[derive(Debug)]
-pub(crate) struct Context {
-    pub session: String,
-    pub client: Option<String>,
+pub(crate) struct Context<'a> {
+    session: Cow<'a, str>,
+    client: Option<&'a str>,
     path: PathBuf,
 }
 
-impl std::fmt::Display for Context {
+impl std::fmt::Display for Context<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "session: {}", self.session)?;
         if let Some(client) = &self.client {
@@ -27,10 +26,13 @@ impl std::fmt::Display for Context {
     }
 }
 
-impl Context {
-    pub fn new(session: String, client: Option<String>) -> Self {
+impl<'a> Context<'a> {
+    pub fn new(session: impl Into<Cow<'a, str>>, client: Option<&'a str>) -> Self {
+        let session = session.into();
         let mut path = std::env::temp_dir();
-        path.push(session.clone() + "-kamp");
+        let mut p = String::from(session.as_ref());
+        p.push_str("-kamp");
+        path.push(p);
 
         let client = client.filter(|client| !client.is_empty());
 
@@ -41,16 +43,21 @@ impl Context {
         }
     }
 
-    pub fn from_env(client: Option<String>) -> Option<Self> {
-        use std::env::var;
-        var(KAKOUNE_SESSION)
-            .map(|s| Context::new(s, client.or_else(|| var(KAKOUNE_CLIENT).ok())))
-            .ok()
+    pub fn session_clone(&self) -> String {
+        self.session.clone().into_owned()
+    }
+
+    pub fn session_as_ref(&self) -> &str {
+        self.session.as_ref()
+    }
+
+    pub fn is_draft(&self) -> bool {
+        self.client.is_none()
     }
 
     pub fn send(&self, body: &str, buffer: Option<String>) -> Result<String, Error> {
-        let eval_ctx = match (&buffer, &self.client) {
-            (Some(b), _) => Some((" -buffer ", b)),
+        let eval_ctx = match (&buffer, self.client) {
+            (Some(b), _) => Some((" -buffer ", b.as_str())),
             (_, Some(c)) => Some((" -client ", c)),
             // 'get val client_list' for example doesn't need neither buffer nor client
             (None, None) => None,
@@ -77,7 +84,7 @@ impl Context {
         write_end_token(&mut cmd);
 
         let kak_h = thread::spawn({
-            let session = self.session.clone();
+            let session = self.session_clone();
             move || kak::pipe(session, cmd)
         });
 
@@ -92,7 +99,7 @@ impl Context {
                 let status = kak_h.join().unwrap()?;
                 let err = match status.code() {
                     Some(code) => Error::InvalidSession {
-                        session: self.session.clone(),
+                        session: self.session_clone(),
                         exit_code: code,
                     },
                     None => Error::Other(anyhow::Error::new(recv_err)),
@@ -123,7 +130,7 @@ impl Context {
         write_end_token(&mut cmd);
 
         let kak_h = thread::spawn({
-            let session = self.session.clone();
+            let session = self.session_clone();
             move || kak::connect(session, cmd)
         });
 
@@ -138,7 +145,7 @@ impl Context {
                 let status = kak_h.join().unwrap()?;
                 let err = match status.code() {
                     Some(code) => Error::InvalidSession {
-                        session: self.session.clone(),
+                        session: self.session_clone(),
                         exit_code: code,
                     },
                     None => Error::Other(anyhow::Error::new(recv_err)),
@@ -159,7 +166,7 @@ impl Context {
     }
 }
 
-impl Context {
+impl Context<'_> {
     fn get_out_path(&self, err_out: bool) -> PathBuf {
         if err_out {
             self.path.with_extension("err")

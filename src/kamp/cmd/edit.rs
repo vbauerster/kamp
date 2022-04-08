@@ -49,7 +49,7 @@ pub(crate) fn edit(ctx: &Context, files: Vec<String>) -> Result<(), Error> {
         buf.push_str("edit -scratch");
     }
 
-    if ctx.client.is_none() {
+    if ctx.is_draft() {
         ctx.connect(&buf) // this one acts like attach
     } else {
         buf.push_str("\nfocus");
