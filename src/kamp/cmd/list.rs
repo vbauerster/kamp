@@ -8,12 +8,13 @@ use std::fmt::Write;
 #[derive(Debug)]
 struct Session {
     name: String,
+    pwd: String,
     clients: Vec<Client>,
 }
 
 impl Session {
-    fn new(name: String, clients: Vec<Client>) -> Self {
-        Session { name, clients }
+    fn new(name: String, pwd: String, clients: Vec<Client>) -> Self {
+        Session { name, pwd, clients }
     }
 }
 
@@ -45,19 +46,23 @@ where
 }
 
 fn get_ctx_session(ctx: &mut Context) -> Result<Session, Error> {
-    Get::Val(String::from("client_list"))
+    Get::Val("client_list".into())
         .run(ctx, 0, None)
         .and_then(|clients| {
-            let res = clients
+            clients
                 .lines()
                 .map(|name| {
-                    ctx.client = Some(String::from(name));
-                    Get::Val(String::from("buffile"))
+                    ctx.client = Some(name.into());
+                    Get::Val("buffile".into())
                         .run(ctx, 2, None)
                         .map(|bf| Client::new(ctx.client.take().unwrap(), bf))
                 })
-                .collect::<Result<Vec<_>, Error>>();
-            res.map(|clients| Session::new(ctx.session.clone(), clients))
+                .collect::<Result<Vec<Client>, Error>>()
+        })
+        .and_then(|clients| {
+            Get::Shell("pwd".into())
+                .run(ctx, 2, None)
+                .map(|pwd| Session::new(ctx.session.clone(), pwd, clients))
         })
 }
 
