@@ -1,7 +1,8 @@
+use anyhow::{bail, Result};
 use std::process::{Command, ExitStatus, Stdio};
 use std::{ffi::OsStr, io::Write};
 
-pub(crate) fn pipe<S, T>(session: S, cmd: T) -> anyhow::Result<ExitStatus>
+pub(crate) fn pipe<S, T>(session: S, cmd: T) -> Result<ExitStatus>
 where
     T: AsRef<[u8]>,
     S: AsRef<OsStr>,
@@ -27,7 +28,7 @@ where
     Ok(status)
 }
 
-pub(crate) fn connect<S: AsRef<OsStr>>(session: S, e_cmd: S) -> anyhow::Result<ExitStatus> {
+pub(crate) fn connect<S: AsRef<OsStr>>(session: S, e_cmd: S) -> Result<ExitStatus> {
     let status = Command::new("kak")
         .arg("-c")
         .arg(session)
@@ -46,14 +47,14 @@ impl Sessions {
     }
 }
 
-pub(crate) fn sessions() -> anyhow::Result<Sessions> {
+pub(crate) fn sessions() -> Result<Sessions> {
     let output = Command::new("kak").arg("-l").output()?;
 
     if !output.status.success() {
         if let Some(code) = output.status.code() {
-            anyhow::bail!("kak exited with code: {}", code);
+            bail!("kak exited with code: {}", code);
         } else {
-            anyhow::bail!("kak terminated by signal");
+            bail!("kak terminated by signal");
         }
     }
 
@@ -62,7 +63,7 @@ pub(crate) fn sessions() -> anyhow::Result<Sessions> {
     Ok(Sessions(list))
 }
 
-pub(crate) fn proxy(args: Vec<String>) -> anyhow::Result<()> {
+pub(crate) fn proxy(args: Vec<String>) -> Result<()> {
     use std::os::unix::prelude::CommandExt;
     let err = Command::new("kak").args(args).exec();
     Err(err.into())
