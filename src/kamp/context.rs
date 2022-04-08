@@ -31,6 +31,9 @@ impl Context {
     pub fn new(session: String, client: Option<String>) -> Self {
         let mut path = std::env::temp_dir();
         path.push(session.clone() + "-kamp");
+
+        let client = client.filter(|client| !client.is_empty());
+
         Context {
             session,
             client,
