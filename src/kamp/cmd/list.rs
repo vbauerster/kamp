@@ -46,21 +46,21 @@ where
 }
 
 fn get_ctx_session(ctx: &mut Context) -> Result<Session, Error> {
-    Get::Val("client_list".into())
+    Get::new_val("client_list")
         .run(ctx, 0, None)
         .and_then(|clients| {
             clients
                 .lines()
                 .map(|name| {
                     ctx.client = Some(name.into());
-                    Get::Val("buffile".into())
+                    Get::new_val("buffile")
                         .run(ctx, 2, None)
                         .map(|bf| Client::new(ctx.client.take().unwrap(), bf))
                 })
                 .collect::<Result<Vec<Client>, Error>>()
         })
         .and_then(|clients| {
-            Get::Shell("pwd".into())
+            Get::new_sh("pwd")
                 .run(ctx, 2, None)
                 .map(|pwd| Session::new(ctx.session.clone(), pwd, clients))
         })

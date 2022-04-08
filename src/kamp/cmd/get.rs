@@ -1,28 +1,45 @@
+use std::borrow::Cow;
+
 use crate::kamp::argv::GetSubCommand;
 
 use super::Context;
 use super::Error;
 
-pub(crate) enum Get {
-    Val(String),
-    Opt(String),
-    Reg(String),
-    Shell(String),
+pub(crate) enum Get<'a> {
+    Val(Cow<'a, str>),
+    Opt(Cow<'a, str>),
+    Reg(Cow<'a, str>),
+    Shell(Cow<'a, str>),
 }
 
-impl From<GetSubCommand> for Get {
+impl<'a> Get<'a> {
+    pub(crate) fn new_val(s: impl Into<Cow<'a, str>>) -> Self {
+        Get::Val(s.into())
+    }
+    pub(crate) fn new_opt(s: impl Into<Cow<'a, str>>) -> Self {
+        Get::Opt(s.into())
+    }
+    pub(crate) fn new_reg(s: impl Into<Cow<'a, str>>) -> Self {
+        Get::Reg(s.into())
+    }
+    pub(crate) fn new_sh(s: impl Into<Cow<'a, str>>) -> Self {
+        Get::Shell(s.into())
+    }
+}
+
+impl From<GetSubCommand> for Get<'_> {
     fn from(argv_cmd: GetSubCommand) -> Self {
         use GetSubCommand::*;
         match argv_cmd {
-            Val(opt) => Get::Val(opt.name),
-            Opt(opt) => Get::Opt(opt.name),
-            Reg(opt) => Get::Reg(opt.name),
-            Shell(opt) => Get::Shell(opt.name),
+            Val(opt) => Get::new_val(opt.name),
+            Opt(opt) => Get::new_opt(opt.name),
+            Reg(opt) => Get::new_reg(opt.name),
+            Shell(opt) => Get::new_sh(opt.name),
         }
     }
 }
 
-impl Get {
+impl Get<'_> {
     pub fn run(&self, ctx: &Context, rawness: u8, buffer: Option<String>) -> Result<String, Error> {
         let mut buf = String::from("echo -quoting ");
         match rawness {
