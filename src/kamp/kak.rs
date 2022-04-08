@@ -46,20 +46,20 @@ impl Sessions {
     }
 }
 
-pub(crate) fn sessions() -> anyhow::Result<Option<Sessions>> {
+pub(crate) fn sessions() -> anyhow::Result<Sessions> {
     let output = Command::new("kak").arg("-l").output()?;
 
     if !output.status.success() {
-        return Ok(None);
+        if let Some(code) = output.status.code() {
+            anyhow::bail!("kak exited with code: {}", code);
+        } else {
+            anyhow::bail!("kak terminated by signal");
+        }
     }
 
     let list = String::from_utf8(output.stdout)?;
 
-    Ok(if list.is_empty() {
-        None
-    } else {
-        Some(Sessions(list))
-    })
+    Ok(Sessions(list))
 }
 
 pub(crate) fn proxy(args: Vec<String>) -> anyhow::Result<()> {

@@ -34,18 +34,14 @@ fn get_sessions<P>(predicate: P) -> Result<Vec<Session>, Error>
 where
     P: FnMut(&&str) -> bool,
 {
-    if let Some(sessions) = kak::sessions()? {
-        sessions
-            .iter()
-            .filter(predicate)
-            .map(|session| {
-                let mut ctx = Context::new(String::from(session), None);
-                get_ctx_session(&mut ctx)
-            })
-            .collect()
-    } else {
-        Ok(Vec::new())
-    }
+    kak::sessions()?
+        .iter()
+        .filter(predicate)
+        .map(|session| {
+            let mut ctx = Context::new(String::from(session), None);
+            get_ctx_session(&mut ctx)
+        })
+        .collect()
 }
 
 fn get_ctx_session(ctx: &mut Context) -> Result<Session, Error> {
