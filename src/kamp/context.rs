@@ -63,32 +63,51 @@ impl<'a> Context<'a> {
     }
 
     pub fn send(&self, body: &str, buffer: Option<String>) -> Result<String, Error> {
+        self.send_kill(body, false, buffer)
+    }
+
+    pub fn send_kill(
+        &self,
+        body: &str,
+        kill: bool,
+        buffer: Option<String>,
+    ) -> Result<String, Error> {
+        let mut buffer_is_star = false;
         let eval_ctx = match (buffer.as_deref(), self.client) {
-            (Some(b), _) => Some((" -buffer ", b)),
+            (Some(b), _) => {
+                buffer_is_star = b == "*";
+                Some((" -buffer ", b))
+            }
             (_, Some(c)) => Some((" -client ", c)),
             // 'get val client_list' for example doesn't need neither buffer nor client
             (None, None) => None,
         };
         let mut cmd = String::new();
-        if !body.is_empty() {
-            cmd.push_str("try %{ eval");
-            if let Some((ctx, name)) = eval_ctx {
-                cmd.push_str(ctx);
-                cmd.push_str(name);
-            }
-            cmd.push_str(" %{\n");
-            if body.starts_with("kill") {
-                // allow kamp to exit early, because after kill commands aren't executed
-                write_end_token(&mut cmd);
-                cmd.push('\n');
-            }
-            cmd.push_str(body);
-            cmd.push_str("\n}} catch %{\n");
-            cmd.push_str("echo -debug kamp: %val{error}\n");
-            cmd.push_str("echo -to-file %opt{kamp_err} %val{error}\n");
-            cmd.push_str("}\n");
+        cmd.push_str("try %{ eval");
+        if let Some((ctx, name)) = eval_ctx {
+            cmd.push_str(ctx);
+            cmd.push_str(name);
         }
-        write_end_token(&mut cmd);
+        cmd.push_str(" %{\n");
+        if kill {
+            // allow kamp to exit early, because after kill commands aren't executed
+            if let Some(c) = cmd.pop() {
+                write_end_token(&mut cmd);
+                cmd.push(c);
+            }
+        }
+        cmd.push_str(body);
+        if !buffer_is_star {
+            write_end_token(&mut cmd);
+        }
+        cmd.push_str("\n}} catch %{");
+        cmd.push_str("\necho -debug kamp: %val{error}");
+        cmd.push_str("\necho -to-file %opt{kamp_err} %val{error}");
+        cmd.push_str("\n}");
+        if buffer_is_star {
+            // writing END_TOKEN after try, because of '-buffer *'
+            write_end_token(&mut cmd);
+        }
 
         let kak_h = thread::spawn({
             let session = self.session();
@@ -128,13 +147,15 @@ impl<'a> Context<'a> {
         if !body.is_empty() {
             cmd.push_str("try %{ eval -try-client '' %{\n");
             cmd.push_str(body);
-            cmd.push_str("\n}} catch %{\n");
-            cmd.push_str("echo -debug kamp: %val{error}\n");
-            cmd.push_str("echo -to-file %opt{kamp_err} %val{error}\n");
-            cmd.push_str("quit 1\n");
-            cmd.push_str("}\n");
+            write_end_token(&mut cmd);
+            cmd.push_str("\n}} catch %{");
+            cmd.push_str("\necho -to-file %opt{kamp_err} %val{error}");
+            cmd.push_str("\necho -debug kamp: %val{error}");
+            cmd.push_str("\nquit 1");
+            cmd.push_str("\n}");
+        } else {
+            write_end_token(&mut cmd);
         }
-        write_end_token(&mut cmd);
 
         let kak_h = thread::spawn({
             let session = self.session();
@@ -220,6 +241,6 @@ fn read_out(
 }
 
 fn write_end_token(buf: &mut String) {
-    buf.push_str("echo -to-file %opt{kamp_out} ");
+    buf.push_str("\necho -to-file %opt{kamp_out} ");
     buf.push_str(END_TOKEN);
 }
