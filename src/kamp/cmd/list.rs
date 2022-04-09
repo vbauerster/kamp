@@ -62,7 +62,7 @@ fn get_ctx_session(ctx: &Context) -> Result<Session, Error> {
         .and_then(|clients| {
             Get::new_sh("pwd")
                 .run(ctx, 2, None)
-                .map(|pwd| Session::new(ctx.session_clone(), pwd, clients))
+                .map(|pwd| Session::new(ctx.session(), pwd, clients))
         })
 }
 

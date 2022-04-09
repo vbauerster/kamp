@@ -43,7 +43,7 @@ impl<'a> Context<'a> {
         }
     }
 
-    pub fn session_clone(&self) -> String {
+    pub fn session(&self) -> String {
         self.session.clone().into_owned()
     }
 
@@ -84,7 +84,7 @@ impl<'a> Context<'a> {
         write_end_token(&mut cmd);
 
         let kak_h = thread::spawn({
-            let session = self.session_clone();
+            let session = self.session();
             move || kak::pipe(session, cmd)
         });
 
@@ -99,7 +99,7 @@ impl<'a> Context<'a> {
                 let status = kak_h.join().unwrap()?;
                 let err = match status.code() {
                     Some(code) => Error::InvalidSession {
-                        session: self.session_clone(),
+                        session: self.session(),
                         exit_code: code,
                     },
                     None => Error::Other(anyhow::Error::new(recv_err)),
@@ -130,7 +130,7 @@ impl<'a> Context<'a> {
         write_end_token(&mut cmd);
 
         let kak_h = thread::spawn({
-            let session = self.session_clone();
+            let session = self.session();
             move || kak::connect(session, cmd)
         });
 
@@ -145,7 +145,7 @@ impl<'a> Context<'a> {
                 let status = kak_h.join().unwrap()?;
                 let err = match status.code() {
                     Some(code) => Error::InvalidSession {
-                        session: self.session_clone(),
+                        session: self.session(),
                         exit_code: code,
                     },
                     None => Error::Other(anyhow::Error::new(recv_err)),
