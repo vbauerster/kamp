@@ -2,6 +2,7 @@ use crossbeam_channel::Sender;
 use std::borrow::Cow;
 use std::io::prelude::*;
 use std::path::PathBuf;
+use std::rc::Rc;
 use std::thread;
 
 use super::kak;
@@ -13,7 +14,7 @@ const END_TOKEN: &str = "<<EEND>>";
 pub(crate) struct Context<'a> {
     session: Cow<'a, str>,
     client: Option<&'a str>,
-    path: PathBuf,
+    path: Rc<PathBuf>,
 }
 
 impl std::fmt::Display for Context<'_> {
@@ -38,8 +39,16 @@ impl<'a> Context<'a> {
 
         Context {
             session,
-            client,
-            path,
+            client: client.filter(|&client| !client.is_empty()),
+            path: Rc::new(path),
+        }
+    }
+
+    pub fn clone_with_client(&self, client: Option<&'a str>) -> Self {
+        Context {
+            session: self.session.clone(),
+            client: client.filter(|&client| !client.is_empty()),
+            path: Rc::clone(&self.path),
         }
     }
 

@@ -52,10 +52,10 @@ fn get_ctx_session(ctx: &Context) -> Result<Session, Error> {
             clients
                 .lines()
                 .map(|name| {
-                    let ctx = Context::new(ctx.session_as_ref(), Some(name));
+                    let ctx = ctx.clone_with_client(Some(name));
                     Get::new_val("buffile")
                         .run(&ctx, 2, None)
-                        .map(|bf| Client::new(name.into(), bf))
+                        .map(|buffile| Client::new(name.into(), buffile))
                 })
                 .collect::<Result<Vec<Client>, Error>>()
         })
