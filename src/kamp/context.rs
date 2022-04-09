@@ -56,8 +56,8 @@ impl<'a> Context<'a> {
     }
 
     pub fn send(&self, body: &str, buffer: Option<String>) -> Result<String, Error> {
-        let eval_ctx = match (&buffer, self.client) {
-            (Some(b), _) => Some((" -buffer ", b.as_str())),
+        let eval_ctx = match (buffer.as_deref(), self.client) {
+            (Some(b), _) => Some((" -buffer ", b)),
             (_, Some(c)) => Some((" -client ", c)),
             // 'get val client_list' for example doesn't need neither buffer nor client
             (None, None) => None,
