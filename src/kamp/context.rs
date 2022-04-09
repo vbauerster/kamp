@@ -106,6 +106,7 @@ impl<'a> Context<'a> {
         cmd.push_str("\n}");
         if buffer_is_star {
             // writing END_TOKEN after try, because of '-buffer *'
+            // workaround for https://github.com/mawww/kakoune/issues/4586
             write_end_token(&mut cmd);
         }
 
