@@ -7,8 +7,8 @@ define-command -hidden -override kamp-init %{
     declare-option -hidden str kamp_out
     declare-option -hidden str kamp_err
     evaluate-commands %sh{
-        kamp_out="${TMPDIR:-/tmp/}${kak_session}-kamp.out"
-        kamp_err="${TMPDIR:-/tmp/}${kak_session}-kamp.err"
+        kamp_out="${TMPDIR:-/tmp/}kamp-${kak_session}.out"
+        kamp_err="${TMPDIR:-/tmp/}kamp-${kak_session}.err"
         mkfifo "$kamp_out" "$kamp_err"
         echo "set-option global kamp_out '$kamp_out'"
         echo "set-option global kamp_err '$kamp_err'"

@@ -31,11 +31,9 @@ impl<'a> Context<'a> {
     pub fn new(session: impl Into<Cow<'a, str>>, client: Option<&'a str>) -> Self {
         let session = session.into();
         let mut path = std::env::temp_dir();
-        let mut p = String::from(session.as_ref());
-        p.push_str("-kamp");
-        path.push(p);
-
-        let client = client.filter(|client| !client.is_empty());
+        let mut base = String::from("kamp-");
+        base.push_str(&session);
+        path.push(base);
 
         Context {
             session,
