@@ -64,7 +64,7 @@ fn to_csv_buffers(buffers: Vec<String>) -> Option<String> {
         buffers
             .iter()
             .take(buffers.len() - 1)
-            .fold(String::from("'"), |mut buf, next| {
+            .fold(String::from('\''), |mut buf, next| {
                 buf.push_str(next);
                 buf.push(',');
                 buf
