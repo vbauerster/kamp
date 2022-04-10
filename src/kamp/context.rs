@@ -63,10 +63,10 @@ impl<'a> Context<'a> {
     }
 
     pub fn send(&self, body: &str, buffer: Option<String>) -> Result<String, Error> {
-        self.send_kill(body, false, buffer)
+        self.send_check_kill(body, false, buffer)
     }
 
-    pub fn send_kill(
+    pub fn send_check_kill(
         &self,
         body: &str,
         kill: bool,
