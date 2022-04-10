@@ -215,9 +215,7 @@ fn read_out(
     thread::spawn(move || {
         let mut buf = String::new();
         let mut f = std::fs::OpenOptions::new().read(true).open(&file_path)?;
-        // there is no guarantee that END_TOKEN comes separately as a single
-        // token. It may come appended or not, that's why reading everything
-        // into single buf
+        // END_TOKEN comes appended to the payload
         let res = loop {
             f.read_to_string(&mut buf)?;
             if buf.ends_with(END_TOKEN) {
