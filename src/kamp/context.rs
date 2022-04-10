@@ -20,7 +20,7 @@ pub(crate) struct Context<'a> {
 impl std::fmt::Display for Context<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "session: {}", self.session)?;
-        if let Some(client) = &self.client {
+        if let Some(client) = self.client {
             write!(f, "\nclient: {}", client)?;
         }
         Ok(())
