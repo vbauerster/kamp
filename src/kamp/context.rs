@@ -174,8 +174,8 @@ impl<'a> Context<'a> {
                 .write(true)
                 .open(self.get_out_path(true))
                 .and_then(|mut f| f.write_all(b""))?;
+            out_h.join().unwrap()?;
         }
-        out_h.join().unwrap()?;
         err_h.join().unwrap()?;
         kak_h.join().unwrap()?;
         res.map(|_| ())
