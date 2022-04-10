@@ -22,12 +22,12 @@ impl Session {
 #[derive(Debug)]
 struct Client {
     name: String,
-    buffile: String,
+    bufname: String,
 }
 
 impl Client {
-    fn new(name: String, buffile: String) -> Self {
-        Client { name, buffile }
+    fn new(name: String, bufname: String) -> Self {
+        Client { name, bufname }
     }
 }
 
@@ -53,9 +53,9 @@ fn get_ctx_session(ctx: &Context) -> Result<Session, Error> {
                 .lines()
                 .map(|name| {
                     let ctx = ctx.clone_with_client(Some(name));
-                    Get::new_val("buffile")
+                    Get::new_val("bufname")
                         .run(&ctx, 2, None)
-                        .map(|buffile| Client::new(name.into(), buffile))
+                        .map(|bufname| Client::new(name.into(), bufname))
                 })
                 .collect::<Result<Vec<Client>, Error>>()
         })
