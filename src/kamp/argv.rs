@@ -90,6 +90,10 @@ pub(crate) struct SendOptions {
     /// command to send
     #[argh(positional)]
     pub command: String,
+
+    /// the rest of the command if any joined by spaces
+    #[argh(positional)]
+    pub rest: Vec<String>,
 }
 
 /// get state from a session in context

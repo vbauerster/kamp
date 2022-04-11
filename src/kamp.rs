@@ -35,7 +35,12 @@ pub(super) fn run() -> Result<Option<String>, Error> {
                 kak::proxy(opt.files).map_err(Error::Other).map(|_| None)
             }
         }
-        Send(opt) => cmd::send(&ctx?, &opt.command, to_csv_buffers(opt.buffers)).map(|_| None),
+        Send(opt) => cmd::send(
+            &ctx?,
+            &join_command(opt.command, opt.rest),
+            to_csv_buffers(opt.buffers),
+        )
+        .map(|_| None),
         List(opt) => {
             if opt.all {
                 cmd::list_all(ctx.ok()).map(Some)
@@ -50,6 +55,14 @@ pub(super) fn run() -> Result<Option<String>, Error> {
         Ctx(_) => cmd::ctx(&ctx?).map(Some),
         Version(_) => cmd::version().map(Some),
     }
+}
+
+fn join_command(cmd: String, rest: Vec<String>) -> String {
+    rest.iter().fold(cmd, |mut cmd, next| {
+        cmd.push(' ');
+        cmd.push_str(next);
+        cmd
+    })
 }
 
 fn to_csv_buffers(buffers: Vec<String>) -> Option<String> {
