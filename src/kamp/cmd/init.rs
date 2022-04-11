@@ -26,9 +26,9 @@ pub(crate) fn init(export: Vec<KeyValue>, alias: bool) -> Result<String, Error> 
     let user_exports = export.into_iter().fold(String::new(), |mut buf, next| {
         buf.push_str("export ");
         buf.push_str(&next.key);
-        buf.push_str("='");
+        buf.push_str("=\"");
         buf.push_str(&next.value);
-        buf.push_str("'\n");
+        buf.push_str("\"\n");
         (0..8).for_each(|_| buf.push(' '));
         buf
     });
