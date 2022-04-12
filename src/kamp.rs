@@ -37,7 +37,7 @@ pub(super) fn run() -> Result<Option<String>, Error> {
         }
         Send(opt) => cmd::send(
             &ctx?,
-            &join_command(opt.command, opt.rest),
+            join_command(opt.command, opt.rest),
             to_csv_buffers(opt.buffers),
         )
         .map(|_| None),
