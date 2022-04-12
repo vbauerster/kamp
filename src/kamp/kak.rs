@@ -1,6 +1,6 @@
 use anyhow::{bail, Result};
+use std::io::Write;
 use std::process::{Command, ExitStatus, Stdio};
-use std::{ffi::OsStr, io::Write};
 
 pub(crate) struct Sessions(String);
 
@@ -28,12 +28,12 @@ pub(crate) fn sessions() -> Result<Sessions> {
 
 pub(crate) fn pipe<S, T>(session: S, cmd: T) -> Result<ExitStatus>
 where
+    S: AsRef<str>,
     T: AsRef<[u8]>,
-    S: AsRef<OsStr>,
 {
     let mut child = Command::new("kak")
         .arg("-p")
-        .arg(session)
+        .arg(session.as_ref())
         .stdin(Stdio::piped())
         .spawn()?;
 
@@ -52,12 +52,12 @@ where
     Ok(status)
 }
 
-pub(crate) fn connect<S: AsRef<OsStr>>(session: S, e_cmd: S) -> Result<ExitStatus> {
+pub(crate) fn connect<S: AsRef<str>>(session: S, cmd: S) -> Result<ExitStatus> {
     let status = Command::new("kak")
         .arg("-c")
-        .arg(session)
+        .arg(session.as_ref())
         .arg("-e")
-        .arg(e_cmd)
+        .arg(cmd.as_ref())
         .status()?;
 
     Ok(status)
