@@ -70,18 +70,7 @@ impl<'a> Context<'a> {
         }
 
         let status = kak::pipe(self.session.as_ref(), cmd)?;
-
-        if !status.success() {
-            let err = match status.code() {
-                Some(code) => Error::InvalidSession {
-                    session: self.session(),
-                    exit_code: code,
-                },
-                None => Error::Other(anyhow::Error::msg("kak terminated by signal")),
-            };
-            return Err(err);
-        }
-        Ok(())
+        self.check_status(status)
     }
 
     pub fn send<S: AsRef<str>>(&self, body: S, buffer: Option<String>) -> Result<String, Error> {
@@ -111,17 +100,7 @@ impl<'a> Context<'a> {
         let err_h = read_err(self.get_out_path(true), s1);
 
         let status = kak::pipe(self.session.as_ref(), cmd)?;
-
-        if !status.success() {
-            let err = match status.code() {
-                Some(code) => Error::InvalidSession {
-                    session: self.session(),
-                    exit_code: code,
-                },
-                None => Error::Other(anyhow::Error::msg("kak terminated by signal")),
-            };
-            return Err(err);
-        }
+        self.check_status(status)?;
 
         let res = r.recv().map_err(anyhow::Error::new)?;
         let handle = if res.is_ok() { out_h } else { err_h };
@@ -160,14 +139,9 @@ impl<'a> Context<'a> {
             Ok(res) => res,
             Err(recv_err) => {
                 let status = kak_h.join().unwrap()?;
-                let err = match status.code() {
-                    Some(code) => Error::InvalidSession {
-                        session: self.session(),
-                        exit_code: code,
-                    },
-                    None => Error::Other(anyhow::Error::new(recv_err)),
-                };
-                return Err(err);
+                return self
+                    .check_status(status)
+                    .and_then(|_| Err(Error::Other(anyhow::Error::new(recv_err))));
             }
         };
         if res.is_ok() {
@@ -190,6 +164,19 @@ impl Context<'_> {
         } else {
             self.path.with_extension("out")
         }
+    }
+    fn check_status(&self, status: std::process::ExitStatus) -> Result<(), Error> {
+        if status.success() {
+            return Ok(());
+        }
+        let err = match status.code() {
+            Some(code) => Error::InvalidSession {
+                session: self.session(),
+                exit_code: code,
+            },
+            None => Error::Other(anyhow::Error::msg("kak terminated by signal")),
+        };
+        Err(err)
     }
 }
 
