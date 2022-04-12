@@ -84,12 +84,7 @@ impl<'a> Context<'a> {
         Ok(())
     }
 
-    pub fn send_check_kill(
-        &self,
-        body: &str,
-        kill: bool,
-        buffer: Option<String>,
-    ) -> Result<String, Error> {
+    pub fn send(&self, body: &str, buffer: Option<String>) -> Result<String, Error> {
         let eval_ctx = match (buffer.as_deref(), self.client) {
             (Some(b), _) => Some((" -buffer ", b)),
             (_, Some(c)) => Some((" -client ", c)),
@@ -97,10 +92,6 @@ impl<'a> Context<'a> {
             (None, None) => None,
         };
         let mut cmd = String::from("try %{\n");
-        if kill {
-            // allow kamp to exit early, because after kill commands aren't executed
-            write_end_token(&mut cmd);
-        }
         cmd.push_str("eval");
         if let Some((ctx, name)) = eval_ctx {
             cmd.push_str(ctx);
@@ -114,36 +105,27 @@ impl<'a> Context<'a> {
         cmd.push_str("echo -debug kamp: %val{error}\n");
         cmd.push_str("echo -to-file %opt{kamp_err} %val{error}\n}");
 
-        let kak_h = thread::spawn({
-            let session = self.session();
-            move || kak::pipe(session, cmd)
-        });
-
         let (s0, r) = crossbeam_channel::bounded(1);
         let s1 = s0.clone();
         let out_h = read_out(self.get_out_path(false), s0);
         let err_h = read_err(self.get_out_path(true), s1);
 
-        let res = match r.recv() {
-            Ok(res) => res,
-            Err(recv_err) => {
-                let status = kak_h.join().unwrap()?;
-                let err = match status.code() {
-                    Some(code) => Error::InvalidSession {
-                        session: self.session(),
-                        exit_code: code,
-                    },
-                    None => Error::Other(anyhow::Error::new(recv_err)),
-                };
-                return Err(err);
-            }
-        };
-        if res.is_ok() {
-            out_h.join().unwrap()?;
-        } else {
-            err_h.join().unwrap()?;
+        let status = kak::pipe(self.session.as_ref(), cmd)?;
+
+        if !status.success() {
+            let err = match status.code() {
+                Some(code) => Error::InvalidSession {
+                    session: self.session(),
+                    exit_code: code,
+                },
+                None => Error::Other(anyhow::Error::msg("kak terminated by signal")),
+            };
+            return Err(err);
         }
-        kak_h.join().unwrap()?;
+
+        let res = r.recv().map_err(anyhow::Error::new)?;
+        let handle = if res.is_ok() { out_h } else { err_h };
+        handle.join().unwrap()?;
         res
     }
 
