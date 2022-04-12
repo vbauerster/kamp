@@ -10,6 +10,33 @@ use super::Error;
 
 const END_TOKEN: &str = "<<EEND>>";
 
+#[allow(unused)]
+#[derive(Debug)]
+pub struct Session {
+    name: String,
+    pwd: String,
+    clients: Vec<Client>,
+}
+
+impl Session {
+    fn new(name: String, pwd: String, clients: Vec<Client>) -> Self {
+        Session { name, pwd, clients }
+    }
+}
+
+#[allow(unused)]
+#[derive(Debug)]
+pub struct Client {
+    name: String,
+    bufname: String,
+}
+
+impl Client {
+    fn new(name: String, bufname: String) -> Self {
+        Client { name, bufname }
+    }
+}
+
 #[derive(Debug)]
 pub(crate) struct Context<'a> {
     session: Cow<'a, str>,
@@ -42,20 +69,8 @@ impl<'a> Context<'a> {
         }
     }
 
-    pub fn clone_with_client(&self, client: Option<&'a str>) -> Self {
-        Context {
-            session: self.session.clone(),
-            client: client.filter(|&client| !client.is_empty()),
-            path: Rc::clone(&self.path),
-        }
-    }
-
-    pub fn session(&self) -> String {
-        self.session.clone().into_owned()
-    }
-
-    pub fn session_as_ref(&self) -> &str {
-        self.session.as_ref()
+    pub fn session(&self) -> Cow<'a, str> {
+        self.session.clone()
     }
 
     pub fn is_draft(&self) -> bool {
@@ -126,7 +141,7 @@ impl<'a> Context<'a> {
         }
 
         let kak_h = thread::spawn({
-            let session = self.session();
+            let session = self.session().into_owned();
             move || kak::connect(session, cmd)
         });
 
@@ -155,9 +170,37 @@ impl<'a> Context<'a> {
         kak_h.join().unwrap()?;
         res.map(|_| ())
     }
+
+    pub fn session_struct(&self) -> Result<Session, Error> {
+        use super::cmd::Get;
+        Get::new_val("client_list")
+            .run(self, 0, None)
+            .and_then(|clients| {
+                clients
+                    .lines()
+                    .map(|name| {
+                        Get::new_val("bufname")
+                            .run(&self.clone_with_client(Some(name)), 2, None)
+                            .map(|bufname| Client::new(name.into(), bufname))
+                    })
+                    .collect::<Result<Vec<Client>, Error>>()
+            })
+            .and_then(|clients| {
+                Get::new_sh("pwd")
+                    .run(self, 2, None)
+                    .map(|pwd| Session::new(self.session().into_owned(), pwd, clients))
+            })
+    }
 }
 
-impl Context<'_> {
+impl<'a> Context<'a> {
+    fn clone_with_client(&self, client: Option<&'a str>) -> Self {
+        Context {
+            session: self.session.clone(),
+            client: client.filter(|&client| !client.is_empty()),
+            path: Rc::clone(&self.path),
+        }
+    }
     fn get_out_path(&self, err_out: bool) -> PathBuf {
         if err_out {
             self.path.with_extension("err")
@@ -171,7 +214,7 @@ impl Context<'_> {
         }
         let err = match status.code() {
             Some(code) => Error::InvalidSession {
-                session: self.session(),
+                session: self.session().into_owned(),
                 exit_code: code,
             },
             None => Error::Other(anyhow::Error::msg("kak terminated by signal")),

@@ -9,7 +9,7 @@ mod list;
 mod send;
 mod version;
 
-use super::Context;
+use super::context::*;
 use super::Error;
 
 pub(super) use attach::attach;
