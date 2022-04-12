@@ -84,7 +84,7 @@ impl<'a> Context<'a> {
         Ok(())
     }
 
-    pub fn send(&self, body: &str, buffer: Option<String>) -> Result<String, Error> {
+    pub fn send<S: AsRef<str>>(&self, body: S, buffer: Option<String>) -> Result<String, Error> {
         let eval_ctx = match (buffer.as_deref(), self.client) {
             (Some(b), _) => Some((" -buffer ", b)),
             (_, Some(c)) => Some((" -client ", c)),
@@ -98,7 +98,7 @@ impl<'a> Context<'a> {
             cmd.push_str(name);
         }
         cmd.push_str(" %{\n");
-        cmd.push_str(body);
+        cmd.push_str(body.as_ref());
         cmd.push_str("\n}\n");
         write_end_token(&mut cmd);
         cmd.push_str("} catch %{\n");
@@ -129,8 +129,9 @@ impl<'a> Context<'a> {
         res
     }
 
-    pub fn connect(&self, body: &str) -> Result<(), Error> {
+    pub fn connect<S: AsRef<str>>(&self, body: S) -> Result<(), Error> {
         let mut cmd = String::new();
+        let body = body.as_ref();
         if !body.is_empty() {
             cmd.push_str("try %{\neval -try-client '' %{\n");
             cmd.push_str(body);
