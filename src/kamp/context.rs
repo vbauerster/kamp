@@ -62,8 +62,26 @@ impl<'a> Context<'a> {
         self.client.is_none()
     }
 
-    pub fn send(&self, body: &str, buffer: Option<String>) -> Result<String, Error> {
-        self.send_check_kill(body, false, buffer)
+    pub fn send_kill(&self, exit_status: Option<i32>) -> Result<(), Error> {
+        let mut cmd = String::from("kill");
+        if let Some(status) = exit_status {
+            cmd.push(' ');
+            cmd.push_str(&status.to_string());
+        }
+
+        let status = kak::pipe(self.session.as_ref(), cmd)?;
+
+        if !status.success() {
+            let err = match status.code() {
+                Some(code) => Error::InvalidSession {
+                    session: self.session(),
+                    exit_code: code,
+                },
+                None => Error::Other(anyhow::Error::msg("kak terminated by signal")),
+            };
+            return Err(err);
+        }
+        Ok(())
     }
 
     pub fn send_check_kill(

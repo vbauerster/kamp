@@ -48,6 +48,7 @@ pub(super) fn run() -> Result<Option<String>, Error> {
                 cmd::list(&ctx?).map(Some)
             }
         }
+        Kill(opt) => cmd::kill(&ctx?, opt.exit_status).map(|_| None),
         Get(opt) => cmd::Get::from(opt.subcommand)
             .run(&ctx?, opt.raw, to_csv_buffers(opt.buffers))
             .map(Some),

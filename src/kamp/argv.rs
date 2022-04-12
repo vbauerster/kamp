@@ -22,6 +22,7 @@ pub(super) enum SubCommand {
     Attach(AttachOptions),
     Edit(EditOptions),
     Send(SendOptions),
+    Kill(KillOptions),
     List(ListOptions),
     Get(GetOptions),
     Cat(CatOptions),
@@ -68,6 +69,15 @@ pub(crate) struct ListOptions {
     /// switch to buffer
     #[argh(switch, short = 'a')]
     pub all: bool,
+}
+
+/// kill session
+#[derive(FromArgs, PartialEq, Debug)]
+#[argh(subcommand, name = "kill")]
+pub(crate) struct KillOptions {
+    /// exit status
+    #[argh(option, short = 's')]
+    pub exit_status: Option<i32>,
 }
 
 /// edit a file
