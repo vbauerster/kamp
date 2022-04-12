@@ -114,7 +114,7 @@ impl<'a> Context<'a> {
         let out_h = read_out(self.get_out_path(false), s0);
         let err_h = read_err(self.get_out_path(true), s1);
 
-        let status = kak::pipe(self.session.as_ref(), cmd)?;
+        let status = kak::pipe(&self.session, cmd)?;
         self.check_status(status)?;
 
         let res = r.recv().map_err(anyhow::Error::new)?;
