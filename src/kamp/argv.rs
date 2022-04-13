@@ -76,7 +76,7 @@ pub(crate) struct ListOptions {
 #[argh(subcommand, name = "kill")]
 pub(crate) struct KillOptions {
     /// exit status
-    #[argh(option, short = 's')]
+    #[argh(positional)]
     pub exit_status: Option<i32>,
 }
 
