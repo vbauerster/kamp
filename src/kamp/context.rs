@@ -41,7 +41,7 @@ impl Client {
 pub(crate) struct Context<'a> {
     session: Cow<'a, str>,
     client: Option<&'a str>,
-    path: Rc<PathBuf>,
+    base_path: Rc<PathBuf>,
 }
 
 impl std::fmt::Display for Context<'_> {
@@ -65,7 +65,7 @@ impl<'a> Context<'a> {
         Context {
             session,
             client: client.filter(|&client| !client.is_empty()),
-            path: Rc::new(path),
+            base_path: Rc::new(path),
         }
     }
 
@@ -198,14 +198,14 @@ impl<'a> Context<'a> {
         Context {
             session: self.session.clone(),
             client: client.filter(|&client| !client.is_empty()),
-            path: Rc::clone(&self.path),
+            base_path: Rc::clone(&self.base_path),
         }
     }
     fn get_out_path(&self, err_out: bool) -> PathBuf {
         if err_out {
-            self.path.with_extension("err")
+            self.base_path.with_extension("err")
         } else {
-            self.path.with_extension("out")
+            self.base_path.with_extension("out")
         }
     }
     fn check_status(&self, status: std::process::ExitStatus) -> Result<(), Error> {
