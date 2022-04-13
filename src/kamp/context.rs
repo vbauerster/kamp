@@ -84,7 +84,7 @@ impl<'a> Context<'a> {
             cmd.push_str(&status.to_string());
         }
 
-        let status = kak::pipe(self.session.as_ref(), cmd)?;
+        let status = kak::pipe(&self.session, cmd)?;
         self.check_status(status)
     }
 
