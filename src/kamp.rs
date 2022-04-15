@@ -15,10 +15,11 @@ const KAKOUNE_CLIENT: &str = "KAKOUNE_CLIENT";
 pub(super) fn run() -> Result<Option<String>, Error> {
     let kamp: Kampliment = argh::from_env();
     let (session, client) = match (kamp.session, kamp.client) {
-        (Some(s), Some(c)) => (Some(s), Some(c)),
-        (Some(s), None) => (Some(s), None),
-        (None, Some(c)) => (var(KAKOUNE_SESSION).ok(), Some(c)),
-        (None, None) => (var(KAKOUNE_SESSION).ok(), var(KAKOUNE_CLIENT).ok()),
+        (Some(s), client) => (Some(s), client),
+        (None, client) => (
+            var(KAKOUNE_SESSION).ok(),
+            client.or_else(|| var(KAKOUNE_CLIENT).ok()),
+        ),
     };
 
     let ctx = session
