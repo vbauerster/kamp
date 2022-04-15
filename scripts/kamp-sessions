@@ -10,7 +10,7 @@ set -euf
 
 sessions_cmd='kak -l'
 preview_cmd='kamp -s {} list'
-kill_cmd='kamp -s {} send kill'
+kill_cmd='kamp -s {} kill'
 
 eval "$sessions_cmd" |
     fzf --prompt 'session> ' --preview "$preview_cmd" \
