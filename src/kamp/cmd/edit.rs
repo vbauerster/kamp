@@ -38,11 +38,7 @@ pub(crate) fn edit(ctx: &Context, files: Vec<String>) -> Result<(), Error> {
         }
     }
 
-    for file in files[i..]
-        .iter()
-        .rev()
-        .chain(pair.into_iter().filter_map(|x| x))
-    {
+    for file in files[i..].iter().rev().chain(pair.into_iter().flatten()) {
         let p = std::fs::canonicalize(file).unwrap_or_else(|_| PathBuf::from(file));
         writeln!(&mut buf, "edit -existing '{}'", p.display())?;
     }
