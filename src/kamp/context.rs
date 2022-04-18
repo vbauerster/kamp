@@ -109,7 +109,7 @@ impl<'a> Context<'a> {
         cmd.push_str("echo -debug kamp: %val{error}\n");
         cmd.push_str("echo -to-file %opt{kamp_err} %val{error}\n}");
 
-        let (s0, r) = crossbeam_channel::bounded(1);
+        let (s0, r) = crossbeam_channel::bounded(0);
         let s1 = s0.clone();
         let out_h = read_out(self.get_out_path(false), s0);
         let err_h = read_err(self.get_out_path(true), s1);
