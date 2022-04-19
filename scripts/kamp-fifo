@@ -8,7 +8,7 @@
 set -euf
 
 # Fail early if there is no session
-kamp ctx
+kamp ctx > /dev/null
 
 d=$(mktemp -d)
 fifo="$d/fifo"
