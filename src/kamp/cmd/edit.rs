@@ -9,7 +9,7 @@ use super::Error;
 pub(crate) fn edit(ctx: &Context, files: Vec<String>) -> Result<(), Error> {
     let mut buf = String::new();
     let mut coord_buf = String::new();
-    let mut pair = [None, None];
+    let mut pair = [None; 2];
     let mut i = 0;
 
     for item in files.iter().take(2) {
