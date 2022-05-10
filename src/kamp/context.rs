@@ -168,7 +168,7 @@ impl<'a> Context<'a> {
         }
         err_h.join().unwrap()?;
         kak_h.join().unwrap()?;
-        res.map(|_| ())
+        res.map(drop)
     }
 
     pub fn session_struct(&self) -> Result<Session, Error> {
