@@ -24,14 +24,16 @@ evaluate-commands %sh{
 
 The [scripts](scripts) need to be added to `$PATH` in order to use them.
 
-| script                                   | function                         |
-| ---------------------------------------- | -------------------------------- |
-| [`kamp-buffers`](scripts/kamp-buffers)   | pick buffers (fzf)               |
-| [`kamp-files`](scripts/kamp-files)       | pick files (fzf)                 |
-| [`kamp-gitls`](scripts/kamp-gitls)       | pick from `git ls-files` (fzf)   |
-| [`kamp-sessions`](scripts/kamp-sessions) | attach session and pick a buffer |
-| [`kamp-grep`](scripts/kamp-grep)         | grep interactively with fzf      |
-| [`kamp-fifo`](scripts/kamp-fifo)         | pipe stdin into fifo buffer      |
+| script                                     | function                         |
+| ------------------------------------------ | -------------------------------- |
+| [`kamp-buffers`](scripts/kamp-buffers)     | pick buffers (fzf)               |
+| [`kamp-files`](scripts/kamp-files)         | pick files (fzf)                 |
+| [`kamp-filetypes`](scripts/kamp-filetypes) | set filetype (fzf)               |
+| [`kamp-gitls`](scripts/kamp-gitls)         | pick from `git ls-files` (fzf)   |
+| [`kamp-lines`](scripts/kamp-lines)         | search lines in buffer (fzf)     |
+| [`kamp-sessions`](scripts/kamp-sessions)   | attach session and pick a buffer |
+| [`kamp-grep`](scripts/kamp-grep)           | grep interactively with fzf      |
+| [`kamp-fifo`](scripts/kamp-fifo)           | pipe stdin into fifo buffer      |
 
 ### Kakoune mappings example
 
