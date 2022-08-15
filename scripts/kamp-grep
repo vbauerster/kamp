@@ -4,28 +4,47 @@
 #
 # Usage:
 #
-# kamp-grep [options]
+# kamp-grep [<query=...>] [rg_options]
 
 # – fzf (https://github.com/junegunn/fzf)
 # https://github.com/junegunn/fzf/blob/master/CHANGELOG.md#0190
 
 # – ripgrep (https://github.com/BurntSushi/ripgrep)
-# 'rg --no-heading --with-filename' are default when not printing to a terminal
+# 'rg --no-heading --with-filename' are defaults when not printing to a terminal
 # 'rg --column' implies --line-number
 
 # - bat (https://github.com/sharkdp/bat)
+
+# example kakoune mapping
+# map -docstring "grep selection, limit to buffer's filetype" global normal <c-y> ':popup kamp-grep "query=%val{selection}" --type %opt{filetype}<ret>'
 
 set -euf
 
 # define SHELL so --preview arguments do not error if current SHELL is not POSIX
 SHELL=/bin/sh
 
-# $@ is meant to pass extra options to rg, not a query and not a path
+query=""
+
+if [ $# -ne 0 ]; then
+  case "$1" in
+    query=*)
+      query="${1#*=}"
+      shift
+    ;;
+  esac
+fi
+
 rg_cmd="rg --color=always --column --fixed-strings $@"
 
-FZF_DEFAULT_COMMAND="$rg_cmd --files" \
+if [ -z "$query" ]; then
+  export FZF_DEFAULT_COMMAND="$rg_cmd --files"
+else
+  export FZF_DEFAULT_COMMAND="$rg_cmd -- '$query'"
+fi
+
 fzf \
   --phony \
+  --query "${query:-}" \
   --delimiter ':' \
   --ansi \
   --bind "change:reload($rg_cmd -- {q} || true)" \
