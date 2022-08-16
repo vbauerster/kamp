@@ -34,7 +34,7 @@ if [ $# -ne 0 ]; then
   esac
 fi
 
-rg_cmd="rg --color=always --column --fixed-strings $@"
+rg_cmd="rg --color=always --column $@"
 
 if [ -z "$query" ]; then
   export FZF_DEFAULT_COMMAND="$rg_cmd --files"
