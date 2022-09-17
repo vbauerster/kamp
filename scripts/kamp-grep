@@ -42,6 +42,11 @@ else
   export FZF_DEFAULT_COMMAND="$rg_cmd -- '$query'"
 fi
 
+preview_cmd='bat \
+  --terminal-width $FZF_PREVIEW_COLUMNS \
+  --style=numbers \
+  --color=always'
+
 fzf \
   --phony \
   --query "${query:-}" \
@@ -51,12 +56,13 @@ fzf \
   --bind 'enter:execute(kamp edit {1} +{2}:{3})+abort' \
   --preview '
       highlight_line={2}
-      line_range_begin=$((highlight_line - (FZF_PREVIEW_LINES / 2)))
-      bat \
-        --terminal-width $FZF_PREVIEW_COLUMNS \
-        --style=numbers \
-        --color=always \
-        --line-range "$((line_range_begin < 0 ? 1 : line_range_begin)):+$FZF_PREVIEW_LINES" \
-        --highlight-line {2} {1} 2> /dev/null' \
+      if [ ! -z "${highlight_line##*[!0-9]*}" ]; then
+        line_range_begin=$((highlight_line - (FZF_PREVIEW_LINES / 2)))
+        '"$preview_cmd"' \
+          --line-range "$((line_range_begin < 0 ? 1 : line_range_begin)):+$FZF_PREVIEW_LINES" \
+          --highlight-line {2} {1} 2>/dev/null
+      else
+        '"$preview_cmd"' {1} 2>/dev/null
+      fi' \
   --header 'type to grep' \
   --prompt 'grep> '
