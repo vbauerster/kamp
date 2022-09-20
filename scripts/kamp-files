@@ -17,4 +17,4 @@ file_list=$(
 		awk '{printf("\"%s\" ",$0)} END { printf "\n" }' # quote each path and join with spaces
 )
 
-eval kamp edit "$file_list"
+[ -n "$file_list" ] && eval kamp edit "$file_list"
