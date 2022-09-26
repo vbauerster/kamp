@@ -16,9 +16,8 @@ pub(crate) fn sessions() -> Result<Sessions> {
     if !output.status.success() {
         if let Some(code) = output.status.code() {
             bail!("kak exited with code: {}", code);
-        } else {
-            bail!("kak terminated by signal");
         }
+        bail!("kak terminated by signal");
     }
 
     let list = String::from_utf8(output.stdout)?;
