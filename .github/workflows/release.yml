@@ -69,17 +69,17 @@ jobs:
         tar -C "$ARCHIVE_DIR" -czf "$PKG_STAGING/$PKG_NAME" .
 
         # Let subsequent steps know where to find the compressed package
-        echo ::set-output name=PKG_NAME::"$PKG_NAME"
-        echo ::set-output name=PKG_PATH::"$PKG_STAGING/$PKG_NAME"
+        echo "PKG_NAME=$PKG_NAME" >> $GITHUB_ENV
+        echo "PKG_PATH=$PKG_STAGING/$PKG_NAME" >> $GITHUB_ENV
 
     - uses: actions/upload-artifact@v3
       with:
-        name: ${{ steps.package.outputs.PKG_NAME }}
-        path: ${{ steps.package.outputs.PKG_PATH }}
+        name: ${{ env.PKG_NAME }}
+        path: ${{ env.PKG_PATH }}
 
     - uses: softprops/action-gh-release@v1
       with:
         files: |
-          ${{ steps.package.outputs.PKG_PATH }}
+          ${{ env.PKG_PATH }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
