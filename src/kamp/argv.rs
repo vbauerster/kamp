@@ -169,7 +169,7 @@ pub(crate) struct RegisterName {
 }
 
 /// shell command
-#[derive(FromArgs, PartialEq, Debug)]
+#[derive(FromArgs, PartialEq, Eq, Debug)]
 #[argh(subcommand, name = "sh")]
 pub(crate) struct ShellCmdName {
     /// shell command
@@ -177,7 +177,7 @@ pub(crate) struct ShellCmdName {
     pub name: String,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Eq, Debug)]
 pub struct KeyValue {
     pub key: String,
     pub value: String,
