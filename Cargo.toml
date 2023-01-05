@@ -1,6 +1,6 @@
 [package]
 name = "kampliment"
-version = "0.1.1"
+version = "0.1.2-dev"
 authors = ["Vladimir Bauer <vbauerster@gmail.com>"]
 description = "kampliment is a tool to control kakoune editor from the command line"
 repository = "https://github.com/vbauerster/kampliment"
