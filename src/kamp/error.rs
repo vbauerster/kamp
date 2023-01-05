@@ -12,7 +12,7 @@ pub enum Error {
     #[error("invalid coordinates: {coord:?}")]
     InvalidCoordinates {
         coord: String,
-        source: std::num::ParseIntError,
+        source: anyhow::Error,
     },
 
     #[error("kak eval error: {0}")]
