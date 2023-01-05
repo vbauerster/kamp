@@ -66,3 +66,31 @@ fn parse(coord: &str) -> Result<Vec<i32>, Error> {
         })
         .collect()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_parse_ok() -> Result<(), Error> {
+        assert_eq!(parse("+1")?, vec![1]);
+        assert_eq!(parse("+1:")?, vec![1]);
+        assert_eq!(parse("+1:1")?, vec![1, 1]);
+        Ok(())
+    }
+    #[test]
+    fn test_parse_err() {
+        assert!(parse("+").is_err());
+        assert!(parse("+:").is_err());
+        assert!(parse("+:+").is_err());
+        assert!(parse("+:1").is_err());
+        assert!(parse("++").is_err());
+        assert!(parse("++:").is_err());
+        assert!(parse("++:1").is_err());
+        assert!(parse("++1:").is_err());
+        assert!(parse("++1:1").is_err());
+        assert!(parse("+a").is_err());
+        assert!(parse("+a:").is_err());
+        assert!(parse("+a:1").is_err());
+        assert!(parse("+1:a").is_err());
+    }
+}
