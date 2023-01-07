@@ -59,9 +59,9 @@ pub(super) fn run() -> Result<Option<String>, Error> {
 }
 
 fn join_command(cmd: String, rest: Vec<String>) -> String {
-    rest.iter().fold(cmd, |mut cmd, next| {
+    rest.into_iter().fold(cmd, |mut cmd, next| {
         cmd.push(' ');
-        cmd.push_str(next);
+        cmd.push_str(&next);
         cmd
     })
 }
