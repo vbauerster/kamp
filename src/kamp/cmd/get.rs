@@ -66,9 +66,8 @@ impl Get<'_> {
             }
         }
         buf.push('}');
-        let res = ctx.send(&buf, buffer);
-        if rawness == 0 {
-            res.map(|s| {
+        ctx.send(&buf, buffer).map(|s| {
+            if rawness == 0 {
                 s.split('\'').filter(|&s| !s.trim().is_empty()).fold(
                     String::new(),
                     |mut buf, next| {
@@ -77,9 +76,9 @@ impl Get<'_> {
                         buf
                     },
                 )
-            })
-        } else {
-            res
-        }
+            } else {
+                s
+            }
+        })
     }
 }
