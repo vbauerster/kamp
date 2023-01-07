@@ -91,6 +91,14 @@ fn to_csv_buffers_or_asterisk(buffers: Vec<String>) -> Option<String> {
 mod tests {
     use super::*;
     #[test]
+    fn test_join_command() {
+        assert_eq!(join_command("a".into(), vec![]), "a".to_owned());
+        assert_eq!(
+            join_command("a".into(), vec!["b".into(), "c".into()]),
+            "a b c".to_owned()
+        );
+    }
+    #[test]
     fn test_to_csv_buffers_or_asterisk() {
         assert_eq!(to_csv_buffers_or_asterisk(vec![]), None);
         assert_eq!(
