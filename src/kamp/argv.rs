@@ -101,7 +101,7 @@ pub(crate) struct SendOptions {
     #[argh(positional)]
     pub command: String,
 
-    /// remainder of the command if any joined by spaces
+    /// remainder of the command if any
     #[argh(positional)]
     pub remainder: Vec<String>,
 }
