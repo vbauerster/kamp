@@ -71,19 +71,18 @@ fn to_csv_buffers(buffers: Vec<String>) -> Option<String> {
         return None;
     }
     if buffers[0] == "*" {
-        return Some("*".into());
+        return buffers.into_iter().rev().last();
     }
-    let buffers = buffers.into_iter().filter(|s| s != "*").collect::<Vec<_>>();
     let mut res =
         buffers
-            .iter()
-            .take(buffers.len() - 1)
+            .into_iter()
+            .filter(|s| s != "*")
             .fold(String::from('\''), |mut buf, next| {
-                buf.push_str(next);
+                buf.push_str(&next);
                 buf.push(',');
                 buf
             });
-    res.push_str(&buffers[buffers.len() - 1]);
+    res.pop(); // pops last ','
     res.push('\'');
     Some(res)
 }
