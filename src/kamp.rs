@@ -37,7 +37,7 @@ pub(super) fn run() -> Result<Option<String>, Error> {
         }
         Send(opt) => cmd::send(
             &ctx?,
-            join_command(opt.command, opt.rest),
+            join_command(opt.command, opt.remainder),
             to_csv_buffers_or_asterisk(opt.buffers),
         )
         .map(|_| None),
@@ -58,8 +58,8 @@ pub(super) fn run() -> Result<Option<String>, Error> {
     }
 }
 
-fn join_command(cmd: String, rest: Vec<String>) -> String {
-    rest.into_iter().fold(cmd, |mut cmd, next| {
+fn join_command(cmd: String, remainder: Vec<String>) -> String {
+    remainder.into_iter().fold(cmd, |mut cmd, next| {
         cmd.push(' ');
         cmd.push_str(&next);
         cmd
