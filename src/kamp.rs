@@ -87,3 +87,29 @@ fn to_csv_buffers(buffers: Vec<String>) -> Option<String> {
     res.push('\'');
     Some(res)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_to_csv_buffers() {
+        assert_eq!(to_csv_buffers(vec![]), None);
+        assert_eq!(to_csv_buffers(vec!["*".into()]), Some("*".into()));
+        assert_eq!(
+            to_csv_buffers(vec!["*".into(), "a".into()]),
+            Some("*".into())
+        );
+        assert_eq!(
+            to_csv_buffers(vec!["a".into(), "*".into()]),
+            Some("'a'".into())
+        );
+        assert_eq!(
+            to_csv_buffers(vec!["a".into(), "b".into()]),
+            Some("'a,b'".into())
+        );
+        assert_eq!(
+            to_csv_buffers(vec!["a".into(), "b".into(), "c".into()]),
+            Some("'a,b,c'".into())
+        );
+    }
+}
