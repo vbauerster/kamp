@@ -58,9 +58,7 @@ impl<'a> Context<'a> {
     pub fn new(session: impl Into<Cow<'a, str>>, client: Option<&'a str>) -> Self {
         let session = session.into();
         let mut path = std::env::temp_dir();
-        let mut base = String::from("kamp-");
-        base.push_str(&session);
-        path.push(base);
+        path.push(format!("kamp-{}", session));
 
         Context {
             session,
