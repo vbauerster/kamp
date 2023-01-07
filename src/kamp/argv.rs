@@ -110,7 +110,8 @@ pub(crate) struct SendOptions {
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "get")]
 pub(crate) struct GetOptions {
-    /// raw output
+    /// raw output:
+    /// single switch includes quoting double switch omits quoting
     #[argh(switch, short = 'r')]
     pub raw: u8,
 
