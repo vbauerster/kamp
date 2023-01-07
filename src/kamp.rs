@@ -38,7 +38,7 @@ pub(super) fn run() -> Result<Option<String>, Error> {
         Send(opt) => cmd::send(
             &ctx?,
             join_command(opt.command, opt.rest),
-            to_csv_buffers(opt.buffers),
+            to_csv_buffers_or_asterisk(opt.buffers),
         )
         .map(|_| None),
         List(opt) => {
@@ -50,9 +50,9 @@ pub(super) fn run() -> Result<Option<String>, Error> {
         }
         Kill(opt) => cmd::kill(&ctx?, opt.exit_status).map(|_| None),
         Get(opt) => cmd::Get::from(opt.subcommand)
-            .run(&ctx?, opt.raw, to_csv_buffers(opt.buffers))
+            .run(&ctx?, opt.raw, to_csv_buffers_or_asterisk(opt.buffers))
             .map(Some),
-        Cat(opt) => cmd::cat(&ctx?, to_csv_buffers(opt.buffers)).map(Some),
+        Cat(opt) => cmd::cat(&ctx?, to_csv_buffers_or_asterisk(opt.buffers)).map(Some),
         Ctx(_) => cmd::ctx(&ctx?).map(Some),
         Version(_) => cmd::version().map(Some),
     }
@@ -66,7 +66,7 @@ fn join_command(cmd: String, rest: Vec<String>) -> String {
     })
 }
 
-fn to_csv_buffers(buffers: Vec<String>) -> Option<String> {
+fn to_csv_buffers_or_asterisk(buffers: Vec<String>) -> Option<String> {
     if buffers.is_empty() {
         return None;
     }
@@ -91,23 +91,26 @@ fn to_csv_buffers(buffers: Vec<String>) -> Option<String> {
 mod tests {
     use super::*;
     #[test]
-    fn test_to_csv_buffers() {
-        assert_eq!(to_csv_buffers(vec![]), None);
-        assert_eq!(to_csv_buffers(vec!["*".into()]), Some("*".into()));
+    fn test_to_csv_buffers_or_asterisk() {
+        assert_eq!(to_csv_buffers_or_asterisk(vec![]), None);
         assert_eq!(
-            to_csv_buffers(vec!["*".into(), "a".into()]),
+            to_csv_buffers_or_asterisk(vec!["*".into()]),
             Some("*".into())
         );
         assert_eq!(
-            to_csv_buffers(vec!["a".into(), "*".into()]),
+            to_csv_buffers_or_asterisk(vec!["*".into(), "a".into()]),
+            Some("*".into())
+        );
+        assert_eq!(
+            to_csv_buffers_or_asterisk(vec!["a".into(), "*".into()]),
             Some("'a'".into())
         );
         assert_eq!(
-            to_csv_buffers(vec!["a".into(), "b".into()]),
+            to_csv_buffers_or_asterisk(vec!["a".into(), "b".into()]),
             Some("'a,b'".into())
         );
         assert_eq!(
-            to_csv_buffers(vec!["a".into(), "b".into(), "c".into()]),
+            to_csv_buffers_or_asterisk(vec!["a".into(), "b".into(), "c".into()]),
             Some("'a,b,c'".into())
         );
     }
