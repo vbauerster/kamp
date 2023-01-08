@@ -38,9 +38,17 @@ pub(super) fn run() -> Result<Option<String>> {
         (List(opt), ctx) if opt.all => cmd::list_all(ctx).map(Some),
         (List(_), Some(ctx)) => cmd::list(&ctx).map(Some),
         (Kill(opt), Some(ctx)) => cmd::kill(&ctx, opt.exit_status).map(|_| None),
-        (Get(opt), Some(ctx)) => cmd::Get::from(opt.subcommand)
-            .run(&ctx, opt.raw, to_csv_buffers_or_asterisk(opt.buffers))
-            .map(Some),
+        (Get(opt), Some(ctx)) => {
+            use argv::GetSubCommand::*;
+            let buffer = to_csv_buffers_or_asterisk(opt.buffers);
+            let res = match opt.subcommand {
+                Val(o) => ctx.query_val(&o.name, opt.raw, buffer),
+                Opt(o) => ctx.query_opt(&o.name, opt.raw, buffer),
+                Reg(o) => ctx.query_reg(&o.name, opt.raw, buffer),
+                Shell(o) => ctx.query_sh(&o.name, opt.raw, buffer),
+            };
+            res.map(Some)
+        }
         (Cat(opt), Some(ctx)) => cmd::cat(&ctx, to_csv_buffers_or_asterisk(opt.buffers)).map(Some),
         (Ctx(_), Some(ctx)) => cmd::ctx(&ctx).map(Some),
         _ => Err(Error::InvalidContext("session is required")),

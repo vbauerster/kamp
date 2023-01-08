@@ -170,28 +170,63 @@ impl<'a> Context<'a> {
     }
 
     pub fn session_struct(&self) -> Result<Session> {
-        use super::cmd::Get;
-        Get::new_val("client_list")
-            .run(self, 0, None)
+        self.query_val("client_list", 0, None)
             .and_then(|clients| {
                 clients
                     .lines()
                     .map(|name| {
-                        Get::new_val("bufname")
-                            .run(&self.clone_with_client(Some(name)), 2, None)
+                        let ctx = self.clone_with_client(Some(name));
+                        ctx.query_val("bufname", 2, None)
                             .map(|bufname| Client::new(name.into(), bufname))
                     })
                     .collect::<Result<Vec<Client>>>()
             })
             .and_then(|clients| {
-                Get::new_sh("pwd")
-                    .run(self, 2, None)
+                self.query_sh("pwd", 2, None)
                     .map(|pwd| Session::new(self.session().into_owned(), pwd, clients))
             })
+    }
+    pub fn query_val(&self, name: &str, rawness: u8, buffer: Option<String>) -> Result<String> {
+        self.query_kak(("val", name), rawness, buffer)
+    }
+    pub fn query_opt(&self, name: &str, rawness: u8, buffer: Option<String>) -> Result<String> {
+        self.query_kak(("opt", name), rawness, buffer)
+    }
+    pub fn query_reg(&self, name: &str, rawness: u8, buffer: Option<String>) -> Result<String> {
+        self.query_kak(("reg", name), rawness, buffer)
+    }
+    pub fn query_sh(&self, name: &str, rawness: u8, buffer: Option<String>) -> Result<String> {
+        self.query_kak(("sh", name), rawness, buffer)
     }
 }
 
 impl<'a> Context<'a> {
+    fn query_kak(&self, kv: (&str, &str), rawness: u8, buffer: Option<String>) -> Result<String> {
+        let mut buf = String::from("echo -quoting ");
+        match rawness {
+            0 | 1 => buf.push_str("kakoune"),
+            _ => buf.push_str("raw"),
+        }
+        buf.push_str(" -to-file %opt{kamp_out} %");
+        buf.push_str(kv.0);
+        buf.push('{');
+        buf.push_str(kv.1);
+        buf.push('}');
+        self.send(&buf, buffer).map(|s| {
+            if rawness == 0 {
+                s.split('\'').filter(|&s| !s.trim().is_empty()).fold(
+                    String::new(),
+                    |mut buf, next| {
+                        buf.push_str(next);
+                        buf.push('\n');
+                        buf
+                    },
+                )
+            } else {
+                s
+            }
+        })
+    }
     fn clone_with_client(&self, client: Option<&'a str>) -> Self {
         Context {
             session: self.session.clone(),
