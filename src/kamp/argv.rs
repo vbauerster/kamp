@@ -139,7 +139,7 @@ pub(crate) enum GetSubCommand {
     Val(ValueName),
     Opt(OptionName),
     Reg(RegisterName),
-    Shell(ShellCmdName),
+    Shell(ShellCommand),
 }
 
 /// value name
@@ -172,10 +172,14 @@ pub(crate) struct RegisterName {
 /// shell command
 #[derive(FromArgs, PartialEq, Eq, Debug)]
 #[argh(subcommand, name = "sh")]
-pub(crate) struct ShellCmdName {
-    /// shell command
-    #[argh(positional, arg_name = "command")]
-    pub name: String,
+pub(crate) struct ShellCommand {
+    /// shell command to evaluate
+    #[argh(positional)]
+    pub command: String,
+
+    /// remainder of the command if any
+    #[argh(positional)]
+    pub remainder: Vec<String>,
 }
 
 #[derive(PartialEq, Eq, Debug)]

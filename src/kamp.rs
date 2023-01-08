@@ -45,7 +45,9 @@ pub(super) fn run() -> Result<Option<String>> {
                 Val(o) => ctx.query_val(&o.name, opt.rawness, buffer),
                 Opt(o) => ctx.query_opt(&o.name, opt.rawness, buffer),
                 Reg(o) => ctx.query_reg(&o.name, opt.rawness, buffer),
-                Shell(o) => ctx.query_sh(&o.name, opt.rawness, buffer),
+                Shell(o) => {
+                    ctx.query_sh(&join_command(o.command, o.remainder), opt.rawness, buffer)
+                }
             };
             res.map(Some)
         }
