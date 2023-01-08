@@ -6,12 +6,12 @@ mod kak;
 
 use argv::{Kampliment, SubCommand::*};
 use context::Context;
-use error::Error;
+use error::{Error, Result};
 
 const KAKOUNE_SESSION: &str = "KAKOUNE_SESSION";
 const KAKOUNE_CLIENT: &str = "KAKOUNE_CLIENT";
 
-pub(super) fn run() -> Result<Option<String>, Error> {
+pub(super) fn run() -> Result<Option<String>> {
     let kamp: Kampliment = argh::from_env();
     let (session, client) = match (kamp.session, kamp.client) {
         (Some(s), client) => (Some(s), client),
