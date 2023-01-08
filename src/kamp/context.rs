@@ -47,11 +47,13 @@ impl<'a> Context<'a> {
         self.session.clone()
     }
 
-    pub fn set_client<S>(&mut self, client: Option<S>)
-    where
-        S: Into<Cow<'a, str>>,
-    {
-        self.client = client.map(Into::into);
+    pub fn set_client(&mut self, client: impl Into<Cow<'a, str>>) {
+        let client = client.into();
+        self.client = if client.is_empty() {
+            None
+        } else {
+            Some(client)
+        };
     }
 
     pub fn is_draft(&self) -> bool {

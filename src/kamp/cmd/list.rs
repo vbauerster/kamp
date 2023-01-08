@@ -58,7 +58,7 @@ fn to_session_struct(ctx: &Context) -> Result<Session> {
                 .lines()
                 .map(|name| {
                     let mut ctx_clone = ctx.clone();
-                    ctx_clone.set_client(Some(name));
+                    ctx_clone.set_client(name);
                     ctx_clone
                         .query_val("bufname", 2, None)
                         .map(|bufname| Client::new(name.into(), bufname))
