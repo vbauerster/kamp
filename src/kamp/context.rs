@@ -175,7 +175,11 @@ impl<'a> Context<'a> {
                 clients
                     .lines()
                     .map(|name| {
-                        let ctx = self.clone_with_client(Some(name));
+                        let ctx = Context {
+                            session: self.session(),
+                            client: Some(name),
+                            base_path: Rc::clone(&self.base_path),
+                        };
                         ctx.query_val("bufname", 2, None)
                             .map(|bufname| Client::new(name.into(), bufname))
                     })
@@ -226,13 +230,6 @@ impl<'a> Context<'a> {
                 s
             }
         })
-    }
-    fn clone_with_client(&self, client: Option<&'a str>) -> Self {
-        Context {
-            session: self.session.clone(),
-            client: client.filter(|&client| !client.is_empty()),
-            base_path: Rc::clone(&self.base_path),
-        }
     }
     fn get_out_path(&self, err_out: bool) -> PathBuf {
         if err_out {
