@@ -71,7 +71,7 @@ impl<'a> Context<'a> {
         self.check_status(status)
     }
 
-    pub fn send<S: AsRef<str>>(&self, body: S, buffer: Option<String>) -> Result<String> {
+    pub fn send(&self, body: impl AsRef<str>, buffer: Option<String>) -> Result<String> {
         let mut cmd = String::from("try %{\n");
         cmd.push_str("eval");
         match (buffer.as_deref(), &self.client) {
@@ -107,7 +107,7 @@ impl<'a> Context<'a> {
         res
     }
 
-    pub fn connect<S: AsRef<str>>(&self, body: S) -> Result<()> {
+    pub fn connect(&self, body: impl AsRef<str>) -> Result<()> {
         let mut cmd = String::new();
         let body = body.as_ref();
         if !body.is_empty() {
