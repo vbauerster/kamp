@@ -28,7 +28,7 @@ pub(super) fn run() -> Result<Option<String>> {
         (Init(opt), _) => cmd::init(opt.export, opt.alias).map(Some),
         (Attach(opt), Some(ctx)) => cmd::attach(&ctx, opt.buffer).map(|_| None),
         (Edit(opt), Some(ctx)) => cmd::edit(&ctx, opt.files).map(|_| None),
-        (Edit(opt), None) => kak::proxy(opt.files).map_err(Error::Other).map(|_| None),
+        (Edit(opt), None) => kak::proxy(opt.files).map(|_| None),
         (Send(opt), Some(ctx)) => cmd::send(
             &ctx,
             join_command(opt.command, opt.remainder),
