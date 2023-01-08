@@ -21,40 +21,29 @@ pub(super) fn run() -> Result<Option<String>> {
         ),
     };
 
-    let ctx = session
-        .map(|session| Context::new(session, client.as_deref()))
-        .ok_or(Error::NoSession);
+    let ctx = session.map(|session| Context::new(session, client.as_deref()));
 
-    match kamp.subcommand {
-        Init(opt) => cmd::init(opt.export, opt.alias).map(Some),
-        Attach(opt) => cmd::attach(&ctx?, opt.buffer).map(|_| None),
-        Edit(opt) => {
-            if let Ok(ctx) = ctx {
-                cmd::edit(&ctx, opt.files).map(|_| None)
-            } else {
-                kak::proxy(opt.files).map_err(Error::Other).map(|_| None)
-            }
-        }
-        Send(opt) => cmd::send(
-            &ctx?,
+    match (kamp.subcommand, ctx) {
+        (Version(_), _) => cmd::version().map(Some),
+        (Init(opt), _) => cmd::init(opt.export, opt.alias).map(Some),
+        (Attach(opt), Some(ctx)) => cmd::attach(&ctx, opt.buffer).map(|_| None),
+        (Edit(opt), Some(ctx)) => cmd::edit(&ctx, opt.files).map(|_| None),
+        (Edit(opt), None) => kak::proxy(opt.files).map_err(Error::Other).map(|_| None),
+        (Send(opt), Some(ctx)) => cmd::send(
+            &ctx,
             join_command(opt.command, opt.remainder),
             to_csv_buffers_or_asterisk(opt.buffers),
         )
         .map(|_| None),
-        List(opt) => {
-            if opt.all {
-                cmd::list_all(ctx.ok()).map(Some)
-            } else {
-                cmd::list(&ctx?).map(Some)
-            }
-        }
-        Kill(opt) => cmd::kill(&ctx?, opt.exit_status).map(|_| None),
-        Get(opt) => cmd::Get::from(opt.subcommand)
-            .run(&ctx?, opt.raw, to_csv_buffers_or_asterisk(opt.buffers))
+        (List(opt), ctx) if opt.all => cmd::list_all(ctx).map(Some),
+        (List(_), Some(ctx)) => cmd::list(&ctx).map(Some),
+        (Kill(opt), Some(ctx)) => cmd::kill(&ctx, opt.exit_status).map(|_| None),
+        (Get(opt), Some(ctx)) => cmd::Get::from(opt.subcommand)
+            .run(&ctx, opt.raw, to_csv_buffers_or_asterisk(opt.buffers))
             .map(Some),
-        Cat(opt) => cmd::cat(&ctx?, to_csv_buffers_or_asterisk(opt.buffers)).map(Some),
-        Ctx(_) => cmd::ctx(&ctx?).map(Some),
-        Version(_) => cmd::version().map(Some),
+        (Cat(opt), Some(ctx)) => cmd::cat(&ctx, to_csv_buffers_or_asterisk(opt.buffers)).map(Some),
+        (Ctx(_), Some(ctx)) => cmd::ctx(&ctx).map(Some),
+        _ => Err(Error::NoSession),
     }
 }
 
