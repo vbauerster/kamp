@@ -27,3 +27,5 @@ pub enum Error {
     #[error(transparent)]
     Other(#[from] anyhow::Error), // source and Display delegate to anyhow::Error
 }
+
+pub type Result<T> = std::result::Result<T, Error>;

@@ -10,7 +10,7 @@ mod send;
 mod version;
 
 use super::context::*;
-use super::Error;
+use super::{Error, Result};
 
 pub(super) use attach::attach;
 pub(super) use cat::cat;
