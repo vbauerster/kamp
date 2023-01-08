@@ -164,8 +164,8 @@ impl<'a> Context<'a> {
     pub fn query_reg(&self, name: &str, rawness: u8, buffer: Option<String>) -> Result<String> {
         self.query_kak(("reg", name), rawness, buffer)
     }
-    pub fn query_sh(&self, name: &str, rawness: u8, buffer: Option<String>) -> Result<String> {
-        self.query_kak(("sh", name), rawness, buffer)
+    pub fn query_sh(&self, cmd: &str, rawness: u8, buffer: Option<String>) -> Result<String> {
+        self.query_kak(("sh", cmd), rawness, buffer)
     }
 }
 
