@@ -42,10 +42,10 @@ pub(super) fn run() -> Result<Option<String>> {
             use argv::GetSubCommand::*;
             let buffer = to_csv_buffers_or_asterisk(opt.buffers);
             let res = match opt.subcommand {
-                Val(o) => ctx.query_val(&o.name, opt.raw, buffer),
-                Opt(o) => ctx.query_opt(&o.name, opt.raw, buffer),
-                Reg(o) => ctx.query_reg(&o.name, opt.raw, buffer),
-                Shell(o) => ctx.query_sh(&o.name, opt.raw, buffer),
+                Val(o) => ctx.query_val(&o.name, opt.rawness, buffer),
+                Opt(o) => ctx.query_opt(&o.name, opt.rawness, buffer),
+                Reg(o) => ctx.query_reg(&o.name, opt.rawness, buffer),
+                Shell(o) => ctx.query_sh(&o.name, opt.rawness, buffer),
             };
             res.map(Some)
         }

@@ -112,8 +112,8 @@ pub(crate) struct SendOptions {
 pub(crate) struct GetOptions {
     /// raw output:
     /// single switch includes quoting double switch omits quoting
-    #[argh(switch, short = 'r')]
-    pub raw: u8,
+    #[argh(switch, short = 'r', long = "raw")]
+    pub rawness: u8,
 
     /// run in a given buffer's context
     /// or '*' for all non-debug buffers
