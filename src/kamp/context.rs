@@ -10,34 +10,7 @@ use super::{Error, Result};
 
 const END_TOKEN: &str = "<<EEND>>";
 
-#[allow(unused)]
-#[derive(Debug)]
-pub struct Session {
-    name: String,
-    pwd: String,
-    clients: Vec<Client>,
-}
-
-impl Session {
-    fn new(name: String, pwd: String, clients: Vec<Client>) -> Self {
-        Session { name, pwd, clients }
-    }
-}
-
-#[allow(unused)]
-#[derive(Debug)]
-pub struct Client {
-    name: String,
-    bufname: String,
-}
-
-impl Client {
-    fn new(name: String, bufname: String) -> Self {
-        Client { name, bufname }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct Context<'a> {
     session: Cow<'a, str>,
     client: Option<&'a str>,
@@ -69,6 +42,10 @@ impl<'a> Context<'a> {
 
     pub fn session(&self) -> Cow<'a, str> {
         self.session.clone()
+    }
+
+    pub fn set_client(&mut self, client: Option<&'a str>) {
+        self.client = client.filter(|&client| !client.is_empty());
     }
 
     pub fn is_draft(&self) -> bool {
@@ -169,27 +146,6 @@ impl<'a> Context<'a> {
         res.map(drop)
     }
 
-    pub fn session_struct(&self) -> Result<Session> {
-        self.query_val("client_list", 0, None)
-            .and_then(|clients| {
-                clients
-                    .lines()
-                    .map(|name| {
-                        let ctx = Context {
-                            session: self.session(),
-                            client: Some(name),
-                            base_path: Rc::clone(&self.base_path),
-                        };
-                        ctx.query_val("bufname", 2, None)
-                            .map(|bufname| Client::new(name.into(), bufname))
-                    })
-                    .collect::<Result<Vec<Client>>>()
-            })
-            .and_then(|clients| {
-                self.query_sh("pwd", 2, None)
-                    .map(|pwd| Session::new(self.session().into_owned(), pwd, clients))
-            })
-    }
     pub fn query_val(&self, name: &str, rawness: u8, buffer: Option<String>) -> Result<String> {
         self.query_kak(("val", name), rawness, buffer)
     }
