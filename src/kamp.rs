@@ -13,7 +13,7 @@ const KAKOUNE_CLIENT: &str = "KAKOUNE_CLIENT";
 
 pub(super) fn run() -> Result<Option<String>> {
     let kamp: Kampliment = argh::from_env();
-    let (session, client) = match (kamp.session, kamp.client) {
+    let (session, client) = match (kamp.session, kamp.client.filter(|s| !s.is_empty())) {
         (Some(s), client) => (Some(s), client),
         (None, client) => (
             std::env::var(KAKOUNE_SESSION).ok(),
@@ -21,7 +21,7 @@ pub(super) fn run() -> Result<Option<String>> {
         ),
     };
 
-    let ctx = session.map(|session| Context::new(session, client.as_deref()));
+    let ctx = session.map(|session| Context::new(session, client));
 
     match (kamp.subcommand, ctx) {
         (Version(_), _) => cmd::version().map(Some),

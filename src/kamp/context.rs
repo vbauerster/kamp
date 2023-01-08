@@ -13,14 +13,14 @@ const END_TOKEN: &str = "<<EEND>>";
 #[derive(Debug, Clone)]
 pub(crate) struct Context<'a> {
     session: Cow<'a, str>,
-    client: Option<&'a str>,
+    client: Option<Cow<'a, str>>,
     base_path: Rc<PathBuf>,
 }
 
 impl std::fmt::Display for Context<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "session: {}", self.session)?;
-        if let Some(client) = self.client {
+        if let Some(client) = &self.client {
             write!(f, "\nclient: {}", client)?;
         }
         Ok(())
@@ -28,14 +28,17 @@ impl std::fmt::Display for Context<'_> {
 }
 
 impl<'a> Context<'a> {
-    pub fn new(session: impl Into<Cow<'a, str>>, client: Option<&'a str>) -> Self {
+    pub fn new<S>(session: S, client: Option<S>) -> Self
+    where
+        S: Into<Cow<'a, str>>,
+    {
         let session = session.into();
         let mut path = std::env::temp_dir();
         path.push(format!("kamp-{}", session));
 
         Context {
             session,
-            client: client.filter(|&client| !client.is_empty()),
+            client: client.map(Into::into),
             base_path: Rc::new(path),
         }
     }
@@ -44,8 +47,11 @@ impl<'a> Context<'a> {
         self.session.clone()
     }
 
-    pub fn set_client(&mut self, client: Option<&'a str>) {
-        self.client = client.filter(|&client| !client.is_empty());
+    pub fn set_client<S>(&mut self, client: Option<S>)
+    where
+        S: Into<Cow<'a, str>>,
+    {
+        self.client = client.map(Into::into);
     }
 
     pub fn is_draft(&self) -> bool {
@@ -64,17 +70,18 @@ impl<'a> Context<'a> {
     }
 
     pub fn send<S: AsRef<str>>(&self, body: S, buffer: Option<String>) -> Result<String> {
-        let eval_ctx = match (buffer.as_deref(), self.client) {
-            (Some(b), _) => Some((" -buffer ", b)),
-            (_, Some(c)) => Some((" -client ", c)),
-            // 'get val client_list' for example doesn't need neither buffer nor client
-            (None, None) => None,
-        };
         let mut cmd = String::from("try %{\n");
         cmd.push_str("eval");
-        if let Some((ctx, name)) = eval_ctx {
-            cmd.push_str(ctx);
-            cmd.push_str(name);
+        match (buffer.as_deref(), &self.client) {
+            (Some(b), _) => {
+                cmd.push_str(" -buffer ");
+                cmd.push_str(b);
+            }
+            (_, Some(c)) => {
+                cmd.push_str(" -client ");
+                cmd.push_str(c);
+            }
+            _ => (), // 'get val client_list' for example doesn't need neither buffer nor client
         }
         cmd.push_str(" %{\n");
         cmd.push_str(body.as_ref());
