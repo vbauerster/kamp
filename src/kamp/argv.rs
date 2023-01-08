@@ -146,7 +146,7 @@ pub(crate) enum GetSubCommand {
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "val")]
 pub(crate) struct ValueName {
-    /// value name
+    /// value name to query
     #[argh(positional)]
     pub name: String,
 }
@@ -155,7 +155,7 @@ pub(crate) struct ValueName {
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "opt")]
 pub(crate) struct OptionName {
-    /// option name
+    /// option name to query
     #[argh(positional)]
     pub name: String,
 }
@@ -164,7 +164,7 @@ pub(crate) struct OptionName {
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "reg")]
 pub(crate) struct RegisterName {
-    /// register name
+    /// register name to query
     #[argh(positional)]
     pub name: String,
 }
