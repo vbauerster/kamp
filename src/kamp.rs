@@ -35,7 +35,7 @@ pub(super) fn run() -> Result<Option<String>> {
             to_csv_buffers_or_asterisk(opt.buffers),
         )
         .map(|_| None),
-        (List(opt), ctx) if opt.all => cmd::list_all(ctx).map(Some),
+        (List(opt), _) if opt.all => cmd::list_all().map(Some),
         (List(_), Some(ctx)) => cmd::list(&ctx).map(Some),
         (Kill(opt), Some(ctx)) => cmd::kill(&ctx, opt.exit_status).map(|_| None),
         (Get(opt), Some(ctx)) => {
