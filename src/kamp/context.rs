@@ -6,7 +6,7 @@ use std::rc::Rc;
 use std::thread;
 
 use super::kak;
-use super::Error;
+use super::{Error, Result};
 
 const END_TOKEN: &str = "<<EEND>>";
 
@@ -75,7 +75,7 @@ impl<'a> Context<'a> {
         self.client.is_none()
     }
 
-    pub fn send_kill(&self, exit_status: Option<i32>) -> Result<(), Error> {
+    pub fn send_kill(&self, exit_status: Option<i32>) -> Result<()> {
         let mut cmd = String::from("kill");
         if let Some(status) = exit_status {
             cmd.push(' ');
@@ -86,7 +86,7 @@ impl<'a> Context<'a> {
         self.check_status(status)
     }
 
-    pub fn send<S: AsRef<str>>(&self, body: S, buffer: Option<String>) -> Result<String, Error> {
+    pub fn send<S: AsRef<str>>(&self, body: S, buffer: Option<String>) -> Result<String> {
         let eval_ctx = match (buffer.as_deref(), self.client) {
             (Some(b), _) => Some((" -buffer ", b)),
             (_, Some(c)) => Some((" -client ", c)),
@@ -121,7 +121,7 @@ impl<'a> Context<'a> {
         res
     }
 
-    pub fn connect<S: AsRef<str>>(&self, body: S) -> Result<(), Error> {
+    pub fn connect<S: AsRef<str>>(&self, body: S) -> Result<()> {
         let mut cmd = String::new();
         let body = body.as_ref();
         if !body.is_empty() {
@@ -154,7 +154,7 @@ impl<'a> Context<'a> {
                 let status = kak_h.join().unwrap()?;
                 return self
                     .check_status(status)
-                    .and_then(|_| Err(Error::Other(anyhow::Error::new(recv_err))));
+                    .and_then(|_| Err(anyhow::Error::new(recv_err).into()));
             }
         };
         if res.is_ok() {
@@ -169,7 +169,7 @@ impl<'a> Context<'a> {
         res.map(drop)
     }
 
-    pub fn session_struct(&self) -> Result<Session, Error> {
+    pub fn session_struct(&self) -> Result<Session> {
         use super::cmd::Get;
         Get::new_val("client_list")
             .run(self, 0, None)
@@ -181,7 +181,7 @@ impl<'a> Context<'a> {
                             .run(&self.clone_with_client(Some(name)), 2, None)
                             .map(|bufname| Client::new(name.into(), bufname))
                     })
-                    .collect::<Result<Vec<Client>, Error>>()
+                    .collect::<Result<Vec<Client>>>()
             })
             .and_then(|clients| {
                 Get::new_sh("pwd")
@@ -206,7 +206,7 @@ impl<'a> Context<'a> {
             self.base_path.with_extension("out")
         }
     }
-    fn check_status(&self, status: std::process::ExitStatus) -> Result<(), Error> {
+    fn check_status(&self, status: std::process::ExitStatus) -> Result<()> {
         if status.success() {
             return Ok(());
         }
@@ -215,7 +215,7 @@ impl<'a> Context<'a> {
                 session: self.session().into_owned(),
                 exit_code: code,
             },
-            None => Error::Other(anyhow::Error::msg("kak terminated by signal")),
+            None => anyhow::Error::msg("kak terminated by signal").into(),
         };
         Err(err)
     }
@@ -223,7 +223,7 @@ impl<'a> Context<'a> {
 
 fn read_err(
     file_path: PathBuf,
-    send_ch: Sender<Result<String, Error>>,
+    send_ch: Sender<Result<String>>,
 ) -> thread::JoinHandle<anyhow::Result<()>> {
     thread::spawn(move || {
         let mut buf = String::new();
@@ -239,7 +239,7 @@ fn read_err(
 
 fn read_out(
     file_path: PathBuf,
-    send_ch: Sender<Result<String, Error>>,
+    send_ch: Sender<Result<String>>,
 ) -> thread::JoinHandle<anyhow::Result<()>> {
     thread::spawn(move || {
         let mut buf = String::new();

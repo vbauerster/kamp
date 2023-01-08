@@ -1,9 +1,9 @@
 use super::Context;
-use super::Error;
+use super::Result;
 use super::Session;
 use std::fmt::Write;
 
-fn get_sessions<P>(predicate: P) -> Result<Vec<Session>, Error>
+fn get_sessions<P>(predicate: P) -> Result<Vec<Session>>
 where
     P: FnMut(&&str) -> bool,
 {
@@ -14,7 +14,7 @@ where
         .collect()
 }
 
-pub(crate) fn list_all(ctx: Option<Context>) -> Result<String, Error> {
+pub(crate) fn list_all(ctx: Option<Context>) -> Result<String> {
     let mut buf = String::new();
     if let Some(ctx) = &ctx {
         for session in get_sessions(|&s| s != ctx.session())? {
@@ -30,7 +30,7 @@ pub(crate) fn list_all(ctx: Option<Context>) -> Result<String, Error> {
     Ok(buf)
 }
 
-pub(crate) fn list(ctx: &Context) -> Result<String, Error> {
+pub(crate) fn list(ctx: &Context) -> Result<String> {
     let mut buf = String::new();
     let session = ctx.session_struct()?;
     writeln!(&mut buf, "{:#?}", session)?;
