@@ -1,6 +1,7 @@
-use anyhow::{bail, Result};
 use std::io::Write;
 use std::process::{Command, ExitStatus, Stdio};
+
+use super::Result;
 
 pub(crate) struct Sessions(String);
 
@@ -11,18 +12,19 @@ impl Sessions {
 }
 
 pub(crate) fn sessions() -> Result<Sessions> {
+    use anyhow::Error;
     let output = Command::new("kak").arg("-l").output()?;
 
     if !output.status.success() {
         if let Some(code) = output.status.code() {
-            bail!("kak exited with code: {}", code);
+            return Err(Error::msg(format!("kak exited with code: {}", code)).into());
         }
-        bail!("kak terminated by signal");
+        return Err(Error::msg("kak terminated by signal").into());
     }
 
-    let list = String::from_utf8(output.stdout)?;
-
-    Ok(Sessions(list))
+    String::from_utf8(output.stdout)
+        .map_err(|e| Error::new(e).into())
+        .map(Sessions)
 }
 
 pub(crate) fn pipe<S, T>(session: S, cmd: T) -> Result<ExitStatus>
