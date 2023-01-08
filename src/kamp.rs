@@ -43,7 +43,7 @@ pub(super) fn run() -> Result<Option<String>> {
             .map(Some),
         (Cat(opt), Some(ctx)) => cmd::cat(&ctx, to_csv_buffers_or_asterisk(opt.buffers)).map(Some),
         (Ctx(_), Some(ctx)) => cmd::ctx(&ctx).map(Some),
-        _ => Err(Error::NoSession),
+        _ => Err(Error::InvalidContext("session is required")),
     }
 }
 

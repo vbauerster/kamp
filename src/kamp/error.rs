@@ -1,13 +1,10 @@
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    #[error("no session in context")]
-    NoSession,
+    #[error("invalid context: {0}")]
+    InvalidContext(&'static str),
 
     #[error("invalid session {session:?} kak exited with code: {exit_code}")]
     InvalidSession { session: String, exit_code: i32 },
-
-    #[error("invalid context: either client or buffer is required")]
-    InvalidContext,
 
     #[error("invalid coordinates: {coord:?}")]
     InvalidCoordinates {
