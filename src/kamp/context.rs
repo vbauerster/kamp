@@ -43,10 +43,6 @@ impl<'a> Context<'a> {
         }
     }
 
-    pub fn session(&self) -> Cow<'a, str> {
-        self.session.clone()
-    }
-
     pub fn set_client(&mut self, client: impl Into<Cow<'a, str>>) {
         let client = client.into();
         self.client = if client.is_empty() {
@@ -54,6 +50,10 @@ impl<'a> Context<'a> {
         } else {
             Some(client)
         };
+    }
+
+    pub fn session(&self) -> Cow<'a, str> {
+        self.session.clone()
     }
 
     pub fn is_draft(&self) -> bool {
