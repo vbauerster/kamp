@@ -23,20 +23,20 @@ pub(super) fn run() -> Result<Option<String>> {
 
     let ctx = session.map(|session| Context::new(session, client));
 
-    match (kamp.subcommand, ctx) {
+    match (kamp.subcommand, &ctx) {
         (Init(opt), _) => cmd::init(opt.export, opt.alias).map(Some),
-        (Attach(opt), Some(ctx)) => cmd::attach(&ctx, opt.buffer).map(|_| None),
-        (Edit(opt), Some(ctx)) => cmd::edit(&ctx, opt.files).map(|_| None),
+        (Attach(opt), Some(ctx)) => cmd::attach(ctx, opt.buffer).map(|_| None),
+        (Edit(opt), Some(ctx)) => cmd::edit(ctx, opt.files).map(|_| None),
         (Edit(opt), None) => kak::proxy(opt.files).map(|_| None),
         (Send(opt), Some(ctx)) => cmd::send(
-            &ctx,
+            ctx,
             join_command(opt.command, opt.remainder),
             to_csv_buffers_or_asterisk(opt.buffers),
         )
         .map(|_| None),
         (List(opt), _) if opt.all => cmd::list_all().map(Some),
-        (List(_), Some(ctx)) => cmd::list(&ctx).map(Some),
-        (Kill(opt), Some(ctx)) => cmd::kill(&ctx, opt.exit_status).map(|_| None),
+        (List(_), Some(ctx)) => cmd::list(ctx).map(Some),
+        (Kill(opt), Some(ctx)) => cmd::kill(ctx, opt.exit_status).map(|_| None),
         (Get(opt), Some(ctx)) => {
             use argv::GetSubCommand::*;
             let buffer = to_csv_buffers_or_asterisk(opt.buffers);
@@ -50,7 +50,7 @@ pub(super) fn run() -> Result<Option<String>> {
             };
             res.map(Some)
         }
-        (Cat(opt), Some(ctx)) => cmd::cat(&ctx, to_csv_buffers_or_asterisk(opt.buffers)).map(Some),
+        (Cat(opt), Some(ctx)) => cmd::cat(ctx, to_csv_buffers_or_asterisk(opt.buffers)).map(Some),
         (Ctx(_), Some(ctx)) => Ok(Some(format!("{}\n", ctx))),
         (Version(_), _) => Ok(Some(format!(
             "{} {}\n",
