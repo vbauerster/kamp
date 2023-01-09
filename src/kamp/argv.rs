@@ -94,6 +94,7 @@ pub(crate) struct EditOptions {
 #[argh(subcommand, name = "send")]
 pub(crate) struct SendOptions {
     /// buffer context
+    /// or '*' for all non-debug buffers
     #[argh(option, short = 'b', arg_name = "buffer")]
     pub buffers: Vec<String>,
 
@@ -111,7 +112,7 @@ pub(crate) struct GetOptions {
     #[argh(switch, short = 'r', long = "raw")]
     pub rawness: u8,
 
-    /// run in a given buffer's context
+    /// buffer context
     /// or '*' for all non-debug buffers
     #[argh(option, short = 'b', arg_name = "buffer")]
     pub buffers: Vec<String>,
@@ -125,6 +126,7 @@ pub(crate) struct GetOptions {
 #[argh(subcommand, name = "cat")]
 pub(crate) struct CatOptions {
     /// buffer context
+    /// or '*' for all non-debug buffers
     #[argh(option, short = 'b', arg_name = "buffer")]
     pub buffers: Vec<String>,
 }
