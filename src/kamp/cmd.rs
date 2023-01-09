@@ -2,7 +2,6 @@ mod attach;
 mod cat;
 mod edit;
 mod init;
-mod kill;
 mod list;
 
 use super::context::*;
@@ -12,5 +11,4 @@ pub(super) use attach::attach;
 pub(super) use cat::cat;
 pub(super) use edit::edit;
 pub(super) use init::init;
-pub(super) use kill::kill;
 pub(super) use list::*;
