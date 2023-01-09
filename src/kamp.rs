@@ -24,7 +24,6 @@ pub(super) fn run() -> Result<Option<String>> {
     let ctx = session.map(|session| Context::new(session, client));
 
     match (kamp.subcommand, ctx) {
-        (Version(_), _) => cmd::version().map(Some),
         (Init(opt), _) => cmd::init(opt.export, opt.alias).map(Some),
         (Attach(opt), Some(ctx)) => cmd::attach(&ctx, opt.buffer).map(|_| None),
         (Edit(opt), Some(ctx)) => cmd::edit(&ctx, opt.files).map(|_| None),
@@ -53,6 +52,11 @@ pub(super) fn run() -> Result<Option<String>> {
         }
         (Cat(opt), Some(ctx)) => cmd::cat(&ctx, to_csv_buffers_or_asterisk(opt.buffers)).map(Some),
         (Ctx(_), Some(ctx)) => cmd::ctx(&ctx).map(Some),
+        (Version(_), _) => Ok(Some(format!(
+            "{} {}\n",
+            env!("CARGO_PKG_NAME"),
+            env!("CARGO_PKG_VERSION")
+        ))),
         _ => Err(Error::InvalidContext("session is required")),
     }
 }

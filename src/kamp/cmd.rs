@@ -6,7 +6,6 @@ mod init;
 mod kill;
 mod list;
 mod send;
-mod version;
 
 use super::context::*;
 use super::{Error, Result};
@@ -19,4 +18,3 @@ pub(super) use init::init;
 pub(super) use kill::kill;
 pub(super) use list::*;
 pub(super) use send::send;
-pub(super) use version::version;
