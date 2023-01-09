@@ -155,17 +155,40 @@ impl<'a> Context<'a> {
         res.map(drop)
     }
 
-    pub fn query_val(&self, name: &str, rawness: u8, buffer: Option<String>) -> Result<String> {
-        self.query_kak(("val", name), rawness, buffer)
+    pub fn query_val(
+        &self,
+        name: impl AsRef<str>,
+        rawness: u8,
+        buffer: Option<String>,
+    ) -> Result<String> {
+        self.query_kak(("val", name.as_ref()), rawness, buffer)
     }
-    pub fn query_opt(&self, name: &str, rawness: u8, buffer: Option<String>) -> Result<String> {
-        self.query_kak(("opt", name), rawness, buffer)
+
+    pub fn query_opt(
+        &self,
+        name: impl AsRef<str>,
+        rawness: u8,
+        buffer: Option<String>,
+    ) -> Result<String> {
+        self.query_kak(("opt", name.as_ref()), rawness, buffer)
     }
-    pub fn query_reg(&self, name: &str, rawness: u8, buffer: Option<String>) -> Result<String> {
-        self.query_kak(("reg", name), rawness, buffer)
+
+    pub fn query_reg(
+        &self,
+        name: impl AsRef<str>,
+        rawness: u8,
+        buffer: Option<String>,
+    ) -> Result<String> {
+        self.query_kak(("reg", name.as_ref()), rawness, buffer)
     }
-    pub fn query_sh(&self, cmd: &str, rawness: u8, buffer: Option<String>) -> Result<String> {
-        self.query_kak(("sh", cmd), rawness, buffer)
+
+    pub fn query_sh(
+        &self,
+        cmd: impl AsRef<str>,
+        rawness: u8,
+        buffer: Option<String>,
+    ) -> Result<String> {
+        self.query_kak(("sh", cmd.as_ref()), rawness, buffer)
     }
 }
 
