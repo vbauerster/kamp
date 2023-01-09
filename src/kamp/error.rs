@@ -12,6 +12,9 @@ pub enum Error {
         source: anyhow::Error,
     },
 
+    #[error("command is required")]
+    CommandRequired,
+
     #[error("kak eval error: {0}")]
     KakEvalCatch(String),
 

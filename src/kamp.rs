@@ -30,7 +30,7 @@ pub(super) fn run() -> Result<Option<String>> {
         (Edit(opt), None) => kak::proxy(opt.files).map(|_| None),
         (Send(opt), Some(ctx)) => {
             if opt.command.is_empty() {
-                return Err(anyhow::Error::msg("command is required").into());
+                return Err(Error::CommandRequired);
             }
             ctx.send(
                 opt.command.join(" "),
@@ -50,7 +50,7 @@ pub(super) fn run() -> Result<Option<String>> {
                 Reg(o) => ctx.query_reg(o.name, opt.rawness, buffer),
                 Shell(o) => {
                     if o.command.is_empty() {
-                        return Err(anyhow::Error::msg("command is required").into());
+                        return Err(Error::CommandRequired);
                     }
                     ctx.query_sh(o.command.join(" "), opt.rawness, buffer)
                 }
