@@ -1,6 +1,7 @@
+use std::fmt::Write;
+
 use super::Result;
 use crate::kamp::argv::KeyValue;
-use std::fmt::Write;
 
 const KAKOUNE_INIT: &str = r#"
 define-command -hidden -override kamp-init %{
