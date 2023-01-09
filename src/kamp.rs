@@ -28,12 +28,16 @@ pub(super) fn run() -> Result<Option<String>> {
         (Attach(opt), Some(ctx)) => cmd::attach(ctx, opt.buffer).map(|_| None),
         (Edit(opt), Some(ctx)) => cmd::edit(ctx, opt.files).map(|_| None),
         (Edit(opt), None) => kak::proxy(opt.files).map(|_| None),
-        (Send(opt), Some(ctx)) => cmd::send(
-            ctx,
-            join_command(opt.command, opt.remainder),
-            to_csv_buffers_or_asterisk(opt.buffers),
-        )
-        .map(|_| None),
+        (Send(opt), Some(ctx)) => {
+            if opt.command.is_empty() {
+                return Err(anyhow::Error::msg("command is required").into());
+            }
+            ctx.send(
+                opt.command.join(" "),
+                to_csv_buffers_or_asterisk(opt.buffers),
+            )
+            .map(|_| None)
+        }
         (List(opt), _) if opt.all => cmd::list_all().map(Some),
         (List(_), Some(ctx)) => cmd::list(ctx).map(Some),
         (Kill(opt), Some(ctx)) => cmd::kill(ctx, opt.exit_status).map(|_| None),
@@ -41,11 +45,14 @@ pub(super) fn run() -> Result<Option<String>> {
             use argv::GetSubCommand::*;
             let buffer = to_csv_buffers_or_asterisk(opt.buffers);
             let res = match opt.subcommand {
-                Val(o) => ctx.query_val(&o.name, opt.rawness, buffer),
-                Opt(o) => ctx.query_opt(&o.name, opt.rawness, buffer),
-                Reg(o) => ctx.query_reg(&o.name, opt.rawness, buffer),
+                Val(o) => ctx.query_val(o.name, opt.rawness, buffer),
+                Opt(o) => ctx.query_opt(o.name, opt.rawness, buffer),
+                Reg(o) => ctx.query_reg(o.name, opt.rawness, buffer),
                 Shell(o) => {
-                    ctx.query_sh(&join_command(o.command, o.remainder), opt.rawness, buffer)
+                    if o.command.is_empty() {
+                        return Err(anyhow::Error::msg("command is required").into());
+                    }
+                    ctx.query_sh(o.command.join(" "), opt.rawness, buffer)
                 }
             };
             res.map(Some)
@@ -59,14 +66,6 @@ pub(super) fn run() -> Result<Option<String>> {
         ))),
         _ => Err(Error::InvalidContext("session is required")),
     }
-}
-
-fn join_command(cmd: String, remainder: Vec<String>) -> String {
-    remainder.into_iter().fold(cmd, |mut cmd, next| {
-        cmd.push(' ');
-        cmd.push_str(&next);
-        cmd
-    })
 }
 
 fn to_csv_buffers_or_asterisk(buffers: Vec<String>) -> Option<String> {
@@ -93,14 +92,6 @@ fn to_csv_buffers_or_asterisk(buffers: Vec<String>) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
-    fn test_join_command() {
-        assert_eq!(join_command("a".into(), vec![]), "a".to_owned());
-        assert_eq!(
-            join_command("a".into(), vec!["b".into(), "c".into()]),
-            "a b c".to_owned()
-        );
-    }
     #[test]
     fn test_to_csv_buffers_or_asterisk() {
         assert_eq!(to_csv_buffers_or_asterisk(vec![]), None);

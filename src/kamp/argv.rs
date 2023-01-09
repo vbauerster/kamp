@@ -98,12 +98,8 @@ pub(crate) struct SendOptions {
     pub buffers: Vec<String>,
 
     /// command to send
-    #[argh(positional)]
-    pub command: String,
-
-    /// remainder of the command if any
-    #[argh(positional)]
-    pub remainder: Vec<String>,
+    #[argh(positional, greedy)]
+    pub command: Vec<String>,
 }
 
 /// get state from a session in context
@@ -174,12 +170,8 @@ pub(crate) struct RegisterName {
 #[argh(subcommand, name = "sh")]
 pub(crate) struct ShellCommand {
     /// shell command to evaluate
-    #[argh(positional)]
-    pub command: String,
-
-    /// remainder of the command if any
-    #[argh(positional)]
-    pub remainder: Vec<String>,
+    #[argh(positional, greedy)]
+    pub command: Vec<String>,
 }
 
 #[derive(PartialEq, Eq, Debug)]
