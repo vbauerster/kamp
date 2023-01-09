@@ -59,7 +59,7 @@ impl<'a> Context<'a> {
         self.client.is_none()
     }
 
-    pub fn send_kill(&self, exit_status: Option<i32>) -> Result<()> {
+    pub fn send_kill(self, exit_status: Option<i32>) -> Result<()> {
         let mut cmd = String::from("kill");
         if let Some(status) = exit_status {
             cmd.push(' ');
