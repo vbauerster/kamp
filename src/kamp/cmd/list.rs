@@ -1,7 +1,6 @@
-use std::fmt::Write;
-
 use super::Context;
 use super::Result;
+use std::fmt::Write;
 
 #[allow(unused)]
 #[derive(Debug)]
