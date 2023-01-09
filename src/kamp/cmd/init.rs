@@ -20,7 +20,8 @@ define-command -hidden -override kamp-end %{
 }
 
 hook global KakBegin .* kamp-init
-hook global KakEnd .* kamp-end"#;
+hook global KakEnd .* kamp-end
+"#;
 
 pub(crate) fn init(export: Vec<KeyValue>, alias: bool) -> Result<String> {
     let user_exports = export.into_iter().fold(String::new(), |mut buf, next| {
@@ -49,10 +50,10 @@ r#"define-command -override kamp-connect -params 1.. -command-completion %{{
     }} -- %val{{session}} %val{{client}} %arg{{@}}
 }} -docstring 'run Kakoune command in connected context'"#)?;
 
-    writeln!(&mut buf, "{}", KAKOUNE_INIT)?;
+    buf.push_str(KAKOUNE_INIT);
 
     if alias {
-        writeln!(&mut buf, "alias global connect kamp-connect")?;
+        buf.push_str("alias global connect kamp-connect\n");
     }
 
     Ok(buf)
