@@ -4,7 +4,6 @@ mod edit;
 mod init;
 mod kill;
 mod list;
-mod send;
 
 use super::context::*;
 use super::{Error, Result};
@@ -15,4 +14,3 @@ pub(super) use edit::edit;
 pub(super) use init::init;
 pub(super) use kill::kill;
 pub(super) use list::*;
-pub(super) use send::send;
