@@ -32,7 +32,7 @@ impl Client {
 fn get_sessions() -> Result<Vec<Session>> {
     crate::kamp::kak::sessions()?
         .iter()
-        .map(|session| to_session_struct(&Context::new(session, None)))
+        .map(|session| to_session_struct(Context::new(session, None)))
         .collect()
 }
 
@@ -44,14 +44,14 @@ pub(crate) fn list_all() -> Result<String> {
     Ok(buf)
 }
 
-pub(crate) fn list(ctx: &Context) -> Result<String> {
+pub(crate) fn list(ctx: Context) -> Result<String> {
     let mut buf = String::new();
     let session = to_session_struct(ctx)?;
     writeln!(&mut buf, "{:#?}", session)?;
     Ok(buf)
 }
 
-fn to_session_struct(ctx: &Context) -> Result<Session> {
+fn to_session_struct(ctx: Context) -> Result<Session> {
     ctx.query_val("client_list", 0, None)
         .and_then(|clients| {
             clients

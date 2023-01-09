@@ -21,17 +21,22 @@ pub(super) fn run() -> Result<Option<String>> {
         ),
     };
 
-    let ctx = session.map(|session| Context::new(session, client));
-
-    match (kamp.subcommand, &ctx) {
+    match (kamp.subcommand, session.as_deref()) {
         (Init(opt), _) => cmd::init(opt.export, opt.alias).map(Some),
-        (Attach(opt), Some(ctx)) => cmd::attach(ctx, opt.buffer).map(|_| None),
-        (Edit(opt), Some(ctx)) => cmd::edit(ctx, opt.files).map(|_| None),
+        (Attach(opt), Some(session)) => {
+            let ctx = Context::new(session, client.as_deref());
+            cmd::attach(ctx, opt.buffer).map(|_| None)
+        }
+        (Edit(opt), Some(session)) => {
+            let ctx = Context::new(session, client.as_deref());
+            cmd::edit(ctx, opt.files).map(|_| None)
+        }
         (Edit(opt), None) => kak::proxy(opt.files).map(|_| None),
-        (Send(opt), Some(ctx)) => {
+        (Send(opt), Some(session)) => {
             if opt.command.is_empty() {
                 return Err(Error::CommandRequired);
             }
+            let ctx = Context::new(session, client.as_deref());
             ctx.send(
                 opt.command.join(" "),
                 to_csv_buffers_or_asterisk(opt.buffers),
@@ -39,10 +44,17 @@ pub(super) fn run() -> Result<Option<String>> {
             .map(|_| None)
         }
         (List(opt), _) if opt.all => cmd::list_all().map(Some),
-        (List(_), Some(ctx)) => cmd::list(ctx).map(Some),
-        (Kill(opt), Some(ctx)) => ctx.send_kill(opt.exit_status).map(|_| None),
-        (Get(opt), Some(ctx)) => {
+        (List(_), Some(session)) => {
+            let ctx = Context::new(session, client.as_deref());
+            cmd::list(ctx).map(Some)
+        }
+        (Kill(opt), Some(session)) => {
+            let ctx = Context::new(session, client.as_deref());
+            ctx.send_kill(opt.exit_status).map(|_| None)
+        }
+        (Get(opt), Some(session)) => {
             use argv::GetSubCommand::*;
+            let ctx = Context::new(session, client.as_deref());
             let buffer = to_csv_buffers_or_asterisk(opt.buffers);
             let res = match opt.subcommand {
                 Val(o) => ctx.query_val(o.name, opt.rawness, buffer),
@@ -57,7 +69,10 @@ pub(super) fn run() -> Result<Option<String>> {
             };
             res.map(Some)
         }
-        (Cat(opt), Some(ctx)) => cmd::cat(ctx, to_csv_buffers_or_asterisk(opt.buffers)).map(Some),
+        (Cat(opt), Some(session)) => {
+            let ctx = Context::new(session, client.as_deref());
+            cmd::cat(ctx, to_csv_buffers_or_asterisk(opt.buffers)).map(Some)
+        }
         (Ctx(_), Some(ctx)) => Ok(Some(format!("{}\n", ctx))),
         (Version(_), _) => Ok(Some(format!(
             "{} {}\n",

@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use super::Context;
 use super::Error;
 
-pub(crate) fn edit(ctx: &Context, files: Vec<String>) -> Result<(), Error> {
+pub(crate) fn edit(ctx: Context, files: Vec<String>) -> Result<(), Error> {
     let mut buf = String::new();
     let mut pair = [None; 2];
     let mut coord = None;
