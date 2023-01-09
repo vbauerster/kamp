@@ -16,16 +16,6 @@ pub(crate) struct Context<'a> {
     base_path: Rc<PathBuf>,
 }
 
-impl std::fmt::Display for Context<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "session: {}", self.session)?;
-        if let Some(client) = &self.client {
-            write!(f, "\nclient: {}", client)?;
-        }
-        Ok(())
-    }
-}
-
 impl<'a> Context<'a> {
     pub fn new<S>(session: S, client: Option<S>) -> Self
     where

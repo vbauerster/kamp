@@ -73,7 +73,15 @@ pub(super) fn run() -> Result<Option<String>> {
             let ctx = Context::new(session, client.as_deref());
             cmd::cat(ctx, to_csv_buffers_or_asterisk(opt.buffers)).map(Some)
         }
-        (Ctx(_), Some(ctx)) => Ok(Some(format!("{}\n", ctx))),
+        (Ctx(_), Some(session)) => {
+            let mut buf = format!("session: {}\n", session);
+            if let Some(client) = &client {
+                buf.push_str("client: ");
+                buf.push_str(client);
+                buf.push('\n');
+            }
+            Ok(Some(buf))
+        }
         (Version(_), _) => Ok(Some(format!(
             "{} {}\n",
             env!("CARGO_PKG_NAME"),
