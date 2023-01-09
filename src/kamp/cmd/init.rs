@@ -1,4 +1,4 @@
-use super::Error;
+use super::Result;
 use crate::kamp::argv::KeyValue;
 use std::fmt::Write;
 
@@ -22,7 +22,7 @@ define-command -hidden -override kamp-end %{
 hook global KakBegin .* kamp-init
 hook global KakEnd .* kamp-end"#;
 
-pub(crate) fn init(export: Vec<KeyValue>, alias: bool) -> Result<String, Error> {
+pub(crate) fn init(export: Vec<KeyValue>, alias: bool) -> Result<String> {
     let user_exports = export.into_iter().fold(String::new(), |mut buf, next| {
         buf.push_str("export ");
         buf.push_str(&next.key);
