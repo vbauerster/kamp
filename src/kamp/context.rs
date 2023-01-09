@@ -1,12 +1,11 @@
+use super::kak;
+use super::{Error, Result};
 use crossbeam_channel::Sender;
 use std::borrow::Cow;
 use std::io::prelude::*;
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::thread;
-
-use super::kak;
-use super::{Error, Result};
 
 const END_TOKEN: &str = "<<EEND>>";
 
