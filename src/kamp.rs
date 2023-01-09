@@ -51,7 +51,7 @@ pub(super) fn run() -> Result<Option<String>> {
             res.map(Some)
         }
         (Cat(opt), Some(ctx)) => cmd::cat(&ctx, to_csv_buffers_or_asterisk(opt.buffers)).map(Some),
-        (Ctx(_), Some(ctx)) => cmd::ctx(&ctx).map(Some),
+        (Ctx(_), Some(ctx)) => Ok(Some(format!("{}\n", ctx))),
         (Version(_), _) => Ok(Some(format!(
             "{} {}\n",
             env!("CARGO_PKG_NAME"),
