@@ -162,8 +162,8 @@ pub(crate) struct OptionName {
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "reg")]
 pub(crate) struct RegisterName {
-    /// register name to query
-    #[argh(positional)]
+    /// register name to query, " is default
+    #[argh(positional, default = r#"String::from("dquote")"#)]
     pub name: String,
 }
 
