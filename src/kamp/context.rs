@@ -63,7 +63,7 @@ impl<'a> Context<'a> {
     pub fn send(&self, body: impl AsRef<str>, buffer: Option<String>) -> Result<String> {
         let mut cmd = String::from("try %{\n");
         cmd.push_str("eval");
-        match (buffer.as_deref(), &self.client) {
+        match (&buffer, &self.client) {
             (Some(b), _) => {
                 cmd.push_str(" -buffer ");
                 cmd.push_str(b);
