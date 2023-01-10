@@ -107,28 +107,8 @@ pub(crate) struct SendOptions {
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "get")]
 pub(crate) struct GetOptions {
-    /// raw output:
-    /// single switch includes quoting double switch omits quoting
-    #[argh(switch, short = 'r', long = "raw")]
-    pub rawness: u8,
-
-    /// buffer context
-    /// or '*' for all non-debug buffers
-    #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
-    pub buffers: Vec<String>,
-
     #[argh(subcommand)]
     pub subcommand: GetSubCommand,
-}
-
-/// print buffer content
-#[derive(FromArgs, PartialEq, Debug)]
-#[argh(subcommand, name = "cat")]
-pub(crate) struct CatOptions {
-    /// buffer context
-    /// or '*' for all non-debug buffers
-    #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
-    pub buffers: Vec<String>,
 }
 
 #[derive(FromArgs, PartialEq, Debug)]
@@ -144,6 +124,16 @@ pub(crate) enum GetSubCommand {
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "val")]
 pub(crate) struct ValueName {
+    /// buffer context
+    /// or '*' for all non-debug buffers
+    #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
+    pub buffers: Vec<String>,
+
+    /// raw output:
+    /// single switch includes quoting double switch omits quoting
+    #[argh(switch, short = 'r', long = "raw")]
+    pub rawness: u8,
+
     /// value name to query
     #[argh(positional)]
     pub name: String,
@@ -153,6 +143,16 @@ pub(crate) struct ValueName {
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "opt")]
 pub(crate) struct OptionName {
+    /// buffer context
+    /// or '*' for all non-debug buffers
+    #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
+    pub buffers: Vec<String>,
+
+    /// raw output:
+    /// single switch includes quoting double switch omits quoting
+    #[argh(switch, short = 'r', long = "raw")]
+    pub rawness: u8,
+
     /// option name to query
     #[argh(positional)]
     pub name: String,
@@ -171,9 +171,29 @@ pub(crate) struct RegisterName {
 #[derive(FromArgs, PartialEq, Eq, Debug)]
 #[argh(subcommand, name = "sh")]
 pub(crate) struct ShellCommand {
+    /// buffer context
+    /// or '*' for all non-debug buffers
+    #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
+    pub buffers: Vec<String>,
+
+    /// raw output:
+    /// single switch includes quoting double switch omits quoting
+    #[argh(switch, short = 'r', long = "raw")]
+    pub rawness: u8,
+
     /// shell command to evaluate
     #[argh(positional, greedy)]
     pub command: Vec<String>,
+}
+
+/// print buffer content
+#[derive(FromArgs, PartialEq, Debug)]
+#[argh(subcommand, name = "cat")]
+pub(crate) struct CatOptions {
+    /// buffer context
+    /// or '*' for all non-debug buffers
+    #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
+    pub buffers: Vec<String>,
 }
 
 #[derive(PartialEq, Eq, Debug)]

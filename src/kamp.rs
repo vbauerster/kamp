@@ -55,16 +55,19 @@ pub(super) fn run() -> Result<Option<String>> {
         (Get(opt), Some(session)) => {
             use argv::GetSubCommand::*;
             let ctx = Context::new(session, client.as_deref());
-            let buffer = to_csv_buffers_or_asterisk(opt.buffers);
             let res = match opt.subcommand {
-                Val(o) => ctx.query_val(o.name, opt.rawness, buffer),
-                Opt(o) => ctx.query_opt(o.name, opt.rawness, buffer),
-                Reg(o) => ctx.query_reg(o.name, opt.rawness, buffer),
+                Val(o) => ctx.query_val(o.name, o.rawness, to_csv_buffers_or_asterisk(o.buffers)),
+                Opt(o) => ctx.query_opt(o.name, o.rawness, to_csv_buffers_or_asterisk(o.buffers)),
+                Reg(o) => ctx.query_reg(o.name),
                 Shell(o) => {
                     if o.command.is_empty() {
                         return Err(Error::CommandRequired);
                     }
-                    ctx.query_sh(o.command.join(" "), opt.rawness, buffer)
+                    ctx.query_sh(
+                        o.command.join(" "),
+                        o.rawness,
+                        to_csv_buffers_or_asterisk(o.buffers),
+                    )
                 }
             };
             res.map(Some)

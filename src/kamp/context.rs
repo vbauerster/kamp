@@ -162,13 +162,8 @@ impl<'a> Context<'a> {
         self.query_kak(("opt", name.as_ref()), rawness, buffer)
     }
 
-    pub fn query_reg(
-        &self,
-        name: impl AsRef<str>,
-        rawness: u8,
-        buffer: Option<String>,
-    ) -> Result<String> {
-        self.query_kak(("reg", name.as_ref()), rawness, buffer)
+    pub fn query_reg(&self, name: impl AsRef<str>) -> Result<String> {
+        self.query_kak(("reg", name.as_ref()), 2, None)
     }
 
     pub fn query_sh(
