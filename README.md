@@ -62,7 +62,7 @@ alias kopt='kamp get opt'
 alias kreg='kamp get reg'
 alias kcd-pwd='cd "$(kamp get sh pwd)"'
 alias kcd-buf='cd "$(dirname $(kamp get val buffile))"'
-alias kft='kamp get -b \* opt filetype | sort | uniq' # list file types you're working on
+alias kft='kamp get opt -b \* filetype | sort | uniq' # list file types you're working on
 ```
 
 ## Similar projects

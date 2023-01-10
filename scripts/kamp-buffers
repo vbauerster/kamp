@@ -12,7 +12,7 @@
 set -euf
 
 session="${2:-$KAKOUNE_SESSION}"
-buffers_cmd="kamp -s $session get -b \* val bufname"
+buffers_cmd="kamp -s $session get val -b \* bufname"
 preview_cmd="kamp -s $session cat -b {} | bat --color=always --line-range=:500 --file-name {}"
 delete_cmd="kamp -s $session send -b {} delete-buffer"
 
