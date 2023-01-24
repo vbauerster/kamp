@@ -34,12 +34,12 @@ if [ $# -ne 0 ]; then
   esac
 fi
 
-rg_cmd="rg --color=always --column $*"
+rg_cmd="rg $*"
 
 if [ -z "$query" ]; then
   export FZF_DEFAULT_COMMAND="$rg_cmd --files"
 else
-  export FZF_DEFAULT_COMMAND="$rg_cmd -- '$query'"
+  export FZF_DEFAULT_COMMAND="$rg_cmd --color always --column -- '$query'"
 fi
 
 fzf \
@@ -47,7 +47,7 @@ fzf \
   --query "${query:-}" \
   --delimiter ':' \
   --ansi \
-  --bind "change:reload($rg_cmd -- {q} || true)" \
+  --bind "change:reload($rg_cmd --color always --column -- {q} || true)" \
   --bind 'enter:execute(kamp edit {1} +{2}:{3})+abort' \
   --preview '
       highlight_line={2}
