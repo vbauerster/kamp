@@ -29,7 +29,6 @@ The [scripts](scripts) need to be added to `$PATH` in order to use them.
 | [`kamp-buffers`](scripts/kamp-buffers)     | pick buffers (fzf)               |
 | [`kamp-files`](scripts/kamp-files)         | pick files (fzf)                 |
 | [`kamp-filetypes`](scripts/kamp-filetypes) | set filetype (fzf)               |
-| [`kamp-gitls`](scripts/kamp-gitls)         | pick from `git ls-files` (fzf)   |
 | [`kamp-lines`](scripts/kamp-lines)         | search lines in buffer (fzf)     |
 | [`kamp-sessions`](scripts/kamp-sessions)   | attach session and pick a buffer |
 | [`kamp-grep`](scripts/kamp-grep)           | grep interactively with fzf      |
