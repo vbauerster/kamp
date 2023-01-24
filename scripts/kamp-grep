@@ -51,7 +51,7 @@ fzf \
   --bind 'enter:execute(kamp edit {1} +{2}:{3})+abort' \
   --preview '
       highlight_line={2}
-      line_range_begin=$((highlight_line - (FZF_PREVIEW_LINES / 2)))
+      line_range_begin=$((highlight_line - FZF_PREVIEW_LINES / 2))
       bat \
         --terminal-width $FZF_PREVIEW_COLUMNS \
         --style=numbers \
