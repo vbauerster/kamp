@@ -5,7 +5,7 @@
 # requires:
 # - fd (https://github.com/sharkdp/fd)
 # - fzf (https://github.com/junegunn/fzf)
-# - bat (change to your liking) (https://github.com/sharkdp/bat)
+# - bat (https://github.com/sharkdp/bat)
 
 set -euf
 

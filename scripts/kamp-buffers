@@ -4,7 +4,7 @@
 #
 # requires:
 # - fzf (https://github.com/junegunn/fzf)
-# - bat (change to your liking) (https://github.com/sharkdp/bat)
+# - bat (https://github.com/sharkdp/bat)
 #
 # optional param: $1 = [send|attach]
 # optional param: $2 = session
