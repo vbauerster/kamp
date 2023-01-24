@@ -2,6 +2,10 @@
 #
 # pick files
 #
+# Usage:
+#
+# kamp-files [<backend=fd|rg|find|git>] [backend_options]
+
 # requires:
 # - fd (https://github.com/sharkdp/fd)
 # - fzf (https://github.com/junegunn/fzf)
@@ -11,10 +15,29 @@ set -euf
 
 preview_cmd='bat --color=always --line-range=:500 {}'
 
+backend="fd"
+if [ $# -ne 0 ]; then
+  case "$1" in
+    backend=*)
+      backend="${1#*=}"
+      shift
+    ;;
+  esac
+fi
+
+backend_cmd=""
+case "$backend" in
+  fd) backend_cmd="fd --strip-cwd-prefix --color never --type file" ;;
+  rg) backend_cmd="rg --color never --files" ;;
+  find) backend_cmd="find . -type f" ;;
+  git) backend_cmd="git ls-files" ;;
+  *) backend_cmd="$backend" ;;
+esac
+
 file_list=$(
-	fd --strip-cwd-prefix --color never --type file "$@" |
-		fzf --multi --prompt 'files> ' --preview "$preview_cmd" |
-		awk '{printf("\"%s\" ",$0)} END { printf "\n" }' # quote each path and join with spaces
+  eval "$backend_cmd $*" |
+    fzf --multi --prompt 'files> ' --preview "$preview_cmd" |
+    awk '{printf("\"%s\" ",$0)} END { printf "\n" }' # quote each path and join with spaces
 )
 
 [ -n "$file_list" ] && eval kamp edit "$file_list"
