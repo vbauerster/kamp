@@ -36,7 +36,7 @@ esac
 
 file_list=$(
   eval "$backend_cmd $*" |
-    fzf --multi --prompt 'files> ' --preview "$preview_cmd" |
+    fzf --multi --prompt "${backend}> " --preview "$preview_cmd" |
     awk '{printf("\"%s\" ",$0)} END { printf "\n" }' # quote each path and join with spaces
 )
 
