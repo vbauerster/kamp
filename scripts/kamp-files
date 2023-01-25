@@ -34,8 +34,10 @@ case "$backend" in
   *) backend_cmd="$backend" ;;
 esac
 
+backend_cmd="$backend_cmd $*"
+
 file_list=$(
-  eval "$backend_cmd $*" |
+  eval "$backend_cmd" |
     fzf --multi --prompt "${backend}> " --preview "$preview_cmd" |
     awk '{printf("\"%s\" ",$0)} END { printf "\n" }' # quote each path and join with spaces
 )
