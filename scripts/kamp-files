@@ -36,10 +36,6 @@ esac
 
 backend_cmd="$backend_cmd $*"
 
-file_list=$(
-  eval "$backend_cmd" |
-    fzf --multi --prompt "${backend}> " --preview "$preview_cmd" |
-    awk '{printf("\"%s\" ",$0)} END { printf "\n" }' # quote each path and join with spaces
-)
-
-[ -n "$file_list" ] && eval kamp edit "$file_list"
+eval "$backend_cmd" |
+  fzf --multi --prompt "${backend}> " --preview "$preview_cmd" --print0 |
+  xargs -r0 kamp edit
