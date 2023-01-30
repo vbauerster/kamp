@@ -129,10 +129,17 @@ pub(crate) struct ValueName {
     #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
     pub buffers: Vec<String>,
 
-    /// raw output:
-    /// single switch includes quoting double switch omits quoting
-    #[argh(switch, short = 'r', long = "raw")]
-    pub rawness: u8,
+    /// quoting style kakoune, discards --split
+    #[argh(switch, short = 'q')]
+    pub quote: bool,
+
+    /// split by new line, for example 'buflist' value
+    #[argh(switch, short = 's')]
+    pub split: bool,
+
+    /// split by null character
+    #[argh(switch, short = '0')]
+    pub split0: bool,
 
     /// value name to query
     #[argh(positional)]
@@ -148,10 +155,17 @@ pub(crate) struct OptionName {
     #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
     pub buffers: Vec<String>,
 
-    /// raw output:
-    /// single switch includes quoting double switch omits quoting
-    #[argh(switch, short = 'r', long = "raw")]
-    pub rawness: u8,
+    /// quoting style kakoune, discards --split
+    #[argh(switch, short = 'q')]
+    pub quote: bool,
+
+    /// split by new line, for example 'str-list' type option
+    #[argh(switch, short = 's')]
+    pub split: bool,
+
+    /// split by null character
+    #[argh(switch, short = '0')]
+    pub split0: bool,
 
     /// option name to query
     #[argh(positional)]
@@ -162,6 +176,18 @@ pub(crate) struct OptionName {
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "reg")]
 pub(crate) struct RegisterName {
+    /// quoting style kakoune, discards --split
+    #[argh(switch, short = 'q')]
+    pub quote: bool,
+
+    /// split by new line, for example ':' register
+    #[argh(switch, short = 's')]
+    pub split: bool,
+
+    /// split by null character
+    #[argh(switch, short = '0')]
+    pub split0: bool,
+
     /// register name to query, " is default
     #[argh(positional, default = r#"String::from("dquote")"#)]
     pub name: String,
@@ -175,11 +201,6 @@ pub(crate) struct ShellCommand {
     /// or '*' for all non-debug buffers
     #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
     pub buffers: Vec<String>,
-
-    /// raw output:
-    /// single switch includes quoting double switch omits quoting
-    #[argh(switch, short = 'r', long = "raw")]
-    pub rawness: u8,
 
     /// shell command to evaluate
     #[argh(positional, greedy)]

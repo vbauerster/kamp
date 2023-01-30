@@ -1,11 +1,7 @@
 mod kamp;
 
-use anyhow::Result;
+use anyhow::{Error, Result};
 
 fn main() -> Result<()> {
-    let res = kamp::run()?;
-    if let Some(res) = res {
-        print!("{}", res);
-    }
-    Ok(())
+    kamp::run().map_err(Error::new)
 }

@@ -9,6 +9,28 @@ use std::thread;
 
 const END_TOKEN: &str = "<<EEND>>";
 
+pub(crate) enum SplitType {
+    None(bool), // quoting: false = "raw", true = "kakoune"
+    Dummy,
+    Kakoune,
+}
+
+impl SplitType {
+    pub fn new(quote: bool, split: bool, more_than_one_buffer: bool) -> Self {
+        match (quote, split) {
+            (true, _) => SplitType::None(true),
+            (_, true) => {
+                if more_than_one_buffer {
+                    SplitType::Dummy
+                } else {
+                    SplitType::Kakoune
+                }
+            }
+            _ => SplitType::None(false),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub(crate) struct Context<'a> {
     session: Cow<'a, str>,
@@ -147,62 +169,75 @@ impl<'a> Context<'a> {
     pub fn query_val(
         &self,
         name: impl AsRef<str>,
-        rawness: u8,
-        buffer: Option<String>,
-    ) -> Result<String> {
-        self.query_kak(("val", name.as_ref()), rawness, buffer)
+        split_type: SplitType,
+        buffers: Option<String>,
+    ) -> Result<Vec<String>> {
+        self.query_kak(("val", name.as_ref()), split_type, buffers)
     }
 
     pub fn query_opt(
         &self,
         name: impl AsRef<str>,
-        rawness: u8,
-        buffer: Option<String>,
-    ) -> Result<String> {
-        self.query_kak(("opt", name.as_ref()), rawness, buffer)
+        split_type: SplitType,
+        buffers: Option<String>,
+    ) -> Result<Vec<String>> {
+        self.query_kak(("opt", name.as_ref()), split_type, buffers)
     }
 
-    pub fn query_reg(&self, name: impl AsRef<str>) -> Result<String> {
-        self.query_kak(("reg", name.as_ref()), 2, None)
+    pub fn query_reg(&self, name: impl AsRef<str>, split_type: SplitType) -> Result<Vec<String>> {
+        self.query_kak(("reg", name.as_ref()), split_type, None)
     }
 
     pub fn query_sh(
         &self,
         cmd: impl AsRef<str>,
-        rawness: u8,
-        buffer: Option<String>,
-    ) -> Result<String> {
-        self.query_kak(("sh", cmd.as_ref()), rawness, buffer)
+        split_type: SplitType,
+        buffers: Option<String>,
+    ) -> Result<Vec<String>> {
+        self.query_kak(("sh", cmd.as_ref()), split_type, buffers)
     }
 }
 
 impl<'a> Context<'a> {
-    fn query_kak(&self, kv: (&str, &str), rawness: u8, buffer: Option<String>) -> Result<String> {
+    fn query_kak(
+        &self,
+        kv: (&str, &str),
+        split_type: SplitType,
+        buffers: Option<String>,
+    ) -> Result<Vec<String>> {
         let mut buf = String::from("echo -quoting ");
-        match rawness {
-            0 | 1 => buf.push_str("kakoune"),
-            _ => buf.push_str("raw"),
-        }
+        let quote_type = match split_type {
+            SplitType::None(quote) => {
+                if quote {
+                    "kakoune"
+                } else {
+                    "raw"
+                }
+            }
+            _ => "kakoune",
+        };
+
+        buf.push_str(quote_type);
         buf.push_str(" -to-file %opt{kamp_out} %");
         buf.push_str(kv.0);
         buf.push('{');
         buf.push_str(kv.1);
         buf.push('}');
-        self.send(&buf, buffer).map(|s| {
-            if rawness == 0 {
-                s.split('\'').filter(|&s| !s.trim().is_empty()).fold(
-                    String::new(),
-                    |mut buf, next| {
-                        buf.push_str(next);
-                        buf.push('\n');
-                        buf
-                    },
-                )
-            } else {
-                s
+
+        self.send(&buf, buffers).map(|s| match split_type {
+            SplitType::Dummy => s
+                .split('\'')
+                .filter(|&s| !s.trim().is_empty())
+                .map(String::from)
+                .collect(),
+            SplitType::Kakoune => {
+                let mut chars = s.chars().peekable();
+                parse_kak_style_quoting(&mut chars)
             }
+            _ => vec![s],
         })
     }
+
     fn get_out_path(&self, err_out: bool) -> PathBuf {
         if err_out {
             self.base_path.with_extension("err")
@@ -210,6 +245,7 @@ impl<'a> Context<'a> {
             self.base_path.with_extension("out")
         }
     }
+
     fn check_status(&self, status: std::process::ExitStatus) -> Result<()> {
         if status.success() {
             return Ok(());
@@ -263,4 +299,41 @@ fn write_end_token(buf: &mut String) {
     buf.push_str("echo -to-file %opt{kamp_out} ");
     buf.push_str(END_TOKEN);
     buf.push('\n');
+}
+
+fn parse_kak_style_quoting<I>(tokens: &mut std::iter::Peekable<I>) -> Vec<String>
+where
+    I: Iterator<Item = char>,
+{
+    enum State {
+        Open,
+        Close,
+    }
+    let mut res = Vec::new();
+    let mut buf = String::new();
+    let mut state = State::Close;
+    loop {
+        match tokens.next() {
+            Some('\'') => match state {
+                State::Open => {
+                    if let Some('\'') = tokens.peek() {
+                        buf.push('\'');
+                    } else {
+                        res.push(buf);
+                        buf = String::new();
+                    }
+                    state = State::Close;
+                }
+                State::Close => {
+                    state = State::Open;
+                }
+            },
+            Some(c) => {
+                if let State::Open = state {
+                    buf.push(c)
+                }
+            }
+            None => return res,
+        }
+    }
 }

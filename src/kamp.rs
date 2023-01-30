@@ -11,7 +11,7 @@ use error::{Error, Result};
 const KAKOUNE_SESSION: &str = "KAKOUNE_SESSION";
 const KAKOUNE_CLIENT: &str = "KAKOUNE_CLIENT";
 
-pub(super) fn run() -> Result<Option<String>> {
+pub(super) fn run() -> Result<()> {
     let kamp: Kampliment = argh::from_env();
     let (session, client) = match (kamp.session, kamp.client.filter(|s| !s.is_empty())) {
         (Some(s), client) => (Some(s), client),
@@ -22,85 +22,112 @@ pub(super) fn run() -> Result<Option<String>> {
     };
 
     match (kamp.subcommand, session.as_deref()) {
-        (Init(opt), _) => cmd::init(opt.export, opt.alias).map(Some),
+        (Init(opt), _) => {
+            let res = cmd::init(opt.export, opt.alias)?;
+            print!("{res}");
+        }
         (Attach(opt), Some(session)) => {
             let ctx = Context::new(session, client.as_deref());
-            cmd::attach(ctx, opt.buffer).map(|_| None)
+            return cmd::attach(ctx, opt.buffer);
         }
         (Edit(opt), Some(session)) => {
             let ctx = Context::new(session, client.as_deref());
-            cmd::edit(ctx, opt.files).map(|_| None)
+            return cmd::edit(ctx, opt.files);
         }
-        (Edit(opt), None) => kak::proxy(opt.files).map(|_| None),
+        (Edit(opt), None) => {
+            return kak::proxy(opt.files);
+        }
         (Send(opt), Some(session)) => {
             if opt.command.is_empty() {
                 return Err(Error::CommandRequired);
             }
             let ctx = Context::new(session, client.as_deref());
-            ctx.send(
-                opt.command.join(" "),
-                to_csv_buffers_or_asterisk(opt.buffers),
-            )
-            .map(|_| None)
+            let (buffers, _) = to_csv_buffers_or_asterisk(opt.buffers);
+            let res = ctx.send(opt.command.join(" "), buffers)?;
+            print!("{res}");
         }
-        (List(opt), _) if opt.all => cmd::list_all().map(Some),
+        (List(opt), _) if opt.all => {
+            let res = cmd::list_all()?;
+            print!("{res}");
+        }
         (List(_), Some(session)) => {
             let ctx = Context::new(session, client.as_deref());
-            cmd::list(ctx).map(Some)
+            let res = cmd::list(ctx)?;
+            print!("{res}");
         }
         (Kill(opt), Some(session)) => {
             let ctx = Context::new(session, client.as_deref());
-            ctx.send_kill(opt.exit_status).map(|_| None)
+            return ctx.send_kill(opt.exit_status);
         }
         (Get(opt), Some(session)) => {
             use argv::GetSubCommand::*;
+            use context::SplitType;
             let ctx = Context::new(session, client.as_deref());
             let res = match opt.subcommand {
-                Val(o) => ctx.query_val(o.name, o.rawness, to_csv_buffers_or_asterisk(o.buffers)),
-                Opt(o) => ctx.query_opt(o.name, o.rawness, to_csv_buffers_or_asterisk(o.buffers)),
-                Reg(o) => ctx.query_reg(o.name),
+                Val(o) => {
+                    let (buffers, more_than_one) = to_csv_buffers_or_asterisk(o.buffers);
+                    let split_type = SplitType::new(o.quote, o.split || o.split0, more_than_one);
+                    ctx.query_val(o.name, split_type, buffers)
+                        .map(|v| (v, o.split0))
+                }
+                Opt(o) => {
+                    let (buffers, more_than_one) = to_csv_buffers_or_asterisk(o.buffers);
+                    let split_type = SplitType::new(o.quote, o.split || o.split0, more_than_one);
+                    ctx.query_opt(o.name, split_type, buffers)
+                        .map(|v| (v, o.split0))
+                }
+                Reg(o) => {
+                    let split_type = SplitType::new(o.quote, o.split || o.split0, false);
+                    ctx.query_reg(o.name, split_type).map(|v| (v, o.split0))
+                }
                 Shell(o) => {
                     if o.command.is_empty() {
-                        return Err(Error::CommandRequired);
+                        Err(Error::CommandRequired)
+                    } else {
+                        let (buffers, _) = to_csv_buffers_or_asterisk(o.buffers);
+                        ctx.query_sh(o.command.join(" "), SplitType::None(false), buffers)
+                            .map(|v| (v, false))
                     }
-                    ctx.query_sh(
-                        o.command.join(" "),
-                        o.rawness,
-                        to_csv_buffers_or_asterisk(o.buffers),
-                    )
                 }
             };
-            res.map(Some)
+            let (items, split0) = res?;
+            for item in items {
+                if split0 {
+                    print!("{item}\0");
+                } else {
+                    println!("{item}");
+                }
+            }
         }
         (Cat(opt), Some(session)) => {
             let ctx = Context::new(session, client.as_deref());
-            cmd::cat(ctx, to_csv_buffers_or_asterisk(opt.buffers)).map(Some)
+            let (buffers, _) = to_csv_buffers_or_asterisk(opt.buffers);
+            let res = cmd::cat(ctx, buffers)?;
+            print!("{res}");
         }
         (Ctx(_), Some(session)) => {
-            let mut buf = format!("session: {}\n", session);
+            println!("session: {session}");
             if let Some(client) = &client {
-                buf.push_str("client: ");
-                buf.push_str(client);
-                buf.push('\n');
+                println!("client: {client}");
             }
-            Ok(Some(buf))
         }
-        (Version(_), _) => Ok(Some(format!(
-            "{} {}\n",
-            env!("CARGO_PKG_NAME"),
-            env!("CARGO_PKG_VERSION")
-        ))),
-        _ => Err(Error::InvalidContext("session is required")),
+        (Version(_), _) => {
+            println!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+        }
+        _ => return Err(Error::InvalidContext("session is required")),
     }
+
+    Ok(())
 }
 
-fn to_csv_buffers_or_asterisk(buffers: Vec<String>) -> Option<String> {
+fn to_csv_buffers_or_asterisk(buffers: Vec<String>) -> (Option<String>, bool) {
     if buffers.is_empty() {
-        return None;
+        return (None, false);
     }
     if buffers[0] == "*" {
-        return buffers.into_iter().rev().last();
+        return (buffers.into_iter().rev().last(), true);
     }
+    let more_than_one = buffers.len() > 1;
     let mut res =
         buffers
             .into_iter()
@@ -112,7 +139,7 @@ fn to_csv_buffers_or_asterisk(buffers: Vec<String>) -> Option<String> {
             });
     res.pop(); // pops last ','
     res.push('\'');
-    Some(res)
+    (Some(res), more_than_one)
 }
 
 #[cfg(test)]
