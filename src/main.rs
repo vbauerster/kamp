@@ -1,7 +1,7 @@
 mod kamp;
 
-use anyhow::{Error, Result};
+use anyhow::Result;
 
 fn main() -> Result<()> {
-    kamp::run().map_err(Error::new)
+    kamp::run().map_err(From::from)
 }
