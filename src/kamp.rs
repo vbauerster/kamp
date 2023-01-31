@@ -92,12 +92,9 @@ pub(super) fn run() -> Result<()> {
                 }
             };
             let (items, split0) = res?;
+            let split_char = if split0 { '\0' } else { '\n' };
             for item in items {
-                if split0 {
-                    print!("{item}\0");
-                } else {
-                    println!("{item}");
-                }
+                print!("{item}{split_char}");
             }
         }
         (Cat(opt), Some(session)) => {
