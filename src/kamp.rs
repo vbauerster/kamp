@@ -53,13 +53,13 @@ pub(super) fn run() -> Result<()> {
             }
             (List(opt), _) if opt.all => {
                 for session in cmd::list_all()? {
-                    println!("{:#?}", session);
+                    println!("{session:#?}");
                 }
             }
             (List(_), Some(session)) => {
                 let ctx = Context::new(session, client.as_deref());
                 let session = cmd::list_current(ctx)?;
-                println!("{:#?}", session);
+                println!("{session:#?}");
             }
             (Kill(opt), Some(session)) => {
                 let ctx = Context::new(session, client.as_deref());

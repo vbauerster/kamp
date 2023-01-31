@@ -45,7 +45,7 @@ impl<'a> Context<'a> {
     {
         let session = session.into();
         let mut path = std::env::temp_dir();
-        path.push(format!("kamp-{}", session));
+        path.push(format!("kamp-{session}"));
 
         Context {
             session,

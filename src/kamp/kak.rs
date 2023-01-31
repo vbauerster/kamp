@@ -17,7 +17,7 @@ pub(crate) fn sessions() -> Result<Sessions> {
 
     if !output.status.success() {
         if let Some(code) = output.status.code() {
-            return Err(Error::msg(format!("kak exited with code: {}", code)).into());
+            return Err(Error::msg(format!("kak exited with code: {code}")).into());
         }
         return Err(Error::msg("kak terminated by signal").into());
     }

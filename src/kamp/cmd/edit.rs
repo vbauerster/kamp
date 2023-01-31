@@ -36,7 +36,7 @@ pub(crate) fn edit(ctx: Context, files: Vec<String>) -> Result<(), Error> {
 
     if let Some(v) = coord {
         for item in v {
-            buf.push_str(&format!(" {}", item));
+            buf.push_str(&format!(" {item}"));
         }
     }
 
