@@ -30,7 +30,6 @@ pub(super) enum SubCommand {
     List(ListOptions),
     Get(GetOptions),
     Cat(CatOptions),
-    Ctx(CtxOptions),
 }
 
 /// kakoune init
@@ -45,11 +44,6 @@ pub(crate) struct InitOptions {
     #[argh(option, short = 'e')]
     pub export: Vec<KeyValue>,
 }
-
-/// show execution context
-#[derive(FromArgs, PartialEq, Debug)]
-#[argh(subcommand, name = "ctx")]
-pub(crate) struct CtxOptions {}
 
 /// attach to a session in context
 #[derive(FromArgs, PartialEq, Debug)]

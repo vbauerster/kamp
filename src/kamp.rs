@@ -18,14 +18,15 @@ pub(super) fn run() -> Result<()> {
         return Ok(());
     }
 
+    let (session, client) = match (kamp.session, kamp.client.filter(|s| !s.is_empty())) {
+        (Some(s), client) => (Some(s), client),
+        (None, client) => (
+            std::env::var(KAKOUNE_SESSION).ok(),
+            client.or_else(|| std::env::var(KAKOUNE_CLIENT).ok()),
+        ),
+    };
+
     if let Some(subcommand) = kamp.subcommand {
-        let (session, client) = match (kamp.session, kamp.client.filter(|s| !s.is_empty())) {
-            (Some(s), client) => (Some(s), client),
-            (None, client) => (
-                std::env::var(KAKOUNE_SESSION).ok(),
-                client.or_else(|| std::env::var(KAKOUNE_CLIENT).ok()),
-            ),
-        };
         match (subcommand, session.as_deref()) {
             (Init(opt), _) => {
                 let res = cmd::init(opt.export, opt.alias)?;
@@ -110,14 +111,15 @@ pub(super) fn run() -> Result<()> {
                 let res = cmd::cat(ctx, buffers)?;
                 print!("{res}");
             }
-            (Ctx(_), Some(session)) => {
-                println!("session: {session}");
-                if let Some(client) = &client {
-                    println!("client: {client}");
-                }
-            }
             _ => return Err(Error::InvalidContext("session is required")),
         }
+    } else if let Some(session) = session {
+        println!("session: {session}");
+        if let Some(client) = &client {
+            println!("client: {client}");
+        }
+    } else {
+        return Err(Error::InvalidContext("session is required"));
     }
 
     Ok(())
