@@ -14,10 +14,10 @@ path = "src/main.rs"
 name = "kamp"
 
 [dependencies]
-anyhow = "1.0.66"
-argh = "0.1.9"
+anyhow = "1.0.68"
+argh = "0.1.10"
 crossbeam-channel = "0.5.6"
-thiserror = "1.0.37"
+thiserror = "1.0.38"
 
 [profile.release]
 lto = true
