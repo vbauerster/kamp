@@ -337,3 +337,32 @@ where
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashMap;
+
+    #[test]
+    fn test_parse_kak_style_quoting() {
+        let test = vec!["'''a'''", "'b'", "'echo pop'", r#"'echo "''ok''"'"#];
+        let expected = vec!["'a'", "b", "echo pop", r#"echo "'ok'""#]
+            .into_iter()
+            .map(String::from)
+            .collect::<Vec<_>>();
+
+        let test_joined = test.join(" ");
+        assert_eq!(
+            parse_kak_style_quoting(&mut test_joined.chars().peekable()),
+            expected
+        );
+
+        let map = test.into_iter().zip(expected).collect::<HashMap<_, _>>();
+        for (test, expected) in map {
+            assert_eq!(
+                parse_kak_style_quoting(&mut test.chars().peekable()),
+                vec![expected]
+            );
+        }
+    }
+}
