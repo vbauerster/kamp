@@ -1,6 +1,6 @@
-# Kampliment
+# Kamp
 
-Kampliment is a tool to control [Kakoune](https://github.com/mawww/kakoune) editor from the command line.
+Kamp is a tool to control [Kakoune](https://github.com/mawww/kakoune) editor from the command line.
 
 ## Installation
 
