@@ -130,8 +130,8 @@ pub(crate) struct ValueName {
     pub split: bool,
 
     /// split by null character
-    #[argh(switch, short = '0')]
-    pub split0: bool,
+    #[argh(switch, short = 'z')]
+    pub zplit: bool,
 
     /// value name to query
     #[argh(positional)]
@@ -156,8 +156,8 @@ pub(crate) struct OptionName {
     pub split: bool,
 
     /// split by null character
-    #[argh(switch, short = '0')]
-    pub split0: bool,
+    #[argh(switch, short = 'z')]
+    pub zplit: bool,
 
     /// option name to query
     #[argh(positional)]
@@ -177,8 +177,8 @@ pub(crate) struct RegisterName {
     pub split: bool,
 
     /// split by null character
-    #[argh(switch, short = '0')]
-    pub split0: bool,
+    #[argh(switch, short = 'z')]
+    pub zplit: bool,
 
     /// register name to query, " is default
     #[argh(positional, default = r#"String::from("dquote")"#)]

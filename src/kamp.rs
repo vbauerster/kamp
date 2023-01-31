@@ -73,21 +73,19 @@ pub(super) fn run() -> Result<()> {
                 let res = match opt.subcommand {
                     Val(o) => {
                         let (buffers, more_than_one) = to_csv_buffers_or_asterisk(o.buffers);
-                        let split_type =
-                            SplitType::new(o.quote, o.split || o.split0, more_than_one);
+                        let split_type = SplitType::new(o.quote, o.split || o.zplit, more_than_one);
                         ctx.query_val(o.name, split_type, buffers)
-                            .map(|v| (v, o.split0))
+                            .map(|v| (v, o.zplit))
                     }
                     Opt(o) => {
                         let (buffers, more_than_one) = to_csv_buffers_or_asterisk(o.buffers);
-                        let split_type =
-                            SplitType::new(o.quote, o.split || o.split0, more_than_one);
+                        let split_type = SplitType::new(o.quote, o.split || o.zplit, more_than_one);
                         ctx.query_opt(o.name, split_type, buffers)
-                            .map(|v| (v, o.split0))
+                            .map(|v| (v, o.zplit))
                     }
                     Reg(o) => {
-                        let split_type = SplitType::new(o.quote, o.split || o.split0, false);
-                        ctx.query_reg(o.name, split_type).map(|v| (v, o.split0))
+                        let split_type = SplitType::new(o.quote, o.split || o.zplit, false);
+                        ctx.query_reg(o.name, split_type).map(|v| (v, o.zplit))
                     }
                     Shell(o) => {
                         if o.command.is_empty() {
@@ -99,8 +97,8 @@ pub(super) fn run() -> Result<()> {
                         }
                     }
                 };
-                let (items, split0) = res?;
-                let split_char = if split0 { '\0' } else { '\n' };
+                let (items, zplit) = res?;
+                let split_char = if zplit { '\0' } else { '\n' };
                 for item in items {
                     print!("{item}{split_char}");
                 }
