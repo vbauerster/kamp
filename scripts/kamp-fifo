@@ -3,7 +3,7 @@
 # pipe stdin into fifo buffer
 #
 # Example:
-#    make | kamp-fifo
+#    make | kamp-fifo [output_buffer_name]
 
 set -euf
 
@@ -15,5 +15,5 @@ fifo="$d/fifo"
 
 trap 'rm -rf "$d"; exit' EXIT HUP INT TERM
 mkfifo "$fifo"
-kamp send "edit -scroll -fifo $fifo *fifo*"
+kamp send "edit -scroll -fifo $fifo *${1:-fifo}*"
 cat >"$fifo"
