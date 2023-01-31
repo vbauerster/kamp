@@ -230,10 +230,7 @@ impl<'a> Context<'a> {
                 .filter(|&s| !s.trim().is_empty())
                 .map(String::from)
                 .collect(),
-            SplitType::Kakoune => {
-                let mut chars = s.chars().peekable();
-                parse_kak_style_quoting(&mut chars)
-            }
+            SplitType::Kakoune => parse_kak_style_quoting(&mut s.chars().peekable()),
             _ => vec![s],
         })
     }
