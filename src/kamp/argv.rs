@@ -11,8 +11,12 @@ pub(super) struct Kampliment {
     #[argh(option, short = 'c')]
     pub client: Option<String>,
 
+    /// display version and exit
+    #[argh(switch, short = 'v')]
+    pub version: bool,
+
     #[argh(subcommand)]
-    pub subcommand: SubCommand,
+    pub subcommand: Option<SubCommand>,
 }
 
 #[derive(FromArgs, PartialEq, Debug)]
@@ -27,7 +31,6 @@ pub(super) enum SubCommand {
     Get(GetOptions),
     Cat(CatOptions),
     Ctx(CtxOptions),
-    Version(VersionOptions),
 }
 
 /// kakoune init
@@ -47,11 +50,6 @@ pub(crate) struct InitOptions {
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "ctx")]
 pub(crate) struct CtxOptions {}
-
-/// display version
-#[derive(FromArgs, PartialEq, Debug)]
-#[argh(subcommand, name = "version")]
-pub(crate) struct VersionOptions {}
 
 /// attach to a session in context
 #[derive(FromArgs, PartialEq, Debug)]
