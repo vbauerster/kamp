@@ -125,19 +125,20 @@ fn to_csv_buffers_or_asterisk(buffers: Vec<String>) -> (Option<String>, bool) {
     if buffers[0] == "*" {
         return (buffers.into_iter().rev().last(), true);
     }
-    let more_than_one = buffers.len() > 1;
+    let mut count = 0;
     let mut res =
         buffers
             .into_iter()
             .filter(|s| s != "*")
             .fold(String::from('\''), |mut buf, next| {
+                count += 1;
                 buf.push_str(&next);
                 buf.push(',');
                 buf
             });
     res.pop(); // pops last ','
     res.push('\'');
-    (Some(res), more_than_one)
+    (Some(res), count > 1)
 }
 
 #[cfg(test)]
@@ -145,26 +146,26 @@ mod tests {
     use super::*;
     #[test]
     fn test_to_csv_buffers_or_asterisk() {
-        assert_eq!(to_csv_buffers_or_asterisk(vec![]), None);
+        assert_eq!(to_csv_buffers_or_asterisk(vec![]), (None, false));
         assert_eq!(
             to_csv_buffers_or_asterisk(vec!["*".into()]),
-            Some("*".into())
+            (Some("*".into()), true)
         );
         assert_eq!(
             to_csv_buffers_or_asterisk(vec!["*".into(), "a".into()]),
-            Some("*".into())
+            (Some("*".into()), true)
         );
         assert_eq!(
             to_csv_buffers_or_asterisk(vec!["a".into(), "*".into()]),
-            Some("'a'".into())
+            (Some("'a'".into()), false)
+        );
+        assert_eq!(
+            to_csv_buffers_or_asterisk(vec!["a".into()]),
+            (Some("'a'".into()), false)
         );
         assert_eq!(
             to_csv_buffers_or_asterisk(vec!["a".into(), "b".into()]),
-            Some("'a,b'".into())
-        );
-        assert_eq!(
-            to_csv_buffers_or_asterisk(vec!["a".into(), "b".into(), "c".into()]),
-            Some("'a,b,c'".into())
+            (Some("'a,b'".into()), true)
         );
     }
 }
