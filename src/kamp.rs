@@ -112,7 +112,7 @@ pub(super) fn run() -> Result<()> {
         }
     } else if let Some(session) = session {
         println!("session: {session}");
-        if let Some(client) = &client {
+        if let Some(client) = client {
             println!("client: {client}");
         }
     } else {
