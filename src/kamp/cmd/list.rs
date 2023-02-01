@@ -48,13 +48,13 @@ fn to_session_struct(ctx: Context) -> Result<Session> {
                     let mut ctx_clone = ctx.clone();
                     ctx_clone.set_client(name);
                     ctx_clone
-                        .query_val("bufname", SplitType::None(false), None)
+                        .query_val("bufname", SplitType::none_quote_raw(), None)
                         .map(|mut bufname| Client::new(name.into(), bufname.pop().unwrap()))
                 })
                 .collect::<Result<Vec<Client>>>()
         })
         .and_then(|clients| {
-            ctx.query_sh("pwd", SplitType::None(false), None)
+            ctx.query_sh("pwd", SplitType::none_quote_raw(), None)
                 .map(|mut pwd| {
                     Session::new(ctx.session().into_owned(), pwd.pop().unwrap(), clients)
                 })

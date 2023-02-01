@@ -92,7 +92,7 @@ pub(super) fn run() -> Result<()> {
                             return Err(Error::CommandRequired);
                         }
                         let (buffers, _) = to_csv_buffers_or_asterisk(o.buffers);
-                        ctx.query_sh(o.command.join(" "), SplitType::None(false), buffers)
+                        ctx.query_sh(o.command.join(" "), SplitType::none_quote_raw(), buffers)
                             .map(|v| (v, false))
                     }
                 };

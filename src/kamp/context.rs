@@ -9,8 +9,13 @@ use std::thread;
 
 const END_TOKEN: &str = "<<EEND>>";
 
+pub(crate) enum QuotingStyle {
+    Raw,
+    Kakoune,
+}
+
 pub(crate) enum SplitType {
-    None(bool), // quoting: false = "raw", true = "kakoune"
+    None(QuotingStyle),
     Dummy,
     Kakoune,
 }
@@ -18,7 +23,7 @@ pub(crate) enum SplitType {
 impl SplitType {
     pub fn new(quote: bool, split: bool, more_than_one_buffer: bool) -> Self {
         match (quote, split) {
-            (true, _) => SplitType::None(true),
+            (true, _) => SplitType::none_quote_kak(),
             (_, true) => {
                 if more_than_one_buffer {
                     SplitType::Dummy
@@ -26,7 +31,19 @@ impl SplitType {
                     SplitType::Kakoune
                 }
             }
-            _ => SplitType::None(false),
+            _ => SplitType::none_quote_raw(),
+        }
+    }
+    pub fn none_quote_raw() -> Self {
+        SplitType::None(QuotingStyle::Raw)
+    }
+    pub fn none_quote_kak() -> Self {
+        SplitType::None(QuotingStyle::Kakoune)
+    }
+    fn quoting(&self) -> Cow<'static, str> {
+        match self {
+            SplitType::None(QuotingStyle::Raw) => "raw".into(),
+            _ => "kakoune".into(),
         }
     }
 }
@@ -206,18 +223,7 @@ impl<'a> Context<'a> {
         buffers: Option<String>,
     ) -> Result<Vec<String>> {
         let mut buf = String::from("echo -quoting ");
-        let quote_type = match split_type {
-            SplitType::None(quote) => {
-                if quote {
-                    "kakoune"
-                } else {
-                    "raw"
-                }
-            }
-            _ => "kakoune",
-        };
-
-        buf.push_str(quote_type);
+        buf.push_str(&split_type.quoting());
         buf.push_str(" -to-file %opt{kamp_out} %");
         buf.push_str(kv.0);
         buf.push('{');
