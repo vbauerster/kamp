@@ -89,12 +89,11 @@ pub(super) fn run() -> Result<()> {
                     }
                     Shell(o) => {
                         if o.command.is_empty() {
-                            Err(Error::CommandRequired)
-                        } else {
-                            let (buffers, _) = to_csv_buffers_or_asterisk(o.buffers);
-                            ctx.query_sh(o.command.join(" "), SplitType::None(false), buffers)
-                                .map(|v| (v, false))
+                            return Err(Error::CommandRequired);
                         }
+                        let (buffers, _) = to_csv_buffers_or_asterisk(o.buffers);
+                        ctx.query_sh(o.command.join(" "), SplitType::None(false), buffers)
+                            .map(|v| (v, false))
                     }
                 };
                 let (items, zplit) = res?;
