@@ -24,14 +24,9 @@ impl SplitType {
     pub fn new(quote: bool, split: bool, more_than_one_buffer: bool) -> Self {
         match (quote, split) {
             (true, _) => SplitType::none_quote_kak(),
-            (_, true) => {
-                if more_than_one_buffer {
-                    SplitType::Dummy
-                } else {
-                    SplitType::Kakoune
-                }
-            }
-            _ => SplitType::none_quote_raw(),
+            (_, false) => SplitType::none_quote_raw(),
+            _ if more_than_one_buffer => SplitType::Dummy,
+            _ => SplitType::Kakoune,
         }
     }
     pub fn none_quote_raw() -> Self {
