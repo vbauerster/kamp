@@ -121,7 +121,7 @@ pub(crate) struct ValueName {
     #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
     pub buffers: Vec<String>,
 
-    /// quoting style kakoune, discards --split
+    /// quoting style kakoune, discards any --split
     #[argh(switch, short = 'q')]
     pub quote: bool,
 
@@ -147,7 +147,7 @@ pub(crate) struct OptionName {
     #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
     pub buffers: Vec<String>,
 
-    /// quoting style kakoune, discards --split
+    /// quoting style kakoune, discards any --split
     #[argh(switch, short = 'q')]
     pub quote: bool,
 
@@ -168,7 +168,7 @@ pub(crate) struct OptionName {
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "reg")]
 pub(crate) struct RegisterName {
-    /// quoting style kakoune, discards --split
+    /// quoting style kakoune, discards any --split
     #[argh(switch, short = 'q')]
     pub quote: bool,
 
