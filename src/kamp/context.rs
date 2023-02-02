@@ -21,11 +21,11 @@ pub(crate) enum SplitType {
 }
 
 impl SplitType {
-    pub fn new(quote: bool, split: bool, more_than_one_buffer: bool) -> Self {
+    pub fn new(quote: bool, split: bool, buffer_ctx: Option<&i32>) -> Self {
         match (quote, split) {
             (true, _) => SplitType::none_quote_kak(),
             (_, false) => SplitType::none_quote_raw(),
-            _ if more_than_one_buffer => SplitType::Dummy,
+            _ if buffer_ctx.map(|&n| n == 0 || n > 1).unwrap_or(false) => SplitType::Dummy,
             _ => SplitType::Kakoune,
         }
     }
