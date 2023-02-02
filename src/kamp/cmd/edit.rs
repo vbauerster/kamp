@@ -2,10 +2,9 @@ use std::fmt::Write;
 use std::path::Path;
 use std::path::PathBuf;
 
-use super::Context;
-use super::Error;
+use super::{Context, Error, Result};
 
-pub(crate) fn edit(ctx: Context, files: Vec<String>) -> Result<(), Error> {
+pub(crate) fn edit(ctx: Context, files: Vec<String>) -> Result<()> {
     let mut buf = String::new();
     let mut pair = [None; 2];
     let mut coord = None;
@@ -53,7 +52,7 @@ pub(crate) fn edit(ctx: Context, files: Vec<String>) -> Result<(), Error> {
 }
 
 // assuming coord starts with '+'
-fn parse(coord: &str) -> Result<Vec<i32>, Error> {
+fn parse(coord: &str) -> Result<Vec<i32>> {
     // parsing first value as '+n' so '+:<n>' will fail
     coord
         .splitn(2, ':')
@@ -71,7 +70,7 @@ fn parse(coord: &str) -> Result<Vec<i32>, Error> {
 mod tests {
     use super::*;
     #[test]
-    fn test_parse_ok() -> Result<(), Error> {
+    fn test_parse_ok() -> Result<()> {
         assert_eq!(parse("+1")?, vec![1]);
         assert_eq!(parse("+1:")?, vec![1]);
         assert_eq!(parse("+1:1")?, vec![1, 1]);
