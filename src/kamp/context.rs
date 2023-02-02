@@ -20,17 +20,17 @@ enum ParseType {
 }
 
 impl ParseType {
-    pub fn new(quote: bool, split: bool) -> Self {
+    fn new(quote: bool, split: bool) -> Self {
         match (quote, split) {
             (true, _) => ParseType::none_quote_kak(),
             (_, false) => ParseType::none_quote_raw(),
             _ => ParseType::Kakoune,
         }
     }
-    pub fn none_quote_raw() -> Self {
+    fn none_quote_raw() -> Self {
         ParseType::None(QuotingStyle::Raw)
     }
-    pub fn none_quote_kak() -> Self {
+    fn none_quote_kak() -> Self {
         ParseType::None(QuotingStyle::Kakoune)
     }
     fn quoting(&self) -> &'static str {
