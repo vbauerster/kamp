@@ -189,32 +189,38 @@ impl<'a> Context<'a> {
     pub fn query_val(
         &self,
         name: impl AsRef<str>,
-        split_type: SplitType,
-        buffers: Option<String>,
+        quote: bool,
+        split: bool,
+        buffer_ctx: Option<(String, i32)>,
     ) -> Result<Vec<String>> {
-        self.query_kak(("val", name.as_ref()), split_type, buffers)
+        self.query_kak(("val", name.as_ref()), quote, split, buffer_ctx)
     }
 
     pub fn query_opt(
         &self,
         name: impl AsRef<str>,
-        split_type: SplitType,
-        buffers: Option<String>,
+        quote: bool,
+        split: bool,
+        buffer_ctx: Option<(String, i32)>,
     ) -> Result<Vec<String>> {
-        self.query_kak(("opt", name.as_ref()), split_type, buffers)
+        self.query_kak(("opt", name.as_ref()), quote, split, buffer_ctx)
     }
 
-    pub fn query_reg(&self, name: impl AsRef<str>, split_type: SplitType) -> Result<Vec<String>> {
-        self.query_kak(("reg", name.as_ref()), split_type, None)
+    pub fn query_reg(
+        &self,
+        name: impl AsRef<str>,
+        quote: bool,
+        split: bool,
+    ) -> Result<Vec<String>> {
+        self.query_kak(("reg", name.as_ref()), quote, split, None)
     }
 
     pub fn query_sh(
         &self,
         cmd: impl AsRef<str>,
-        split_type: SplitType,
-        buffers: Option<String>,
+        buffer_ctx: Option<(String, i32)>,
     ) -> Result<Vec<String>> {
-        self.query_kak(("sh", cmd.as_ref()), split_type, buffers)
+        self.query_kak(("sh", cmd.as_ref()), false, false, buffer_ctx)
     }
 }
 

@@ -68,44 +68,28 @@ pub(super) fn run() -> Result<()> {
             }
             (Get(opt), Some(session)) => {
                 use argv::GetSubCommand::*;
-                use context::SplitType;
                 let ctx = Context::new(session, client.as_deref());
                 let res = match opt.subcommand {
                     Val(o) => {
                         let buffer_ctx = to_buffer_ctx(o.buffers);
-                        let split_type = SplitType::new(
-                            o.quote,
-                            o.split || o.zplit,
-                            buffer_ctx.as_ref().map(|(_, n)| n),
-                        );
-                        ctx.query_val(o.name, split_type, buffer_ctx.map(|(s, _)| s))
-                            .map(|v| (v, o.zplit))
+                        ctx.query_val(o.name, o.quote, o.split || o.zplit, buffer_ctx)
+                            .map(|v| (v, !o.quote && o.zplit))
                     }
                     Opt(o) => {
                         let buffer_ctx = to_buffer_ctx(o.buffers);
-                        let split_type = SplitType::new(
-                            o.quote,
-                            o.split || o.zplit,
-                            buffer_ctx.as_ref().map(|(_, n)| n),
-                        );
-                        ctx.query_opt(o.name, split_type, buffer_ctx.map(|(s, _)| s))
-                            .map(|v| (v, o.zplit))
+                        ctx.query_opt(o.name, o.quote, o.split || o.zplit, buffer_ctx)
+                            .map(|v| (v, !o.quote && o.zplit))
                     }
-                    Reg(o) => {
-                        let split_type = SplitType::new(o.quote, o.split || o.zplit, None);
-                        ctx.query_reg(o.name, split_type).map(|v| (v, o.zplit))
-                    }
+                    Reg(o) => ctx
+                        .query_reg(o.name, o.quote, o.split || o.zplit)
+                        .map(|v| (v, !o.quote && o.zplit)),
                     Shell(o) => {
                         if o.command.is_empty() {
                             return Err(Error::CommandRequired);
                         }
                         let buffer_ctx = to_buffer_ctx(o.buffers);
-                        ctx.query_sh(
-                            o.command.join(" "),
-                            SplitType::none_quote_raw(),
-                            buffer_ctx.map(|(s, _)| s),
-                        )
-                        .map(|v| (v, false))
+                        ctx.query_sh(o.command.join(" "), buffer_ctx)
+                            .map(|v| (v, false))
                     }
                 };
                 let (items, zplit) = res?;
