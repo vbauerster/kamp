@@ -107,7 +107,7 @@ impl<'a> Context<'a> {
                 cmd.push_str(" -buffer ");
                 cmd.push_str(b);
                 if *n == 0 || *n > 1 {
-                    body.to_mut().push_str("; echo -to-file %opt{kamp_out} ' '");
+                    body.to_mut().push_str(";echo -to-file %opt{kamp_out} ' '");
                 }
             }
             (_, Some(c)) => {
@@ -121,7 +121,8 @@ impl<'a> Context<'a> {
         cmd.push_str("\n}\n");
         write_end_token(&mut cmd);
         cmd.push_str("} catch %{\n");
-        cmd.push_str("echo -debug kamp: %val{error}; echo -to-file %opt{kamp_err} %val{error}\n}");
+        cmd.push_str("echo -debug kamp: %val{error};");
+        cmd.push_str("echo -to-file %opt{kamp_err} %val{error}\n}");
 
         let (s0, r) = crossbeam_channel::bounded(0);
         let s1 = s0.clone();
@@ -146,8 +147,8 @@ impl<'a> Context<'a> {
             cmd.push_str("\n}\n");
             write_end_token(&mut cmd);
             cmd.push_str("} catch %{\n");
-            cmd.push_str("echo -debug kamp: %val{error}\n");
-            cmd.push_str("echo -to-file %opt{kamp_err} %val{error}\n");
+            cmd.push_str("echo -debug kamp: %val{error};");
+            cmd.push_str("echo -to-file %opt{kamp_err} %val{error};");
             cmd.push_str("quit 1\n}");
         } else {
             write_end_token(&mut cmd);
