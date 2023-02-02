@@ -38,7 +38,7 @@ pub(super) fn run() -> Result<()> {
             }
             (Edit(opt), Some(session)) => {
                 let ctx = Context::new(session, client.as_deref());
-                return cmd::edit(ctx, opt.files);
+                return cmd::edit(ctx, opt.focus, opt.files);
             }
             (Edit(opt), None) => {
                 return kak::proxy(opt.files);

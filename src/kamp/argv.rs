@@ -76,8 +76,12 @@ pub(crate) struct KillOptions {
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "edit")]
 pub(crate) struct EditOptions {
+    /// focus client
+    #[argh(switch, short = 'f')]
+    pub focus: bool,
+
     /// path to file
-    #[argh(positional, arg_name = "file")]
+    #[argh(positional, greedy, arg_name = "file")]
     pub files: Vec<String>,
 }
 

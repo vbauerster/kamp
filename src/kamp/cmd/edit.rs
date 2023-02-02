@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use super::{Context, Error, Result};
 
-pub(crate) fn edit(ctx: Context, files: Vec<String>) -> Result<()> {
+pub(crate) fn edit(ctx: Context, focus: bool, files: Vec<String>) -> Result<()> {
     let mut buf = String::new();
     let mut pair = [None; 2];
     let mut coord = None;
@@ -59,7 +59,9 @@ pub(crate) fn edit(ctx: Context, files: Vec<String>) -> Result<()> {
     if ctx.is_draft() {
         ctx.connect(&buf) // this one acts like attach
     } else {
-        buf.push_str("\nfocus");
+        if focus {
+            buf.push_str("\nfocus");
+        }
         ctx.send(&buf, None).map(drop)
     }
 }
