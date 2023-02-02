@@ -35,10 +35,10 @@ impl SplitType {
     pub fn none_quote_kak() -> Self {
         SplitType::None(QuotingStyle::Kakoune)
     }
-    fn quoting(&self) -> Cow<'static, str> {
+    fn quoting(&self) -> &'static str {
         match self {
-            SplitType::None(QuotingStyle::Raw) => "raw".into(),
-            _ => "kakoune".into(),
+            SplitType::None(QuotingStyle::Raw) => "raw",
+            _ => "kakoune",
         }
     }
 }
@@ -218,7 +218,7 @@ impl<'a> Context<'a> {
         buffers: Option<String>,
     ) -> Result<Vec<String>> {
         let mut buf = String::from("echo -quoting ");
-        buf.push_str(&split_type.quoting());
+        buf.push_str(split_type.quoting());
         buf.push_str(" -to-file %opt{kamp_out} %");
         buf.push_str(kv.0);
         buf.push('{');
