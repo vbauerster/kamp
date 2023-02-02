@@ -117,7 +117,7 @@ pub(super) fn run() -> Result<()> {
             (Cat(opt), Some(session)) => {
                 let ctx = Context::new(session, client.as_deref());
                 let buffer_ctx = to_buffer_ctx(opt.buffers);
-                let res = cmd::cat(ctx, buffer_ctx.map(|(s, _)| s))?;
+                let res = cmd::cat(ctx, buffer_ctx)?;
                 print!("{res}");
             }
             _ => return Err(Error::InvalidContext("session is required")),
