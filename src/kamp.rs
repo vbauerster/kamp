@@ -48,7 +48,7 @@ pub(super) fn run() -> Result<()> {
                     return Err(Error::CommandRequired);
                 }
                 let ctx = Context::new(session, client.as_deref());
-                let buffer_ctx = to_csv_buffers_or_asterisk(opt.buffers);
+                let buffer_ctx = to_buffer_ctx(opt.buffers);
                 let res = ctx.send(opt.command.join(" "), buffer_ctx.map(|(s, _)| s))?;
                 print!("{res}");
             }
@@ -72,7 +72,7 @@ pub(super) fn run() -> Result<()> {
                 let ctx = Context::new(session, client.as_deref());
                 let res = match opt.subcommand {
                     Val(o) => {
-                        let buffer_ctx = to_csv_buffers_or_asterisk(o.buffers);
+                        let buffer_ctx = to_buffer_ctx(o.buffers);
                         let split_type = SplitType::new(
                             o.quote,
                             o.split || o.zplit,
@@ -82,7 +82,7 @@ pub(super) fn run() -> Result<()> {
                             .map(|v| (v, o.zplit))
                     }
                     Opt(o) => {
-                        let buffer_ctx = to_csv_buffers_or_asterisk(o.buffers);
+                        let buffer_ctx = to_buffer_ctx(o.buffers);
                         let split_type = SplitType::new(
                             o.quote,
                             o.split || o.zplit,
@@ -99,7 +99,7 @@ pub(super) fn run() -> Result<()> {
                         if o.command.is_empty() {
                             return Err(Error::CommandRequired);
                         }
-                        let buffer_ctx = to_csv_buffers_or_asterisk(o.buffers);
+                        let buffer_ctx = to_buffer_ctx(o.buffers);
                         ctx.query_sh(
                             o.command.join(" "),
                             SplitType::none_quote_raw(),
@@ -116,7 +116,7 @@ pub(super) fn run() -> Result<()> {
             }
             (Cat(opt), Some(session)) => {
                 let ctx = Context::new(session, client.as_deref());
-                let buffer_ctx = to_csv_buffers_or_asterisk(opt.buffers);
+                let buffer_ctx = to_buffer_ctx(opt.buffers);
                 let res = cmd::cat(ctx, buffer_ctx.map(|(s, _)| s))?;
                 print!("{res}");
             }
@@ -134,7 +134,7 @@ pub(super) fn run() -> Result<()> {
     Ok(())
 }
 
-fn to_csv_buffers_or_asterisk(buffers: Vec<String>) -> Option<(String, i32)> {
+fn to_buffer_ctx(buffers: Vec<String>) -> Option<(String, i32)> {
     if buffers.is_empty() {
         return None;
     }
@@ -161,26 +161,20 @@ fn to_csv_buffers_or_asterisk(buffers: Vec<String>) -> Option<(String, i32)> {
 mod tests {
     use super::*;
     #[test]
-    fn test_to_csv_buffers_or_asterisk() {
-        assert_eq!(to_csv_buffers_or_asterisk(vec![]), None);
+    fn test_to_buffer_ctx() {
+        assert_eq!(to_buffer_ctx(vec![]), None);
+        assert_eq!(to_buffer_ctx(vec!["*".into()]), Some(("*".into(), 0)));
         assert_eq!(
-            to_csv_buffers_or_asterisk(vec!["*".into()]),
+            to_buffer_ctx(vec!["*".into(), "a".into()]),
             Some(("*".into(), 0))
         );
         assert_eq!(
-            to_csv_buffers_or_asterisk(vec!["*".into(), "a".into()]),
-            Some(("*".into(), 0))
-        );
-        assert_eq!(
-            to_csv_buffers_or_asterisk(vec!["a".into(), "*".into()]),
+            to_buffer_ctx(vec!["a".into(), "*".into()]),
             Some(("'a'".into(), 1))
         );
+        assert_eq!(to_buffer_ctx(vec!["a".into()]), Some(("'a'".into(), 1)));
         assert_eq!(
-            to_csv_buffers_or_asterisk(vec!["a".into()]),
-            Some(("'a'".into(), 1))
-        );
-        assert_eq!(
-            to_csv_buffers_or_asterisk(vec!["a".into(), "b".into()]),
+            to_buffer_ctx(vec!["a".into(), "b".into()]),
             Some(("'a,b'".into(), 2))
         );
     }
