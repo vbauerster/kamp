@@ -1,4 +1,3 @@
-use std::fmt::Write;
 use std::path::Path;
 use std::path::PathBuf;
 
@@ -26,12 +25,26 @@ pub(crate) fn edit(ctx: Context, files: Vec<String>) -> Result<()> {
         }
     }
 
-    for file in files[i..].iter().rev().chain(pair.into_iter().flatten()) {
+    for (i, file) in files[i..]
+        .iter()
+        .rev()
+        .chain(pair.into_iter().flatten())
+        .enumerate()
+    {
         let p = std::fs::canonicalize(file).unwrap_or_else(|_| PathBuf::from(file));
-        writeln!(&mut buf, "edit -existing '{}'", p.display())?;
+        if let Some(p) = p.as_path().to_str() {
+            if i != 0 {
+                buf.push('\n');
+            }
+            buf.push_str("edit -existing '");
+            if p.contains('\'') {
+                buf.push_str(&p.replace('\'', "''"));
+            } else {
+                buf.push_str(p);
+            }
+            buf.push('\'');
+        }
     }
-
-    buf.pop(); // pops '\n'
 
     if let Some(v) = coord {
         for item in v {
