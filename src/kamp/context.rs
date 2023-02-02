@@ -227,7 +227,7 @@ impl<'a> Context<'a> {
 impl<'a> Context<'a> {
     fn query_kak(
         &self,
-        kv: (&str, &str),
+        (key, val): (&str, &str),
         quote: bool,
         split: bool,
         buffer_ctx: Option<(String, i32)>,
@@ -236,9 +236,9 @@ impl<'a> Context<'a> {
         let mut buf = String::from("echo -quoting ");
         buf.push_str(parse_type.quoting());
         buf.push_str(" -to-file %opt{kamp_out} %");
-        buf.push_str(kv.0);
+        buf.push_str(key);
         buf.push('{');
-        buf.push_str(kv.1);
+        buf.push_str(val);
         buf.push('}');
         self.send(&buf, buffer_ctx).map(|s| parse_type.parse(s))
     }
