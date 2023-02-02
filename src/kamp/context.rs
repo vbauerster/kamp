@@ -9,12 +9,12 @@ use std::thread;
 
 const END_TOKEN: &str = "<<EEND>>";
 
-pub(crate) enum QuotingStyle {
+enum QuotingStyle {
     Raw,
     Kakoune,
 }
 
-pub(crate) enum ParseType {
+enum ParseType {
     None(QuotingStyle),
     Kakoune,
 }
