@@ -14,34 +14,34 @@ pub(crate) enum QuotingStyle {
     Kakoune,
 }
 
-pub(crate) enum SplitType {
+pub(crate) enum ParseType {
     None(QuotingStyle),
     Kakoune,
 }
 
-impl SplitType {
+impl ParseType {
     pub fn new(quote: bool, split: bool) -> Self {
         match (quote, split) {
-            (true, _) => SplitType::none_quote_kak(),
-            (_, false) => SplitType::none_quote_raw(),
-            _ => SplitType::Kakoune,
+            (true, _) => ParseType::none_quote_kak(),
+            (_, false) => ParseType::none_quote_raw(),
+            _ => ParseType::Kakoune,
         }
     }
     pub fn none_quote_raw() -> Self {
-        SplitType::None(QuotingStyle::Raw)
+        ParseType::None(QuotingStyle::Raw)
     }
     pub fn none_quote_kak() -> Self {
-        SplitType::None(QuotingStyle::Kakoune)
+        ParseType::None(QuotingStyle::Kakoune)
     }
     fn quoting(&self) -> &'static str {
         match self {
-            SplitType::None(QuotingStyle::Raw) => "raw",
+            ParseType::None(QuotingStyle::Raw) => "raw",
             _ => "kakoune",
         }
     }
     fn parse(&self, s: String) -> Vec<String> {
         match self {
-            SplitType::Kakoune => parse_kak_style_quoting(&mut s.chars().peekable()),
+            ParseType::Kakoune => parse_kak_style_quoting(&mut s.chars().peekable()),
             _ => vec![s],
         }
     }
@@ -232,15 +232,15 @@ impl<'a> Context<'a> {
         split: bool,
         buffer_ctx: Option<(String, i32)>,
     ) -> Result<Vec<String>> {
-        let split_type = SplitType::new(quote, split);
+        let parse_type = ParseType::new(quote, split);
         let mut buf = String::from("echo -quoting ");
-        buf.push_str(split_type.quoting());
+        buf.push_str(parse_type.quoting());
         buf.push_str(" -to-file %opt{kamp_out} %");
         buf.push_str(kv.0);
         buf.push('{');
         buf.push_str(kv.1);
         buf.push('}');
-        self.send(&buf, buffer_ctx).map(|s| split_type.parse(s))
+        self.send(&buf, buffer_ctx).map(|s| parse_type.parse(s))
     }
 
     fn get_out_path(&self, err_out: bool) -> PathBuf {
