@@ -16,16 +16,14 @@ pub(crate) enum QuotingStyle {
 
 pub(crate) enum SplitType {
     None(QuotingStyle),
-    Dummy,
     Kakoune,
 }
 
 impl SplitType {
-    pub fn new(quote: bool, split: bool, buffer_ctx: Option<&i32>) -> Self {
+    pub fn new(quote: bool, split: bool) -> Self {
         match (quote, split) {
             (true, _) => SplitType::none_quote_kak(),
             (_, false) => SplitType::none_quote_raw(),
-            _ if buffer_ctx.map(|&n| n == 0 || n > 1).unwrap_or(false) => SplitType::Dummy,
             _ => SplitType::Kakoune,
         }
     }
@@ -39,6 +37,12 @@ impl SplitType {
         match self {
             SplitType::None(QuotingStyle::Raw) => "raw",
             _ => "kakoune",
+        }
+    }
+    fn parse(&self, s: String) -> Vec<String> {
+        match self {
+            SplitType::Kakoune => parse_kak_style_quoting(&mut s.chars().peekable()),
+            _ => vec![s],
         }
     }
 }
@@ -94,13 +98,17 @@ impl<'a> Context<'a> {
         self.check_status(status)
     }
 
-    pub fn send(&self, body: impl AsRef<str>, buffer: Option<String>) -> Result<String> {
+    pub fn send(&self, body: impl AsRef<str>, buffer_ctx: Option<(String, i32)>) -> Result<String> {
+        let mut body = Cow::from(body.as_ref());
         let mut cmd = String::from("try %{\n");
         cmd.push_str("eval");
-        match (&buffer, &self.client) {
-            (Some(b), _) => {
+        match (&buffer_ctx, &self.client) {
+            (Some((b, n)), _) => {
                 cmd.push_str(" -buffer ");
                 cmd.push_str(b);
+                if *n == 0 || *n > 1 {
+                    body.to_mut().push_str("; echo -to-file %opt{kamp_out} ' '");
+                }
             }
             (_, Some(c)) => {
                 cmd.push_str(" -client ");
@@ -109,7 +117,7 @@ impl<'a> Context<'a> {
             _ => (), // 'get val client_list' for example doesn't need neither buffer nor client
         }
         cmd.push_str(" %{\n");
-        cmd.push_str(body.as_ref());
+        cmd.push_str(&body);
         cmd.push_str("\n}\n");
         write_end_token(&mut cmd);
         cmd.push_str("} catch %{\n");
@@ -214,9 +222,11 @@ impl<'a> Context<'a> {
     fn query_kak(
         &self,
         kv: (&str, &str),
-        split_type: SplitType,
-        buffers: Option<String>,
+        quote: bool,
+        split: bool,
+        buffer_ctx: Option<(String, i32)>,
     ) -> Result<Vec<String>> {
+        let split_type = SplitType::new(quote, split);
         let mut buf = String::from("echo -quoting ");
         buf.push_str(split_type.quoting());
         buf.push_str(" -to-file %opt{kamp_out} %");
@@ -224,16 +234,7 @@ impl<'a> Context<'a> {
         buf.push('{');
         buf.push_str(kv.1);
         buf.push('}');
-
-        self.send(&buf, buffers).map(|s| match split_type {
-            SplitType::Dummy => s
-                .split('\'')
-                .filter(|&s| !s.trim().is_empty())
-                .map(String::from)
-                .collect(),
-            SplitType::Kakoune => parse_kak_style_quoting(&mut s.chars().peekable()),
-            _ => vec![s],
-        })
+        self.send(&buf, buffer_ctx).map(|s| split_type.parse(s))
     }
 
     fn get_out_path(&self, err_out: bool) -> PathBuf {

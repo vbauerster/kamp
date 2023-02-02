@@ -49,7 +49,7 @@ pub(super) fn run() -> Result<()> {
                 }
                 let ctx = Context::new(session, client.as_deref());
                 let buffer_ctx = to_buffer_ctx(opt.buffers);
-                let res = ctx.send(opt.command.join(" "), buffer_ctx.map(|(s, _)| s))?;
+                let res = ctx.send(opt.command.join(" "), buffer_ctx)?;
                 print!("{res}");
             }
             (List(opt), _) if opt.all => {
