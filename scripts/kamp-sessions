@@ -16,6 +16,4 @@ eval "$sessions_cmd" |
     fzf --prompt 'session> ' --preview "$preview_cmd" \
         --header '[c-x] kill' \
         --bind "ctrl-x:execute-silent($kill_cmd)+reload($sessions_cmd)" |
-    while read -r session; do
-        kamp-buffers attach "$session"
-    done
+    xargs -r -n1 kamp-buffers attach
