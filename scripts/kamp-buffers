@@ -6,28 +6,30 @@
 # - fzf (https://github.com/junegunn/fzf)
 # - bat (https://github.com/sharkdp/bat)
 #
-# optional param: $1 = [send|attach]
+# optional param: $1 = attach
 # optional param: $2 = session
 
 set -euf
 
-session="${2:-$KAKOUNE_SESSION}"
+session=""
+exec_cmd=""
+
+if [ $# -eq 0 ]; then
+    session="$KAKOUNE_SESSION"
+    exec_cmd="kamp -s $session -c ${KAKOUNE_CLIENT:-client0} send buffer {}"
+elif [ "$1" = "attach" ]; then
+    session="${2:-$KAKOUNE_SESSION}"
+    exec_cmd="kamp -s $session attach -b {}"
+else
+    exit 1
+fi
+
 buffers_cmd="kamp -s $session get val -b \* -s bufname"
 preview_cmd="kamp -s $session cat -b {} | bat --color=always --line-range=:500 --file-name {}"
 delete_cmd="kamp -s $session send -b {} delete-buffer"
 
-send() {
-    kamp -s "$1" -c "${KAKOUNE_CLIENT:-client0}" send "buffer '$2'"
-}
-
-attach() {
-    kamp -s "$1" attach -b "$2"
-}
-
 eval "$buffers_cmd" |
     fzf --prompt 'buf> ' --preview "$preview_cmd" \
         --header '[c-x] delete' \
-        --bind "ctrl-x:execute-silent($delete_cmd)+reload($buffers_cmd)" |
-    while read -r bufname; do
-        "${1:-send}" "$session" "$bufname"
-    done
+        --bind "ctrl-x:execute-silent($delete_cmd)+reload($buffers_cmd)" \
+        --bind "enter:become($exec_cmd)"

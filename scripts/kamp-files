@@ -37,5 +37,4 @@ esac
 backend_cmd="$backend_cmd $*"
 
 eval "$backend_cmd" |
-  fzf --multi --prompt "${backend}> " --preview "$preview_cmd" --print0 |
-  xargs -r0 kamp edit
+  fzf --multi --prompt "${backend}> " --preview "$preview_cmd" --bind 'enter:become(kamp edit {+})'

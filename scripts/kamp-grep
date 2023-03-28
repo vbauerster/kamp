@@ -44,7 +44,7 @@ fzf \
   --delimiter ':' \
   --ansi \
   --bind "change:reload($rg_cmd --color always --column -- {q} || true)" \
-  --bind 'enter:execute(kamp edit {1} +{2}:{3})+abort' \
+  --bind 'enter:become(kamp edit {1} +{2}:{3})' \
   --preview '
       highlight_line={2}
       line_range_begin=$((highlight_line - FZF_PREVIEW_LINES / 2))
