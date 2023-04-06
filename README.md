@@ -28,6 +28,7 @@ The [scripts](scripts) need to be added to `$PATH` in order to use them.
 | ------------------------------------------ | -------------------------------- |
 | [`kamp-buffers`](scripts/kamp-buffers)     | pick buffers (fzf)               |
 | [`kamp-files`](scripts/kamp-files)         | pick files (fzf)                 |
+| [`kamp-nnn`](scripts/kamp-nnn)             | pick files (nnn)                 |
 | [`kamp-filetypes`](scripts/kamp-filetypes) | set filetype (fzf)               |
 | [`kamp-lines`](scripts/kamp-lines)         | search lines in buffer (fzf)     |
 | [`kamp-sessions`](scripts/kamp-sessions)   | attach session and pick a buffer |

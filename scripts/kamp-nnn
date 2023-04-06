@@ -1,0 +1,13 @@
+#!/bin/sh
+#
+# pick files with nnn
+#
+# requires:
+# - nnn (https://github.com/jarun/nnn)
+#
+# example mapping:
+# map global user n ':terminal-popup kamp-nnn %val{buffile}<ret>' -docstring 'pick with nnn'
+
+set -ef
+
+nnn -p - "$1" | xargs -r kamp edit
