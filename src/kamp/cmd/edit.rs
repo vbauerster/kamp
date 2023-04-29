@@ -7,12 +7,11 @@ pub(crate) fn edit(ctx: Context, focus: bool, files: Vec<String>) -> Result<()> 
     let mut buf = String::new();
     let mut pair = [None; 2];
     let mut coord = None;
-    let mut i = 0;
+    let mut iter = files.iter();
 
-    for item in files.iter().take(2) {
-        i += 1;
+    for (i, item) in iter.by_ref().take(2).enumerate() {
         if Path::new(item).exists() || !item.starts_with('+') {
-            pair[2 - i] = Some(item);
+            pair[1 - i] = Some(item);
             continue;
         }
         if coord.is_none() {
@@ -25,12 +24,7 @@ pub(crate) fn edit(ctx: Context, focus: bool, files: Vec<String>) -> Result<()> 
         }
     }
 
-    for (i, file) in files[i..]
-        .iter()
-        .rev()
-        .chain(pair.into_iter().flatten())
-        .enumerate()
-    {
+    for (i, file) in iter.rev().chain(pair.into_iter().flatten()).enumerate() {
         let p = std::fs::canonicalize(file).unwrap_or_else(|_| PathBuf::from(file));
         if let Some(p) = p.as_path().to_str() {
             if i != 0 {
