@@ -42,7 +42,8 @@ pub(crate) fn edit(ctx: Context, focus: bool, files: Vec<String>) -> Result<()> 
 
     if let Some(v) = coord {
         for item in v {
-            buf.push_str(&format!(" {item}"));
+            buf.push(' ');
+            buf.push_str(&item.to_string());
         }
     }
 
