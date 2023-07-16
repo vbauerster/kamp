@@ -122,10 +122,11 @@ fn to_buffer_ctx(buffers: Vec<String>) -> Option<(String, i32)> {
     if buffers.is_empty() {
         return None;
     }
-    let mut count = 0;
     if buffers[0] == "*" {
-        return buffers.into_iter().rev().last().map(|s| (s, count));
+        let mut b = buffers;
+        return Some((b.remove(0), 0));
     }
+    let mut count = 0;
     let mut res =
         buffers
             .into_iter()
