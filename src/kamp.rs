@@ -157,6 +157,10 @@ mod tests {
             to_buffer_ctx(vec!["a".into(), "*".into()]),
             Some(("'a'".into(), 1))
         );
+        assert_eq!(
+            to_buffer_ctx(vec!["a".into(), "*".into(), "b".into()]),
+            Some(("'a,b'".into(), 2))
+        );
         assert_eq!(to_buffer_ctx(vec!["a".into()]), Some(("'a'".into(), 1)));
         assert_eq!(
             to_buffer_ctx(vec!["a".into(), "b".into()]),
