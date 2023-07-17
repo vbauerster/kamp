@@ -31,93 +31,99 @@ pub(super) fn run() -> Result<()> {
         ),
     };
 
-    if let Some(subcommand) = kamp.subcommand {
-        match (subcommand, session.as_deref()) {
-            (Init(opt), _) => {
-                let res = cmd::init(opt.export, opt.alias)?;
-                print!("{res}");
+    let Some(subcommand) = kamp.subcommand else {
+        return match (session, client) {
+            (Some(s), Some(c)) => {
+                println!("session: {s}");
+                println!("client: {c}");
+                Ok(())
             }
-            (Attach(opt), Some(session)) => {
-                let ctx = Context::new(session, client.as_deref());
-                return cmd::attach(ctx, opt.buffer);
+            (Some(s), None) => {
+                println!("session: {s}");
+                Ok(())
             }
-            (Edit(opt), Some(session)) => {
-                let ctx = Context::new(session, client.as_deref());
-                return cmd::edit(ctx, opt.focus, opt.files);
+            _ => Err(Error::InvalidContext("session is required")),
+        };
+    };
+
+    match (subcommand, session.as_deref()) {
+        (Init(opt), _) => {
+            let res = cmd::init(opt.export, opt.alias)?;
+            print!("{res}");
+        }
+        (Attach(opt), Some(session)) => {
+            let ctx = Context::new(session, client.as_deref());
+            return cmd::attach(ctx, opt.buffer);
+        }
+        (Edit(opt), Some(session)) => {
+            let ctx = Context::new(session, client.as_deref());
+            return cmd::edit(ctx, opt.focus, opt.files);
+        }
+        (Edit(opt), None) => {
+            return kak::proxy(opt.files);
+        }
+        (Send(opt), Some(session)) => {
+            if opt.command.is_empty() {
+                return Err(Error::CommandRequired);
             }
-            (Edit(opt), None) => {
-                return kak::proxy(opt.files);
-            }
-            (Send(opt), Some(session)) => {
-                if opt.command.is_empty() {
-                    return Err(Error::CommandRequired);
-                }
-                let ctx = Context::new(session, client.as_deref());
-                let buffer_ctx = to_buffer_ctx(opt.buffers);
-                let res = ctx.send(opt.command.join(" "), buffer_ctx)?;
-                print!("{res}");
-            }
-            (List(opt), _) if opt.all => {
-                for session in cmd::list_all()? {
-                    println!("{session:#?}");
-                }
-            }
-            (List(_), Some(session)) => {
-                let ctx = Context::new(session, client.as_deref());
-                let session = cmd::list_current(ctx)?;
+            let ctx = Context::new(session, client.as_deref());
+            let buffer_ctx = to_buffer_ctx(opt.buffers);
+            let res = ctx.send(opt.command.join(" "), buffer_ctx)?;
+            print!("{res}");
+        }
+        (List(opt), _) if opt.all => {
+            for session in cmd::list_all()? {
                 println!("{session:#?}");
             }
-            (Kill(opt), Some(session)) => {
-                let ctx = Context::new(session, client.as_deref());
-                return ctx.send_kill(opt.exit_status);
-            }
-            (Get(opt), Some(session)) => {
-                use argv::GetSubCommand::*;
-                let ctx = Context::new(session, client.as_deref());
-                let res = match opt.subcommand {
-                    Val(o) => {
-                        let buffer_ctx = to_buffer_ctx(o.buffers);
-                        ctx.query_val(o.name, o.quote, o.split || o.zplit, buffer_ctx)
-                            .map(|v| (v, !o.quote && o.zplit))
-                    }
-                    Opt(o) => {
-                        let buffer_ctx = to_buffer_ctx(o.buffers);
-                        ctx.query_opt(o.name, o.quote, o.split || o.zplit, buffer_ctx)
-                            .map(|v| (v, !o.quote && o.zplit))
-                    }
-                    Reg(o) => ctx
-                        .query_reg(o.name, o.quote, o.split || o.zplit)
-                        .map(|v| (v, !o.quote && o.zplit)),
-                    Shell(o) => {
-                        if o.command.is_empty() {
-                            return Err(Error::CommandRequired);
-                        }
-                        let buffer_ctx = to_buffer_ctx(o.buffers);
-                        ctx.query_sh(o.command.join(" "), buffer_ctx)
-                            .map(|v| (v, false))
-                    }
-                };
-                let (items, zplit) = res?;
-                let split_char = if zplit { '\0' } else { '\n' };
-                for item in items {
-                    print!("{item}{split_char}");
+        }
+        (List(_), Some(session)) => {
+            let ctx = Context::new(session, client.as_deref());
+            let session = cmd::list_current(ctx)?;
+            println!("{session:#?}");
+        }
+        (Kill(opt), Some(session)) => {
+            let ctx = Context::new(session, client.as_deref());
+            return ctx.send_kill(opt.exit_status);
+        }
+        (Get(opt), Some(session)) => {
+            use argv::GetSubCommand::*;
+            let ctx = Context::new(session, client.as_deref());
+            let res = match opt.subcommand {
+                Val(o) => {
+                    let buffer_ctx = to_buffer_ctx(o.buffers);
+                    ctx.query_val(o.name, o.quote, o.split || o.zplit, buffer_ctx)
+                        .map(|v| (v, !o.quote && o.zplit))
                 }
+                Opt(o) => {
+                    let buffer_ctx = to_buffer_ctx(o.buffers);
+                    ctx.query_opt(o.name, o.quote, o.split || o.zplit, buffer_ctx)
+                        .map(|v| (v, !o.quote && o.zplit))
+                }
+                Reg(o) => ctx
+                    .query_reg(o.name, o.quote, o.split || o.zplit)
+                    .map(|v| (v, !o.quote && o.zplit)),
+                Shell(o) => {
+                    if o.command.is_empty() {
+                        return Err(Error::CommandRequired);
+                    }
+                    let buffer_ctx = to_buffer_ctx(o.buffers);
+                    ctx.query_sh(o.command.join(" "), buffer_ctx)
+                        .map(|v| (v, false))
+                }
+            };
+            let (items, zplit) = res?;
+            let split_char = if zplit { '\0' } else { '\n' };
+            for item in items {
+                print!("{item}{split_char}");
             }
-            (Cat(opt), Some(session)) => {
-                let ctx = Context::new(session, client.as_deref());
-                let buffer_ctx = to_buffer_ctx(opt.buffers);
-                let res = cmd::cat(ctx, buffer_ctx)?;
-                print!("{res}");
-            }
-            _ => return Err(Error::InvalidContext("session is required")),
         }
-    } else if let Some(session) = session {
-        println!("session: {session}");
-        if let Some(client) = client {
-            println!("client: {client}");
+        (Cat(opt), Some(session)) => {
+            let ctx = Context::new(session, client.as_deref());
+            let buffer_ctx = to_buffer_ctx(opt.buffers);
+            let res = cmd::cat(ctx, buffer_ctx)?;
+            print!("{res}");
         }
-    } else {
-        return Err(Error::InvalidContext("session is required"));
+        _ => return Err(Error::InvalidContext("session is required")),
     }
 
     Ok(())
