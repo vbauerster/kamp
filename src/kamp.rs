@@ -18,12 +18,14 @@ pub(super) fn run() -> Result<()> {
         return Ok(());
     }
 
-    let (session, client) = match (kamp.session, kamp.client.filter(|s| !s.is_empty())) {
-        (Some(s), client) => (Some(s), client),
-        (None, client) => (
+    let (session, client) = match (kamp.session, kamp.client) {
+        (None, Some(c)) if c.is_empty() => (std::env::var(KAKOUNE_SESSION).ok(), None),
+        (None, Some(c)) => (std::env::var(KAKOUNE_SESSION).ok(), Some(c)),
+        (None, None) => (
             std::env::var(KAKOUNE_SESSION).ok(),
-            client.or_else(|| std::env::var(KAKOUNE_CLIENT).ok()),
+            std::env::var(KAKOUNE_CLIENT).ok(),
         ),
+        (session, client) => (session, client.filter(|s| !s.is_empty())),
     };
 
     if let Some(subcommand) = kamp.subcommand {
