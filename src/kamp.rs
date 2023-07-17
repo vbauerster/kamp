@@ -25,7 +25,10 @@ pub(super) fn run() -> Result<()> {
             std::env::var(KAKOUNE_SESSION).ok(),
             std::env::var(KAKOUNE_CLIENT).ok(),
         ),
-        (session, client) => (session, client.filter(|s| !s.is_empty())),
+        (session, client) => (
+            session.filter(|s| !s.is_empty()),
+            client.filter(|c| !c.is_empty()),
+        ),
     };
 
     if let Some(subcommand) = kamp.subcommand {
