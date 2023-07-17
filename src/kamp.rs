@@ -119,25 +119,22 @@ pub(super) fn run() -> Result<()> {
 }
 
 fn to_buffer_ctx(buffers: Vec<String>) -> Option<(String, i32)> {
-    if buffers.is_empty() {
-        return None;
+    let mut iter = buffers.into_iter();
+    let first = iter.next()?;
+    let mut res = String::from('\'');
+    res.push_str(&first);
+    if first == "*" {
+        res.push('\'');
+        return Some((res, 0));
     }
-    if buffers[0] == "*" {
-        let mut b = buffers;
-        return Some((b.remove(0), 0));
-    }
-    let mut count = 0;
-    let mut res =
-        buffers
-            .into_iter()
-            .filter(|s| s != "*")
-            .fold(String::from('\''), |mut buf, next| {
-                count += 1;
-                buf.push_str(&next);
-                buf.push(',');
-                buf
-            });
-    res.pop(); // pops last ','
+
+    let mut count = 1;
+    let mut res = iter.filter(|s| s != "*").fold(res, |mut buf, next| {
+        buf.push(',');
+        buf.push_str(&next);
+        count += 1;
+        buf
+    });
     res.push('\'');
     Some((res, count))
 }
@@ -148,10 +145,10 @@ mod tests {
     #[test]
     fn test_to_buffer_ctx() {
         assert_eq!(to_buffer_ctx(vec![]), None);
-        assert_eq!(to_buffer_ctx(vec!["*".into()]), Some(("*".into(), 0)));
+        assert_eq!(to_buffer_ctx(vec!["*".into()]), Some(("'*'".into(), 0)));
         assert_eq!(
             to_buffer_ctx(vec!["*".into(), "a".into()]),
-            Some(("*".into(), 0))
+            Some(("'*'".into(), 0))
         );
         assert_eq!(
             to_buffer_ctx(vec!["a".into(), "*".into()]),
