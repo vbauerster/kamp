@@ -114,7 +114,7 @@ impl<'a> Context<'a> {
                 cmd.push_str(" -client ");
                 cmd.push_str(c);
             }
-            _ => (), // 'get val client_list' for example doesn't need neither buffer nor client
+            _ => (), // 'get val client_list' for example need neither buffer nor client
         }
         cmd.push_str(" %{\n");
         cmd.push_str(&body);
