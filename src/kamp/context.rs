@@ -124,10 +124,9 @@ impl<'a> Context<'a> {
         cmd.push_str("echo -debug kamp: %val{error};");
         cmd.push_str("echo -to-file %opt{kamp_err} %val{error}\n}");
 
-        let (s0, r) = crossbeam_channel::bounded(0);
-        let s1 = s0.clone();
-        let out_h = read_out(self.get_out_path(false), s0);
-        let err_h = read_err(self.get_out_path(true), s1);
+        let (s, r) = crossbeam_channel::bounded(0);
+        let err_h = read_err(self.get_out_path(true), s.clone());
+        let out_h = read_out(self.get_out_path(false), s);
 
         let status = kak::pipe(&self.session, cmd)?;
         self.check_status(status)?;
@@ -160,10 +159,9 @@ impl<'a> Context<'a> {
             move || kak::connect(session, cmd)
         });
 
-        let (s0, r) = crossbeam_channel::bounded(1);
-        let s1 = s0.clone();
-        let out_h = read_out(self.get_out_path(false), s0);
-        let err_h = read_err(self.get_out_path(true), s1);
+        let (s, r) = crossbeam_channel::bounded(1);
+        let err_h = read_err(self.get_out_path(true), s.clone());
+        let out_h = read_out(self.get_out_path(false), s);
 
         let res = match r.recv() {
             Ok(res) => res,
