@@ -308,31 +308,26 @@ fn parse_kak_style_quoting<I>(tokens: &mut std::iter::Peekable<I>) -> Vec<String
 where
     I: Iterator<Item = char>,
 {
-    enum State {
-        Open,
-        Close,
-    }
     let mut res = Vec::new();
     let mut buf = String::new();
-    let mut state = State::Close;
+    let mut is_state_open = false;
     loop {
         match tokens.next() {
-            Some('\'') => match state {
-                State::Open => {
+            Some('\'') => {
+                if is_state_open {
                     if let Some('\'') = tokens.peek() {
                         buf.push('\'');
                     } else {
                         res.push(buf);
                         buf = String::new();
                     }
-                    state = State::Close;
+                    is_state_open = false;
+                } else {
+                    is_state_open = true;
                 }
-                State::Close => {
-                    state = State::Open;
-                }
-            },
+            }
             Some(c) => {
-                if let State::Open = state {
+                if is_state_open {
                     buf.push(c)
                 }
             }
