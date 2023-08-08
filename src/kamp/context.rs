@@ -310,24 +310,24 @@ where
 {
     let mut res = Vec::new();
     let mut buf = String::new();
-    let mut is_state_open = false;
+    let mut state_is_open = false;
     loop {
         match tokens.next() {
             Some('\'') => {
-                if is_state_open {
+                if state_is_open {
                     if let Some('\'') = tokens.peek() {
                         buf.push('\'');
                     } else {
                         res.push(buf);
                         buf = String::new();
                     }
-                    is_state_open = false;
+                    state_is_open = false;
                 } else {
-                    is_state_open = true;
+                    state_is_open = true;
                 }
             }
             Some(c) => {
-                if is_state_open {
+                if state_is_open {
                     buf.push(c)
                 }
             }
