@@ -131,10 +131,16 @@ impl<'a> Context<'a> {
         let status = kak::pipe(&self.session, cmd)?;
         self.check_status(status)?;
 
-        let res = r.recv().map_err(anyhow::Error::new)?;
-        let handle = if res.is_ok() { out_h } else { err_h };
-        handle.join().unwrap()?;
-        res
+        match r.recv().map_err(anyhow::Error::new)? {
+            Err(e) => {
+                err_h.join().unwrap()?;
+                Err(e)
+            }
+            Ok(s) => {
+                out_h.join().unwrap()?;
+                Ok(s)
+            }
+        }
     }
 
     pub fn connect(&self, body: impl AsRef<str>) -> Result<()> {
