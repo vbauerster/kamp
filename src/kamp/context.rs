@@ -125,8 +125,8 @@ impl<'a> Context<'a> {
         cmd.push_str("echo -to-file %opt{kamp_err} %val{error}\n}");
 
         let (s, r) = crossbeam_channel::bounded(0);
-        let err_h = read_err(self.get_out_path(true), s.clone());
-        let out_h = read_out(self.get_out_path(false), s);
+        let err_h = read_err(self.get_err_path(), s.clone());
+        let out_h = read_out(self.get_out_path(), s);
 
         let status = kak::pipe(&self.session, cmd)?;
         self.check_status(status)?;
@@ -160,8 +160,8 @@ impl<'a> Context<'a> {
         });
 
         let (s, r) = crossbeam_channel::bounded(1);
-        let err_h = read_err(self.get_out_path(true), s.clone());
-        let out_h = read_out(self.get_out_path(false), s);
+        let err_h = read_err(self.get_err_path(), s.clone());
+        let out_h = read_out(self.get_out_path(), s);
 
         let res = match r.recv() {
             Ok(res) => res,
@@ -241,12 +241,12 @@ impl<'a> Context<'a> {
         self.send(&buf, buffer_ctx).map(|s| parse_type.parse(s))
     }
 
-    fn get_out_path(&self, err_out: bool) -> PathBuf {
-        if err_out {
-            self.base_path.with_extension("err")
-        } else {
-            self.base_path.with_extension("out")
-        }
+    fn get_err_path(&self) -> PathBuf {
+        self.base_path.with_extension("err")
+    }
+
+    fn get_out_path(&self) -> PathBuf {
+        self.base_path.with_extension("out")
     }
 
     fn check_status(&self, status: std::process::ExitStatus) -> Result<()> {
