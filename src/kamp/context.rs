@@ -170,10 +170,10 @@ impl<'a> Context<'a> {
         let out_h = read_out(self.get_out_path(), s);
 
         match r.recv() {
-            Err(recv_err) => {
+            Err(err) => {
                 let status = kak_h.join().unwrap()?;
                 self.check_status(status)
-                    .and_then(|_| Err(anyhow::Error::new(recv_err).into()))
+                    .and_then(|_| Err(anyhow::Error::new(err).into()))
             }
             Ok(res) => {
                 // need to write to err pipe in order to complete its reading thread
