@@ -38,12 +38,9 @@ where
         .stdin(Stdio::piped())
         .spawn()?;
 
-    let kak_stdin = match child.stdin.as_mut() {
-        Some(stdin) => stdin,
-        None => {
-            use std::io::{Error, ErrorKind};
-            return Err(Error::new(ErrorKind::Other, "cannot capture stdin of kak process").into());
-        }
+    let Some(kak_stdin) = child.stdin.as_mut() else {
+        use std::io::{Error, ErrorKind};
+        return Err(Error::new(ErrorKind::Other, "cannot capture stdin of kak process").into());
     };
 
     kak_stdin.write_all(cmd.as_ref())?;
