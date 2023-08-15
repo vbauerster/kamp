@@ -46,6 +46,5 @@ pub(crate) fn connect<S: AsRef<str>>(session: S, cmd: S) -> Result<ExitStatus> {
 
 pub(crate) fn proxy(args: Vec<String>) -> Result<()> {
     use std::os::unix::prelude::CommandExt;
-    let err = Command::new("kak").args(args).exec();
-    Err(err.into())
+    Err(Command::new("kak").args(args).exec())
 }
