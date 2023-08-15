@@ -176,6 +176,7 @@ impl<'a> Context<'a> {
             }
         };
         if res.is_ok() {
+            // need to write to err pipe in order to complete its read thread
             std::fs::OpenOptions::new()
                 .write(true)
                 .open(self.get_err_path())
