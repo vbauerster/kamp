@@ -167,13 +167,13 @@ impl<'a> Context<'a> {
         });
 
         let res = match r.recv() {
-            Ok(res) => res,
             Err(recv_err) => {
                 let status = kak_h.join().unwrap()?;
                 return self
                     .check_status(status)
                     .and_then(|_| Err(anyhow::Error::new(recv_err).into()));
             }
+            Ok(res) => res,
         };
         if res.is_ok() {
             // need to write to err pipe in order to complete its read thread
