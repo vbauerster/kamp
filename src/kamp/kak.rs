@@ -1,28 +1,20 @@
 use std::io::{Error, ErrorKind, Result, Write};
 use std::process::{Command, ExitStatus, Stdio};
 
-pub(crate) struct Sessions(String);
-
-impl Sessions {
-    pub fn iter(&self) -> impl Iterator<Item = &str> {
-        self.0.lines().collect::<Vec<_>>().into_iter()
-    }
-}
-
-pub(crate) fn sessions() -> Result<Sessions> {
-    use anyhow::Error;
+pub(crate) fn list_sessions() -> Result<Vec<u8>> {
     let output = Command::new("kak").arg("-l").output()?;
 
     if !output.status.success() {
-        if let Some(code) = output.status.code() {
-            return Err(Error::msg(format!("kak exited with code: {code}")).into());
-        }
-        return Err(Error::msg("kak terminated by signal").into());
+        return Err(match output.status.code() {
+            Some(code) => Error::new(
+                ErrorKind::Other,
+                format!("kak exited with status code: {code}"),
+            ),
+            None => Error::new(ErrorKind::Other, "kak terminated by signal"),
+        });
     }
 
-    String::from_utf8(output.stdout)
-        .map_err(|e| Error::new(e).into())
-        .map(Sessions)
+    Ok(output.stdout)
 }
 
 pub(crate) fn pipe<S, T>(session: S, cmd: T) -> Result<ExitStatus>
