@@ -260,14 +260,13 @@ impl<'a> Context<'a> {
         if status.success() {
             return Ok(());
         }
-        let err = match status.code() {
+        Err(match status.code() {
             Some(code) => Error::InvalidSession {
                 session: self.session().into_owned(),
                 exit_code: code,
             },
-            None => anyhow::Error::msg("kak terminated by signal").into(),
-        };
-        Err(err)
+            None => anyhow::anyhow!("kak terminated by signal").into(),
+        })
     }
 }
 
