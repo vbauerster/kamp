@@ -60,7 +60,7 @@ pub(super) fn run() -> Result<()> {
             return cmd::edit(ctx, opt.focus, opt.files);
         }
         (Edit(opt), None) => {
-            return kak::proxy(opt.files);
+            return kak::proxy(opt.files).map_err(|err| err.into());
         }
         (Send(opt), Some(session)) => {
             if opt.command.is_empty() {

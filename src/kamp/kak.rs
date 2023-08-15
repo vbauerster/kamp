@@ -1,7 +1,5 @@
-use std::io::Write;
+use std::io::{Error, ErrorKind, Result, Write};
 use std::process::{Command, ExitStatus, Stdio};
-
-use super::Result;
 
 pub(crate) struct Sessions(String);
 
@@ -39,26 +37,19 @@ where
         .spawn()?;
 
     let Some(stdin) = child.stdin.as_mut() else {
-        use std::io::{Error, ErrorKind};
-        return Err(Error::new(ErrorKind::Other, "cannot capture stdin of kak process").into());
+        return Err(Error::new(ErrorKind::Other, "cannot capture stdin of kak process"));
     };
 
-    stdin.write_all(cmd.as_ref())?;
-
-    let status = child.wait()?;
-
-    Ok(status)
+    stdin.write_all(cmd.as_ref()).and_then(|_| child.wait())
 }
 
 pub(crate) fn connect<S: AsRef<str>>(session: S, cmd: S) -> Result<ExitStatus> {
-    let status = Command::new("kak")
+    Command::new("kak")
         .arg("-c")
         .arg(session.as_ref())
         .arg("-e")
         .arg(cmd.as_ref())
-        .status()?;
-
-    Ok(status)
+        .status()
 }
 
 pub(crate) fn proxy(args: Vec<String>) -> Result<()> {
