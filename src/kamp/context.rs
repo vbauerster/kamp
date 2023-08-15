@@ -169,24 +169,25 @@ impl<'a> Context<'a> {
         let err_h = read_err(self.get_err_path(), s.clone());
         let out_h = read_out(self.get_out_path(), s);
 
-        match r.recv() {
+        let res = match r.recv() {
+            Ok(res) => res,
             Err(recv_err) => {
                 let status = kak_h.join().unwrap()?;
-                self.check_status(status)
-                    .and_then(|_| Err(anyhow::Error::new(recv_err).into()))
+                return self
+                    .check_status(status)
+                    .and_then(|_| Err(anyhow::Error::new(recv_err).into()));
             }
-            Ok(res) => {
-                // need to write to err pipe in order to complete its reading thread
-                std::fs::OpenOptions::new()
-                    .write(true)
-                    .open(self.get_err_path())
-                    .and_then(|mut f| f.write_all(b""))?;
-                out_h.join().unwrap()?;
-                err_h.join().unwrap()?;
-                kak_h.join().unwrap()?;
-                res.map(drop)
-            }
+        };
+        if res.is_ok() {
+            std::fs::OpenOptions::new()
+                .write(true)
+                .open(self.get_out_path(true))
+                .and_then(|mut f| f.write_all(b""))?;
+            out_h.join().unwrap()?;
         }
+        err_h.join().unwrap()?;
+        kak_h.join().unwrap()?;
+        res.map(drop)
     }
 
     pub fn query_val(
