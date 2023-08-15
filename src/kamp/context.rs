@@ -140,7 +140,7 @@ impl<'a> Context<'a> {
         }
     }
 
-    pub fn connect(&self, body: impl AsRef<str>) -> Result<()> {
+    pub fn connect(self, body: impl AsRef<str>) -> Result<()> {
         let mut cmd = String::new();
         let body = body.as_ref();
         if !body.is_empty() {
