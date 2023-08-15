@@ -161,14 +161,14 @@ impl<'a> Context<'a> {
             cmd.pop();
         }
 
+        let (s, r) = crossbeam_channel::bounded(1);
+        let err_h = read_err(self.get_err_path(), s.clone());
+        let out_h = read_out(self.get_out_path(), s);
+
         let kak_h = thread::spawn({
             let session = self.session().into_owned();
             move || kak::connect(session, cmd)
         });
-
-        let (s, r) = crossbeam_channel::bounded(1);
-        let err_h = read_err(self.get_err_path(), s.clone());
-        let out_h = read_out(self.get_out_path(), s);
 
         let res = match r.recv() {
             Ok(res) => res,
