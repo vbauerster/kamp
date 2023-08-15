@@ -94,8 +94,9 @@ impl<'a> Context<'a> {
             cmd.push_str(&status.to_string());
         }
 
-        let status = kak::pipe(&self.session, cmd)?;
-        self.check_status(status)
+        kak::pipe(&self.session, cmd)
+            .map_err(|err| err.into())
+            .and_then(|status| self.check_status(status))
     }
 
     pub fn send(&self, body: impl AsRef<str>, buffer_ctx: Option<(String, i32)>) -> Result<String> {
