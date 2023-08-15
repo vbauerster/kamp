@@ -41,21 +41,26 @@ pub(crate) fn list_current(ctx: Context) -> Result<Session> {
 }
 
 fn to_session_struct(ctx: Context) -> Result<Session> {
-    ctx.query_val("client_list", false, true, None)
-        .and_then(|clients| {
-            clients
-                .iter()
-                .map(|name| {
-                    let mut ctx_clone = ctx.clone();
-                    ctx_clone.set_client(name);
-                    ctx_clone
-                        .query_val("bufname", false, false, None)
-                        .map(|mut v| Client::new(name.into(), v.remove(0)))
-                })
-                .collect::<Result<Vec<Client>>>()
+    let clients = ctx.query_val("client_list", false, true, None)?;
+    let clients = clients
+        .into_iter()
+        .flat_map(|name| {
+            let mut ctx = ctx.clone();
+            ctx.set_client(Some(name));
+            ctx.query_val("bufname", false, false, None)
+                .map(|mut v| (ctx.take_client(), v.pop()))
         })
-        .and_then(|clients| {
-            ctx.query_sh("pwd", None)
-                .map(|mut v| Session::new(ctx.session().into_owned(), v.remove(0), clients))
+        .flat_map(|(client, bufname)| match (client, bufname) {
+            (Some(client), Some(bufname)) => Some(Client::new(client, bufname)),
+            (Some(client), None) => Some(Client::new(client, String::new())),
+            _ => None,
         })
+        .collect();
+    ctx.query_sh("pwd", None).map(|mut pwd| {
+        Session::new(
+            ctx.session().into_owned(),
+            pwd.pop().unwrap_or_default(),
+            clients,
+        )
+    })
 }

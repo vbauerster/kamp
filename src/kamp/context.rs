@@ -50,33 +50,29 @@ impl ParseType {
 #[derive(Debug, Clone)]
 pub(crate) struct Context<'a> {
     session: Cow<'a, str>,
-    client: Option<Cow<'a, str>>,
+    client: Option<String>,
     base_path: Rc<PathBuf>,
 }
 
 impl<'a> Context<'a> {
-    pub fn new<S>(session: S, client: Option<S>) -> Self
-    where
-        S: Into<Cow<'a, str>>,
-    {
+    pub fn new(session: impl Into<Cow<'a, str>>, client: Option<String>) -> Self {
         let session = session.into();
         let mut path = std::env::temp_dir();
         path.push(format!("kamp-{session}"));
 
         Context {
             session,
-            client: client.map(Into::into),
+            client,
             base_path: Rc::new(path),
         }
     }
 
-    pub fn set_client(&mut self, client: impl Into<Cow<'a, str>>) {
-        let client = client.into();
-        self.client = if client.is_empty() {
-            None
-        } else {
-            Some(client)
-        };
+    pub fn set_client(&mut self, client: Option<String>) {
+        self.client = client;
+    }
+
+    pub fn take_client(&mut self) -> Option<String> {
+        self.client.take()
     }
 
     pub fn session(&self) -> Cow<'a, str> {

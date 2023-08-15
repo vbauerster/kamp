@@ -52,11 +52,11 @@ pub(super) fn run() -> Result<()> {
             print!("{res}");
         }
         (Attach(opt), Some(session)) => {
-            let ctx = Context::new(session, client.as_deref());
+            let ctx = Context::new(session, client);
             return cmd::attach(ctx, opt.buffer);
         }
         (Edit(opt), Some(session)) => {
-            let ctx = Context::new(session, client.as_deref());
+            let ctx = Context::new(session, client);
             return cmd::edit(ctx, opt.focus, opt.files);
         }
         (Edit(opt), None) => {
@@ -66,7 +66,7 @@ pub(super) fn run() -> Result<()> {
             if opt.command.is_empty() {
                 return Err(Error::CommandRequired);
             }
-            let ctx = Context::new(session, client.as_deref());
+            let ctx = Context::new(session, client);
             let buffer_ctx = to_buffer_ctx(opt.buffers);
             let res = ctx.send(opt.command.join(" "), buffer_ctx)?;
             print!("{res}");
@@ -77,17 +77,17 @@ pub(super) fn run() -> Result<()> {
             }
         }
         (List(_), Some(session)) => {
-            let ctx = Context::new(session, client.as_deref());
+            let ctx = Context::new(session, client);
             let session = cmd::list_current(ctx)?;
             println!("{session:#?}");
         }
         (Kill(opt), Some(session)) => {
-            let ctx = Context::new(session, client.as_deref());
+            let ctx = Context::new(session, client);
             return ctx.send_kill(opt.exit_status);
         }
         (Get(opt), Some(session)) => {
             use argv::GetSubCommand::*;
-            let ctx = Context::new(session, client.as_deref());
+            let ctx = Context::new(session, client);
             let res = match opt.subcommand {
                 Val(o) => {
                     let buffer_ctx = to_buffer_ctx(o.buffers);
@@ -118,7 +118,7 @@ pub(super) fn run() -> Result<()> {
             }
         }
         (Cat(opt), Some(session)) => {
-            let ctx = Context::new(session, client.as_deref());
+            let ctx = Context::new(session, client);
             let buffer_ctx = to_buffer_ctx(opt.buffers);
             let res = cmd::cat(ctx, buffer_ctx)?;
             print!("{res}");
