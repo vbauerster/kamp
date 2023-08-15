@@ -181,7 +181,7 @@ impl<'a> Context<'a> {
         if res.is_ok() {
             std::fs::OpenOptions::new()
                 .write(true)
-                .open(self.get_out_path(true))
+                .open(self.get_err_path())
                 .and_then(|mut f| f.write_all(b""))?;
             out_h.join().unwrap()?;
         }
