@@ -36,9 +36,10 @@ pub(crate) fn init(export: Vec<KeyValue>, alias: bool) -> Result<String> {
 
     let mut buf = String::new();
 
-    #[rustfmt::skip]
-    writeln!(&mut buf,
-r#"define-command -override kamp-connect -params 1.. -command-completion %{{
+    writeln!(
+        &mut buf,
+        r#"
+define-command -override kamp-connect -params 1.. -command-completion %{{
     %arg{{1}} sh -c %{{
         {user_exports}export KAKOUNE_SESSION="$1"
         export KAKOUNE_CLIENT="$2"
@@ -48,7 +49,8 @@ r#"define-command -override kamp-connect -params 1.. -command-completion %{{
 
         "$@"
     }} -- %val{{session}} %val{{client}} %arg{{@}}
-}} -docstring 'run Kakoune command in connected context'"#)?;
+}} -docstring 'run Kakoune command in connected context'"#
+    )?;
 
     buf.push_str(KAKOUNE_INIT);
 
