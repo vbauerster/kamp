@@ -305,12 +305,12 @@ fn parse_kak_style_quoting(input: &str) -> Vec<String> {
     let mut res = Vec::new();
     let mut buf = String::new();
     let mut state_is_open = false;
-    let mut tokens = input.chars().peekable();
+    let mut iter = input.chars().peekable();
     loop {
-        match tokens.next() {
+        match iter.next() {
             Some('\'') => {
                 if state_is_open {
-                    if let Some('\'') = tokens.peek() {
+                    if let Some('\'') = iter.peek() {
                         buf.push('\'');
                     } else {
                         res.push(buf);
