@@ -35,7 +35,7 @@ impl ParseType {
     }
     fn parse(&self, s: String) -> Vec<String> {
         match self {
-            ParseType::Kakoune => parse_kak_style_quoting(&mut s.chars().peekable()),
+            ParseType::Kakoune => parse_kak_style_quoting(&s),
             _ => vec![s],
         }
     }
@@ -301,13 +301,11 @@ fn write_end_token(buf: &mut String) {
     buf.push('\n');
 }
 
-fn parse_kak_style_quoting<I>(tokens: &mut std::iter::Peekable<I>) -> Vec<String>
-where
-    I: Iterator<Item = char>,
-{
+fn parse_kak_style_quoting(input: &str) -> Vec<String> {
     let mut res = Vec::new();
     let mut buf = String::new();
     let mut state_is_open = false;
+    let mut tokens = input.chars().peekable();
     loop {
         match tokens.next() {
             Some('\'') => {
@@ -346,18 +344,11 @@ mod tests {
             .map(String::from)
             .collect::<Vec<_>>();
 
-        let test_joined = test.join(" ");
-        assert_eq!(
-            parse_kak_style_quoting(&mut test_joined.chars().peekable()),
-            expected
-        );
+        assert_eq!(parse_kak_style_quoting(&test.join(" ")), expected);
 
         let map = test.into_iter().zip(expected).collect::<HashMap<_, _>>();
         for (test, expected) in map {
-            assert_eq!(
-                parse_kak_style_quoting(&mut test.chars().peekable()),
-                vec![expected]
-            );
+            assert_eq!(parse_kak_style_quoting(test), vec![expected]);
         }
     }
 }
