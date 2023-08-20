@@ -220,7 +220,7 @@ impl<'a> Context<'a> {
     }
 }
 
-impl<'a> Context<'a> {
+impl Context<'_> {
     fn query_kak(
         &self,
         (key, val): (&str, &str),
