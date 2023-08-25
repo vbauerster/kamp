@@ -10,7 +10,7 @@ define-command -hidden -override kamp-init %{
         kamp_out="${TMPDIR:-/tmp/}kamp-${kak_session}.out"
         kamp_err="${TMPDIR:-/tmp/}kamp-${kak_session}.err"
         mkfifo "$kamp_out" "$kamp_err"
-        printf 'set global kamp_out %s;set global kamp_err %s\n' "$kamp_out" "$kamp_err"
+        printf 'set global kamp_%s %s\n' out "$kamp_out" err "$kamp_err"
     }
 }
 
