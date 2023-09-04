@@ -46,8 +46,8 @@ impl ParseType {
 pub(crate) struct Context {
     session: Arc<str>,
     client: Option<String>,
-    out_path: Arc<Path>,
-    err_path: Arc<Path>,
+    fifo_out: Arc<Path>,
+    fifo_err: Arc<Path>,
 }
 
 impl Context {
@@ -58,8 +58,8 @@ impl Context {
         Context {
             session: session.into(),
             client,
-            out_path: path.with_extension("out").into(),
-            err_path: path.with_extension("err").into(),
+            fifo_out: path.with_extension("out").into(),
+            fifo_err: path.with_extension("err").into(),
         }
     }
 
@@ -175,7 +175,7 @@ impl Context {
             // need to write to err pipe in order to complete its read thread
             std::fs::OpenOptions::new()
                 .write(true)
-                .open(self.err_path)
+                .open(self.fifo_err)
                 .and_then(|mut f| f.write_all(b""))?;
             out_h.join().unwrap()?;
         }
@@ -255,7 +255,7 @@ impl Context {
     }
 
     fn read_err(&self, send_ch: Sender<Result<String>>) -> thread::JoinHandle<anyhow::Result<()>> {
-        let path = self.err_path.clone();
+        let path = self.fifo_err.clone();
         thread::spawn(move || {
             let mut buf = String::new();
             std::fs::OpenOptions::new()
@@ -269,7 +269,7 @@ impl Context {
     }
 
     fn read_out(&self, send_ch: Sender<Result<String>>) -> thread::JoinHandle<anyhow::Result<()>> {
-        let path = self.out_path.clone();
+        let path = self.fifo_out.clone();
         thread::spawn(move || {
             let mut buf = String::new();
             let mut f = std::fs::OpenOptions::new().read(true).open(path)?;
