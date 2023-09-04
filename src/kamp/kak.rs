@@ -38,12 +38,12 @@ where
     stdin.write_all(cmd.as_ref()).and_then(|_| child.wait())
 }
 
-pub(crate) fn connect<S: AsRef<str>>(session: S, cmd: S) -> Result<ExitStatus> {
+pub(crate) fn connect<S: AsRef<str>>(session: S, cmd: String) -> Result<ExitStatus> {
     Command::new("kak")
         .arg("-c")
         .arg(session.as_ref())
         .arg("-e")
-        .arg(cmd.as_ref())
+        .arg(&cmd)
         .status()
 }
 

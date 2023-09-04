@@ -3,8 +3,9 @@ use super::{Error, Result};
 use crossbeam_channel::Sender;
 use std::borrow::Cow;
 use std::io::prelude::*;
-use std::path::PathBuf;
-use std::rc::Rc;
+use std::ops::Deref;
+use std::path::Path;
+use std::sync::Arc;
 use std::thread;
 
 const END_TOKEN: &str = "<<EEND>>";
@@ -42,22 +43,23 @@ impl ParseType {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct Context<'a> {
-    session: Cow<'a, str>,
+pub(crate) struct Context {
+    session: Arc<str>,
     client: Option<String>,
-    base_path: Rc<PathBuf>,
+    out_path: Arc<Path>,
+    err_path: Arc<Path>,
 }
 
-impl<'a> Context<'a> {
-    pub fn new(session: impl Into<Cow<'a, str>>, client: Option<String>) -> Self {
-        let session = session.into();
+impl Context {
+    pub fn new(session: &str, client: Option<String>) -> Self {
         let mut path = std::env::temp_dir();
         path.push(format!("kamp-{session}"));
 
         Context {
-            session,
+            session: session.into(),
             client,
-            base_path: Rc::new(path),
+            out_path: path.with_extension("out").into(),
+            err_path: path.with_extension("err").into(),
         }
     }
 
@@ -69,8 +71,8 @@ impl<'a> Context<'a> {
         self.client.take()
     }
 
-    pub fn session(&self) -> Cow<'a, str> {
-        self.session.clone()
+    pub fn session(&self) -> &str {
+        self.session.deref()
     }
 
     pub fn is_draft(&self) -> bool {
@@ -116,8 +118,8 @@ impl<'a> Context<'a> {
         cmd.push_str("echo -to-file %opt{kamp_err} %val{error}\n}");
 
         let (s, r) = crossbeam_channel::bounded(0);
-        let err_h = read_err(self.get_err_path(), s.clone());
-        let out_h = read_out(self.get_out_path(), s);
+        let err_h = self.read_err(s.clone());
+        let out_h = self.read_out(s);
 
         let status = kak::pipe(&self.session, cmd)?;
         self.check_status(status)?;
@@ -152,11 +154,11 @@ impl<'a> Context<'a> {
         }
 
         let (s, r) = crossbeam_channel::bounded(1);
-        let err_h = read_err(self.get_err_path(), s.clone());
-        let out_h = read_out(self.get_out_path(), s);
+        let err_h = self.read_err(s.clone());
+        let out_h = self.read_out(s);
 
         let kak_h = thread::spawn({
-            let session = self.session().into_owned();
+            let session = self.session.clone();
             move || kak::connect(session, cmd)
         });
 
@@ -173,7 +175,7 @@ impl<'a> Context<'a> {
             // need to write to err pipe in order to complete its read thread
             std::fs::OpenOptions::new()
                 .write(true)
-                .open(self.get_err_path())
+                .open(self.err_path)
                 .and_then(|mut f| f.write_all(b""))?;
             out_h.join().unwrap()?;
         }
@@ -220,7 +222,7 @@ impl<'a> Context<'a> {
     }
 }
 
-impl Context<'_> {
+impl Context {
     fn query_kak(
         &self,
         (key, val): (&str, &str),
@@ -239,60 +241,48 @@ impl Context<'_> {
         self.send(&buf, buffer_ctx).map(|s| parse_type.parse(s))
     }
 
-    fn get_err_path(&self) -> PathBuf {
-        self.base_path.with_extension("err")
-    }
-
-    fn get_out_path(&self) -> PathBuf {
-        self.base_path.with_extension("out")
-    }
-
     fn check_status(&self, status: std::process::ExitStatus) -> Result<()> {
         if status.success() {
             return Ok(());
         }
         Err(match status.code() {
             Some(code) => Error::InvalidSession {
-                session: self.session().into_owned(),
+                session: self.session.clone(),
                 exit_code: code,
             },
             None => anyhow::anyhow!("kak terminated by signal").into(),
         })
     }
-}
 
-fn read_err(
-    file_path: PathBuf,
-    send_ch: Sender<Result<String>>,
-) -> thread::JoinHandle<anyhow::Result<()>> {
-    thread::spawn(move || {
-        let mut buf = String::new();
-        std::fs::OpenOptions::new()
-            .read(true)
-            .open(&file_path)
-            .and_then(|mut f| f.read_to_string(&mut buf))?;
-        send_ch
-            .send(Err(Error::KakEvalCatch(buf)))
-            .map_err(anyhow::Error::new)
-    })
-}
+    fn read_err(&self, send_ch: Sender<Result<String>>) -> thread::JoinHandle<anyhow::Result<()>> {
+        let path = self.err_path.clone();
+        thread::spawn(move || {
+            let mut buf = String::new();
+            std::fs::OpenOptions::new()
+                .read(true)
+                .open(path)
+                .and_then(|mut f| f.read_to_string(&mut buf))?;
+            send_ch
+                .send(Err(Error::KakEvalCatch(buf)))
+                .map_err(anyhow::Error::new)
+        })
+    }
 
-fn read_out(
-    file_path: PathBuf,
-    send_ch: Sender<Result<String>>,
-) -> thread::JoinHandle<anyhow::Result<()>> {
-    thread::spawn(move || {
-        let mut buf = String::new();
-        let mut f = std::fs::OpenOptions::new().read(true).open(&file_path)?;
-        // END_TOKEN comes appended to the payload
-        let res = loop {
-            f.read_to_string(&mut buf)?;
-            if buf.ends_with(END_TOKEN) {
-                break buf.trim_end_matches(END_TOKEN);
-            }
-        };
-        send_ch.send(Ok(res.into())).map_err(anyhow::Error::new)
-    })
+    fn read_out(&self, send_ch: Sender<Result<String>>) -> thread::JoinHandle<anyhow::Result<()>> {
+        let path = self.out_path.clone();
+        thread::spawn(move || {
+            let mut buf = String::new();
+            let mut f = std::fs::OpenOptions::new().read(true).open(path)?;
+            // END_TOKEN comes appended to the payload
+            let res = loop {
+                f.read_to_string(&mut buf)?;
+                if buf.ends_with(END_TOKEN) {
+                    break buf.trim_end_matches(END_TOKEN);
+                }
+            };
+            send_ch.send(Ok(res.into())).map_err(anyhow::Error::new)
+        })
+    }
 }
 
 fn write_end_token(buf: &mut String) {

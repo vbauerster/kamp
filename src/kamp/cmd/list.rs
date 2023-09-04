@@ -56,11 +56,6 @@ fn to_session_struct(ctx: Context) -> Result<Session> {
             _ => None,
         })
         .collect();
-    ctx.query_sh("pwd", None).map(|mut pwd| {
-        Session::new(
-            ctx.session().into_owned(),
-            pwd.pop().unwrap_or_default(),
-            clients,
-        )
-    })
+    ctx.query_sh("pwd", None)
+        .map(|mut pwd| Session::new(ctx.session().into(), pwd.pop().unwrap_or_default(), clients))
 }
