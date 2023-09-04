@@ -29,7 +29,10 @@ where
         .spawn()?;
 
     let Some(stdin) = child.stdin.as_mut() else {
-        return Err(Error::new(ErrorKind::Other, "cannot capture stdin of kak process"));
+        return Err(Error::new(
+            ErrorKind::Other,
+            "cannot capture stdin of kak process",
+        ));
     };
 
     stdin.write_all(cmd.as_ref()).and_then(|_| child.wait())
