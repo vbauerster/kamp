@@ -118,8 +118,8 @@ impl Context {
         cmd.push_str("echo -to-file %opt{kamp_err} %val{error}\n}");
 
         let (s, r) = crossbeam_channel::bounded(0);
-        let err_h = self.read_err(s.clone());
-        let out_h = self.read_out(s);
+        let err_h = self.read_fifo_err(s.clone());
+        let out_h = self.read_fifo_out(s);
 
         let status = kak::pipe(&self.session, cmd)?;
         self.check_status(status)?;
@@ -154,8 +154,8 @@ impl Context {
         }
 
         let (s, r) = crossbeam_channel::bounded(1);
-        let err_h = self.read_err(s.clone());
-        let out_h = self.read_out(s);
+        let err_h = self.read_fifo_err(s.clone());
+        let out_h = self.read_fifo_out(s);
 
         let kak_h = thread::spawn({
             let session = self.session.clone();
@@ -254,7 +254,10 @@ impl Context {
         })
     }
 
-    fn read_err(&self, send_ch: Sender<Result<String>>) -> thread::JoinHandle<anyhow::Result<()>> {
+    fn read_fifo_err(
+        &self,
+        send_ch: Sender<Result<String>>,
+    ) -> thread::JoinHandle<anyhow::Result<()>> {
         let path = self.fifo_err.clone();
         thread::spawn(move || {
             let mut buf = String::new();
@@ -268,7 +271,10 @@ impl Context {
         })
     }
 
-    fn read_out(&self, send_ch: Sender<Result<String>>) -> thread::JoinHandle<anyhow::Result<()>> {
+    fn read_fifo_out(
+        &self,
+        send_ch: Sender<Result<String>>,
+    ) -> thread::JoinHandle<anyhow::Result<()>> {
         let path = self.fifo_out.clone();
         thread::spawn(move || {
             let mut buf = String::new();
