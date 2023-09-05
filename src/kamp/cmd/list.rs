@@ -1,16 +1,19 @@
+use std::rc::Rc;
+use std::sync::Arc;
+
 use super::Context;
 use super::Result;
 
 #[allow(unused)]
 #[derive(Debug)]
 pub struct Session {
-    name: String,
-    pwd: String,
+    name: Arc<str>,
+    pwd: Box<str>,
     clients: Vec<Client>,
 }
 
 impl Session {
-    fn new(name: String, pwd: String, clients: Vec<Client>) -> Self {
+    fn new(name: Arc<str>, pwd: Box<str>, clients: Vec<Client>) -> Self {
         Session { name, pwd, clients }
     }
 }
@@ -18,12 +21,12 @@ impl Session {
 #[allow(unused)]
 #[derive(Debug)]
 pub struct Client {
-    name: String,
-    bufname: String,
+    name: Rc<str>,
+    bufname: Box<str>,
 }
 
 impl Client {
-    fn new(name: String, bufname: String) -> Self {
+    fn new(name: Rc<str>, bufname: Box<str>) -> Client {
         Client { name, bufname }
     }
 }
@@ -32,7 +35,7 @@ pub(crate) fn list_all() -> Result<Vec<Session>> {
     let v = crate::kamp::kak::list_sessions()?;
     let s = String::from_utf8(v).map_err(anyhow::Error::new)?;
     s.lines()
-        .map(|session| to_session_struct(Context::new(session, None)))
+        .map(|session| to_session_struct(Context::new(session.into(), None)))
         .collect()
 }
 
@@ -46,16 +49,17 @@ fn to_session_struct(ctx: Context) -> Result<Session> {
         .into_iter()
         .flat_map(|name| {
             let mut ctx = ctx.clone();
-            ctx.set_client(Some(name));
+            let client: Rc<str> = name.into();
+            ctx.set_client(client.clone());
             ctx.query_val("bufname", false, false, None)
-                .map(|mut v| (ctx.take_client(), v.pop()))
-        })
-        .flat_map(|(client, bufname)| match (client, bufname) {
-            (Some(client), Some(bufname)) => Some(Client::new(client, bufname)),
-            (Some(client), None) => Some(Client::new(client, String::new())),
-            _ => None,
+                .map(|mut v| Client::new(client, v.pop().unwrap_or_default().into()))
         })
         .collect();
-    ctx.query_sh("pwd", None)
-        .map(|mut pwd| Session::new(ctx.session().into(), pwd.pop().unwrap_or_default(), clients))
+    ctx.query_sh("pwd", None).map(|mut pwd| {
+        Session::new(
+            ctx.share_session(),
+            pwd.pop().unwrap_or_default().into(),
+            clients,
+        )
+    })
 }

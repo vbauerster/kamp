@@ -3,8 +3,8 @@ use super::{Error, Result};
 use crossbeam_channel::Sender;
 use std::borrow::Cow;
 use std::io::prelude::*;
-use std::ops::Deref;
 use std::path::Path;
+use std::rc::Rc;
 use std::sync::Arc;
 use std::thread;
 
@@ -45,7 +45,7 @@ impl ParseType {
 #[derive(Debug, Clone)]
 pub(crate) struct Context {
     session: Arc<str>,
-    client: Option<String>,
+    client: Option<Rc<str>>,
     fifo_out: Arc<Path>,
     fifo_err: Arc<Path>,
 }
@@ -57,22 +57,18 @@ impl Context {
 
         Context {
             session: session.into(),
-            client,
+            client: client.map(|s| s.into()),
             fifo_out: path.with_extension("out").into(),
             fifo_err: path.with_extension("err").into(),
         }
     }
 
-    pub fn set_client(&mut self, client: Option<String>) {
-        self.client = client;
+    pub fn set_client(&mut self, client: Rc<str>) {
+        self.client = Some(client);
     }
 
-    pub fn take_client(&mut self) -> Option<String> {
-        self.client.take()
-    }
-
-    pub fn session(&self) -> &str {
-        self.session.deref()
+    pub fn share_session(&self) -> Arc<str> {
+        Arc::clone(&self.session)
     }
 
     pub fn is_draft(&self) -> bool {
@@ -158,7 +154,7 @@ impl Context {
         let out_h = self.read_fifo_out(s);
 
         let kak_h = thread::spawn({
-            let session = self.session.clone();
+            let session = self.share_session();
             move || kak::connect(session, cmd)
         });
 
@@ -247,7 +243,7 @@ impl Context {
         }
         Err(match status.code() {
             Some(code) => Error::InvalidSession {
-                session: self.session.clone(),
+                session: self.share_session(),
                 exit_code: code,
             },
             None => anyhow::anyhow!("kak terminated by signal").into(),
