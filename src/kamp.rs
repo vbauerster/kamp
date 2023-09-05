@@ -46,7 +46,7 @@ pub(super) fn run() -> Result<()> {
     };
 
     use argv::SubCommand as sub;
-    match (command, session.as_deref()) {
+    match (command, session.map(|s| s.into_boxed_str())) {
         (sub::Init(opt), _) => {
             let res = cmd::init(opt.export, opt.alias)?;
             print!("{res}");
