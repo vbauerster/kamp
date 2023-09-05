@@ -6,9 +6,14 @@ mod kak;
 
 use context::Context;
 use error::{Error, Result};
+use std::io::Write;
 
 const KAKOUNE_SESSION: &str = "KAKOUNE_SESSION";
 const KAKOUNE_CLIENT: &str = "KAKOUNE_CLIENT";
+
+trait Dispatcher {
+    fn dispatch<W: Write>(self, writer: W, ctx: Option<Context>) -> Result<()>;
+}
 
 pub(super) fn run() -> Result<()> {
     let kamp: argv::Kampliment = argh::from_env();
@@ -45,88 +50,79 @@ pub(super) fn run() -> Result<()> {
         };
     };
 
-    use argv::SubCommand as sub;
-    match (command, session.map(|s| s.into_boxed_str())) {
-        (sub::Init(opt), _) => {
-            let res = cmd::init(opt.export, opt.alias)?;
-            print!("{res}");
-        }
-        (sub::Attach(opt), Some(session)) => {
-            let ctx = Context::new(session, client);
-            return cmd::attach(ctx, opt.buffer);
-        }
-        (sub::Edit(opt), Some(session)) => {
-            let ctx = Context::new(session, client);
-            return cmd::edit(ctx, opt.focus, opt.files);
-        }
-        (sub::Edit(opt), None) => {
-            return kak::proxy(opt.files).map_err(|err| err.into());
-        }
-        (sub::Send(opt), Some(session)) => {
-            if opt.command.is_empty() {
-                return Err(Error::CommandRequired);
-            }
-            let ctx = Context::new(session, client);
-            let buffer_ctx = to_buffer_ctx(opt.buffers);
-            let res = ctx.send(opt.command.join(" "), buffer_ctx)?;
-            print!("{res}");
-        }
-        (sub::List(opt), _) if opt.all => {
-            for session in cmd::list_all()? {
-                println!("{session:#?}");
-            }
-        }
-        (sub::List(_), Some(session)) => {
-            let ctx = Context::new(session, client);
-            let session = cmd::list_current(ctx)?;
-            println!("{session:#?}");
-        }
-        (sub::Kill(opt), Some(session)) => {
-            let ctx = Context::new(session, client);
-            return ctx.send_kill(opt.exit_status);
-        }
-        (sub::Get(opt), Some(session)) => {
-            use argv::GetSubCommand as get;
-            let ctx = Context::new(session, client);
-            let res = match opt.subcommand {
-                get::Val(o) => {
-                    let buffer_ctx = to_buffer_ctx(o.buffers);
-                    ctx.query_val(o.name, o.quote, o.split || o.zplit, buffer_ctx)
-                        .map(|v| (v, !o.quote && o.zplit))
-                }
-                get::Opt(o) => {
-                    let buffer_ctx = to_buffer_ctx(o.buffers);
-                    ctx.query_opt(o.name, o.quote, o.split || o.zplit, buffer_ctx)
-                        .map(|v| (v, !o.quote && o.zplit))
-                }
-                get::Reg(o) => ctx
-                    .query_reg(o.name, o.quote, o.split || o.zplit)
-                    .map(|v| (v, !o.quote && o.zplit)),
-                get::Shell(o) => {
-                    if o.command.is_empty() {
-                        return Err(Error::CommandRequired);
-                    }
-                    let buffer_ctx = to_buffer_ctx(o.buffers);
-                    ctx.query_sh(o.command.join(" "), buffer_ctx)
-                        .map(|v| (v, false))
-                }
-            };
-            let (items, zplit) = res?;
-            let split_char = if zplit { '\0' } else { '\n' };
-            for item in items {
-                print!("{item}{split_char}");
-            }
-        }
-        (sub::Cat(opt), Some(session)) => {
-            let ctx = Context::new(session, client);
-            let buffer_ctx = to_buffer_ctx(opt.buffers);
-            let res = cmd::cat(ctx, buffer_ctx)?;
-            print!("{res}");
-        }
-        _ => return Err(Error::InvalidContext("session is required")),
+    let mut output = std::io::stdout();
+    if let argv::SubCommand::Init(opt) = command {
+        return cmd::init(opt.export, opt.alias)
+            .and_then(|res| write!(output, "{res}").map_err(|e| e.into()));
     }
 
-    Ok(())
+    let ctx = session.map(|session| Context::new(session.into(), client));
+    command.dispatch(output, ctx)
+}
+
+impl Dispatcher for argv::SubCommand {
+    fn dispatch<W: Write>(self, mut writer: W, ctx: Option<Context>) -> Result<()> {
+        use argv::SubCommand as sub;
+        match (self, ctx) {
+            (sub::Attach(opt), Some(ctx)) => cmd::attach(ctx, opt.buffer),
+            (sub::Edit(opt), Some(ctx)) => cmd::edit(ctx, opt.focus, opt.files),
+            (sub::Edit(opt), None) => kak::proxy(opt.files).map_err(|err| err.into()),
+            (sub::Send(opt), Some(ctx)) => {
+                if opt.command.is_empty() {
+                    return Err(Error::CommandRequired);
+                }
+                ctx.send(opt.command.join(" "), to_buffer_ctx(opt.buffers))
+                    .and_then(|res| write!(writer, "{res}").map_err(|e| e.into()))
+            }
+            (sub::List(opt), _) if opt.all => {
+                let res = cmd::list_all()?;
+                res.into_iter()
+                    .try_for_each(|session| writeln!(writer, "{session:#?}"))
+                    .map_err(|e| e.into())
+            }
+            (sub::List(_), Some(ctx)) => cmd::list_current(ctx)
+                .and_then(|session| writeln!(writer, "{session:#?}").map_err(|e| e.into())),
+            (sub::Kill(opt), Some(ctx)) => ctx.send_kill(opt.exit_status),
+            (sub::Get(opt), Some(ctx)) => {
+                use argv::GetSubCommand as get;
+                let res = match opt.subcommand {
+                    get::Val(o) => {
+                        let buffer_ctx = to_buffer_ctx(o.buffers);
+                        ctx.query_val(o.name, o.quote, o.split || o.zplit, buffer_ctx)
+                            .map(|v| (v, !o.quote && o.zplit))
+                    }
+                    get::Opt(o) => {
+                        let buffer_ctx = to_buffer_ctx(o.buffers);
+                        ctx.query_opt(o.name, o.quote, o.split || o.zplit, buffer_ctx)
+                            .map(|v| (v, !o.quote && o.zplit))
+                    }
+                    get::Reg(o) => ctx
+                        .query_reg(o.name, o.quote, o.split || o.zplit)
+                        .map(|v| (v, !o.quote && o.zplit)),
+                    get::Shell(o) => {
+                        if o.command.is_empty() {
+                            return Err(Error::CommandRequired);
+                        }
+                        let buffer_ctx = to_buffer_ctx(o.buffers);
+                        ctx.query_sh(o.command.join(" "), buffer_ctx)
+                            .map(|v| (v, false))
+                    }
+                };
+                let (items, zplit) = res?;
+                let split_char = if zplit { '\0' } else { '\n' };
+                items
+                    .into_iter()
+                    .try_for_each(|item| write!(writer, "{item}{split_char}"))
+                    .map_err(|e| e.into())
+            }
+            (sub::Cat(opt), Some(ctx)) => {
+                let buffer_ctx = to_buffer_ctx(opt.buffers);
+                cmd::cat(ctx, buffer_ctx)
+                    .and_then(|res| write!(writer, "{res}").map_err(|e| e.into()))
+            }
+            _ => Err(Error::InvalidContext("session is required")),
+        }
+    }
 }
 
 fn to_buffer_ctx(buffers: Vec<String>) -> Option<(String, i32)> {
