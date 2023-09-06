@@ -64,10 +64,7 @@ pub(super) fn run() -> Result<()> {
         }
         sub::Edit(opt) if session.is_none() => kak::proxy(opt.files).map_err(|e| e.into()),
         _ => match session {
-            Some(session) => {
-                let ctx = Context::new(session, client);
-                ctx.dispatch(command, output)
-            }
+            Some(session) => Context::new(session, client).dispatch(command, output),
             None => Err(Error::InvalidContext("session is required")),
         },
     }
