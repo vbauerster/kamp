@@ -62,7 +62,7 @@ pub(super) fn run() -> Result<()> {
                 .try_for_each(|session| writeln!(output, "{session:#?}"))
                 .map_err(|e| e.into())
         }
-        sub::Edit(opt) if session.is_none() => kak::proxy(opt.files).map_err(|err| err.into()),
+        sub::Edit(opt) if session.is_none() => kak::proxy(opt.files).map_err(|e| e.into()),
         _ => match session {
             Some(session) => {
                 let ctx = Context::new(session.into(), client);
