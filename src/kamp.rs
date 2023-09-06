@@ -56,12 +56,11 @@ pub(super) fn run() -> Result<()> {
     match command {
         sub::Init(opt) => cmd::init(opt.export, opt.alias)
             .and_then(|res| write!(output, "{res}").map_err(|e| e.into())),
-        sub::List(opt) if opt.all => {
-            let res = cmd::list_all()?;
+        sub::List(opt) if opt.all => cmd::list_all().and_then(|res| {
             res.into_iter()
                 .try_for_each(|session| writeln!(output, "{session:#?}"))
                 .map_err(|e| e.into())
-        }
+        }),
         sub::Edit(opt) if session.is_none() => kak::proxy(opt.files).map_err(|e| e.into()),
         _ => match session {
             Some(session) => Context::new(session, client).dispatch(command, output),
@@ -87,7 +86,7 @@ impl Dispatcher for sub {
             sub::Kill(opt) => ctx.send_kill(opt.exit_status),
             sub::Get(opt) => {
                 use argv::GetSubCommand as get;
-                let res = match opt.subcommand {
+                match opt.subcommand {
                     get::Val(o) => {
                         let buffer_ctx = to_buffer_ctx(o.buffers);
                         ctx.query_val(o.name, o.quote, o.split || o.zplit, buffer_ctx)
@@ -109,13 +108,14 @@ impl Dispatcher for sub {
                         ctx.query_sh(o.command.join(" "), buffer_ctx)
                             .map(|v| (v, false))
                     }
-                };
-                let (items, zplit) = res?;
-                let split_char = if zplit { '\0' } else { '\n' };
-                items
-                    .into_iter()
-                    .try_for_each(|item| write!(writer, "{item}{split_char}"))
-                    .map_err(|e| e.into())
+                }
+                .and_then(|(items, zplit)| {
+                    let split_char = if zplit { '\0' } else { '\n' };
+                    items
+                        .into_iter()
+                        .try_for_each(|item| write!(writer, "{item}{split_char}"))
+                        .map_err(|e| e.into())
+                })
             }
             sub::Cat(opt) => {
                 let buffer_ctx = to_buffer_ctx(opt.buffers);
