@@ -35,23 +35,24 @@ pub(super) fn run() -> Result<()> {
         ),
     };
 
+    let mut output = std::io::stdout();
+
     let Some(command) = kamp.subcommand else {
-        return match (session, client) {
-            (Some(s), Some(c)) => {
-                println!("session: {s}");
-                println!("client: {c}");
-                Ok(())
-            }
-            (Some(s), None) => {
-                println!("session: {s}");
-                Ok(())
-            }
-            _ => Err(Error::InvalidContext("session is required")),
+        return if session.is_some() {
+            [session, client]
+                .into_iter()
+                .zip(["session", "client"])
+                .try_for_each(|(opt, name)| match opt {
+                    Some(val) => writeln!(output, "{name}: {val}"),
+                    None => Ok(()),
+                })
+                .map_err(|e| e.into())
+        } else {
+            Err(Error::InvalidContext("session is required"))
         };
     };
 
     use argv::SubCommand as sub;
-    let mut output = std::io::stdout();
     match command {
         sub::Init(opt) => cmd::init(opt.export, opt.alias)
             .and_then(|res| write!(output, "{res}").map_err(|e| e.into())),
