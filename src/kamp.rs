@@ -12,8 +12,8 @@ use std::io::Write;
 const KAKOUNE_SESSION: &str = "KAKOUNE_SESSION";
 const KAKOUNE_CLIENT: &str = "KAKOUNE_CLIENT";
 
-trait Dispatcher {
-    fn dispatch<W: Write>(self, writer: W, ctx: Option<Context>) -> Result<()>;
+pub(crate) trait Dispatcher {
+    fn dispatch<W: Write>(self, ctx: Context, writer: W) -> Result<()>;
 }
 
 pub(super) fn run() -> Result<()> {
@@ -62,30 +62,33 @@ pub(super) fn run() -> Result<()> {
                 .try_for_each(|session| writeln!(output, "{session:#?}"))
                 .map_err(|e| e.into())
         }
-        _ => {
-            let ctx = session.map(|session| Context::new(session.into(), client));
-            command.dispatch(output, ctx)
-        }
+        sub::Edit(opt) if session.is_none() => kak::proxy(opt.files).map_err(|err| err.into()),
+        _ => match session {
+            Some(session) => {
+                let ctx = Context::new(session.into(), client);
+                ctx.dispatch(command, output)
+            }
+            None => Err(Error::InvalidContext("session is required")),
+        },
     }
 }
 
 impl Dispatcher for sub {
-    fn dispatch<W: Write>(self, mut writer: W, ctx: Option<Context>) -> Result<()> {
-        match (self, ctx) {
-            (sub::Attach(opt), Some(ctx)) => cmd::attach(ctx, opt.buffer),
-            (sub::Edit(opt), Some(ctx)) => cmd::edit(ctx, opt.focus, opt.files),
-            (sub::Edit(opt), None) => kak::proxy(opt.files).map_err(|err| err.into()),
-            (sub::Send(opt), Some(ctx)) => {
+    fn dispatch<W: Write>(self, ctx: Context, mut writer: W) -> Result<()> {
+        match self {
+            sub::Attach(opt) => cmd::attach(ctx, opt.buffer),
+            sub::Edit(opt) => cmd::edit(ctx, opt.focus, opt.files),
+            sub::Send(opt) => {
                 if opt.command.is_empty() {
                     return Err(Error::CommandRequired);
                 }
                 ctx.send(opt.command.join(" "), to_buffer_ctx(opt.buffers))
                     .and_then(|res| write!(writer, "{res}").map_err(|e| e.into()))
             }
-            (sub::List(_), Some(ctx)) => cmd::list_current(ctx)
+            sub::List(_) => cmd::list_current(ctx)
                 .and_then(|session| writeln!(writer, "{session:#?}").map_err(|e| e.into())),
-            (sub::Kill(opt), Some(ctx)) => ctx.send_kill(opt.exit_status),
-            (sub::Get(opt), Some(ctx)) => {
+            sub::Kill(opt) => ctx.send_kill(opt.exit_status),
+            sub::Get(opt) => {
                 use argv::GetSubCommand as get;
                 let res = match opt.subcommand {
                     get::Val(o) => {
@@ -117,12 +120,12 @@ impl Dispatcher for sub {
                     .try_for_each(|item| write!(writer, "{item}{split_char}"))
                     .map_err(|e| e.into())
             }
-            (sub::Cat(opt), Some(ctx)) => {
+            sub::Cat(opt) => {
                 let buffer_ctx = to_buffer_ctx(opt.buffers);
                 cmd::cat(ctx, buffer_ctx)
                     .and_then(|res| write!(writer, "{res}").map_err(|e| e.into()))
             }
-            _ => Err(Error::InvalidContext("session is required")),
+            _ => unreachable!(),
         }
     }
 }

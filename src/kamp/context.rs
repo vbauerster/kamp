@@ -75,6 +75,14 @@ impl Context {
         self.client.is_none()
     }
 
+    pub fn dispatch<T, W>(self, dispatcher: T, writer: W) -> Result<()>
+    where
+        T: super::Dispatcher,
+        W: std::io::Write,
+    {
+        dispatcher.dispatch(self, writer)
+    }
+
     pub fn send_kill(self, exit_status: Option<i32>) -> Result<()> {
         let mut cmd = String::from("kill");
         if let Some(status) = exit_status {
