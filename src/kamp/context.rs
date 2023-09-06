@@ -51,7 +51,8 @@ pub(crate) struct Context {
 }
 
 impl Context {
-    pub fn new(session: String, client: Option<String>) -> Self {
+    pub fn new(session: impl AsRef<str>, client: Option<String>) -> Self {
+        let session = session.as_ref();
         let mut path = std::env::temp_dir();
         path.push(format!("kamp-{session}"));
 

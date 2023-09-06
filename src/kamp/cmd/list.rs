@@ -35,7 +35,7 @@ pub(crate) fn list_all() -> Result<Vec<Session>> {
     let v = crate::kamp::kak::list_sessions()?;
     let s = String::from_utf8(v).map_err(anyhow::Error::new)?;
     s.lines()
-        .map(|session| to_session_struct(Context::new(session.into(), None)))
+        .map(|session| to_session_struct(Context::new(session, None)))
         .collect()
 }
 
