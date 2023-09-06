@@ -4,6 +4,7 @@ mod context;
 mod error;
 mod kak;
 
+use argv::SubCommand as sub;
 use context::Context;
 use error::{Error, Result};
 use std::io::Write;
@@ -52,7 +53,6 @@ pub(super) fn run() -> Result<()> {
         };
     };
 
-    use argv::SubCommand as sub;
     match command {
         sub::Init(opt) => cmd::init(opt.export, opt.alias)
             .and_then(|res| write!(output, "{res}").map_err(|e| e.into())),
@@ -69,9 +69,8 @@ pub(super) fn run() -> Result<()> {
     }
 }
 
-impl Dispatcher for argv::SubCommand {
+impl Dispatcher for sub {
     fn dispatch<W: Write>(self, mut writer: W, ctx: Option<Context>) -> Result<()> {
-        use argv::SubCommand as sub;
         match (self, ctx) {
             (sub::Attach(opt), Some(ctx)) => cmd::attach(ctx, opt.buffer),
             (sub::Edit(opt), Some(ctx)) => cmd::edit(ctx, opt.focus, opt.files),
