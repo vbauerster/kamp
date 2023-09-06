@@ -216,9 +216,7 @@ impl Context {
     ) -> Result<Vec<String>> {
         self.query_kak(("sh", cmd.as_ref()), false, false, buffer_ctx)
     }
-}
 
-impl Context {
     fn query_kak(
         &self,
         (key, val): (&str, &str),
