@@ -50,14 +50,22 @@ pub(super) fn run() -> Result<()> {
         };
     };
 
+    use argv::SubCommand as sub;
     let mut output = std::io::stdout();
-    if let argv::SubCommand::Init(opt) = command {
-        return cmd::init(opt.export, opt.alias)
-            .and_then(|res| write!(output, "{res}").map_err(|e| e.into()));
+    match command {
+        sub::Init(opt) => cmd::init(opt.export, opt.alias)
+            .and_then(|res| write!(output, "{res}").map_err(|e| e.into())),
+        sub::List(opt) if opt.all => {
+            let res = cmd::list_all()?;
+            res.into_iter()
+                .try_for_each(|session| writeln!(output, "{session:#?}"))
+                .map_err(|e| e.into())
+        }
+        _ => {
+            let ctx = session.map(|session| Context::new(session.into(), client));
+            command.dispatch(output, ctx)
+        }
     }
-
-    let ctx = session.map(|session| Context::new(session.into(), client));
-    command.dispatch(output, ctx)
 }
 
 impl Dispatcher for argv::SubCommand {
@@ -73,12 +81,6 @@ impl Dispatcher for argv::SubCommand {
                 }
                 ctx.send(opt.command.join(" "), to_buffer_ctx(opt.buffers))
                     .and_then(|res| write!(writer, "{res}").map_err(|e| e.into()))
-            }
-            (sub::List(opt), _) if opt.all => {
-                let res = cmd::list_all()?;
-                res.into_iter()
-                    .try_for_each(|session| writeln!(writer, "{session:#?}"))
-                    .map_err(|e| e.into())
             }
             (sub::List(_), Some(ctx)) => cmd::list_current(ctx)
                 .and_then(|session| writeln!(writer, "{session:#?}").map_err(|e| e.into())),
