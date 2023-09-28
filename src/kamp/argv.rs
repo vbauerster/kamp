@@ -81,7 +81,7 @@ pub(crate) struct EditOptions {
     pub focus: bool,
 
     /// path to file
-    #[argh(positional, greedy, arg_name = "file")]
+    #[argh(positional, arg_name = "file")]
     pub files: Vec<String>,
 }
 
