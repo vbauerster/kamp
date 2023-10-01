@@ -68,8 +68,9 @@ impl Context {
         self.client = Some(client);
     }
 
-    pub fn share_session(&self) -> Arc<str> {
-        Arc::clone(&self.session)
+    pub fn own_session(&mut self) -> Box<str> {
+        let session = Arc::get_mut(&mut self.session).unwrap();
+        (&*session).into()
     }
 
     pub fn is_draft(&self) -> bool {
@@ -84,7 +85,7 @@ impl Context {
         dispatcher.dispatch(self, writer)
     }
 
-    pub fn send_kill(self, exit_status: Option<i32>) -> Result<()> {
+    pub fn send_kill(&mut self, exit_status: Option<i32>) -> Result<()> {
         let mut cmd = String::from("kill");
         if let Some(status) = exit_status {
             cmd.push(' ');
@@ -96,7 +97,11 @@ impl Context {
             .and_then(|status| self.check_status(status))
     }
 
-    pub fn send(&self, body: impl AsRef<str>, buffer_ctx: Option<(String, i32)>) -> Result<String> {
+    pub fn send(
+        &mut self,
+        body: impl AsRef<str>,
+        buffer_ctx: Option<(String, i32)>,
+    ) -> Result<String> {
         let mut body = Cow::from(body.as_ref());
         let mut cmd = String::from("try %{\n");
         cmd.push_str("eval");
@@ -141,7 +146,7 @@ impl Context {
         }
     }
 
-    pub fn connect(self, body: impl AsRef<str>) -> Result<()> {
+    pub fn connect(&mut self, body: impl AsRef<str>) -> Result<()> {
         let mut cmd = String::new();
         let body = body.as_ref();
         if !body.is_empty() {
@@ -163,7 +168,7 @@ impl Context {
         let out_h = self.read_fifo_out(s);
 
         let kak_h = thread::spawn({
-            let session = self.share_session();
+            let session = self.session.clone();
             move || kak::connect(session, cmd)
         });
 
@@ -180,7 +185,7 @@ impl Context {
             // need to write to err pipe in order to complete its read thread
             std::fs::OpenOptions::new()
                 .write(true)
-                .open(self.fifo_err)
+                .open(&self.fifo_err)
                 .and_then(|mut f| f.write_all(b""))?;
             out_h.join().unwrap()?;
         }
@@ -190,7 +195,7 @@ impl Context {
     }
 
     pub fn query_val(
-        &self,
+        &mut self,
         name: impl AsRef<str>,
         quote: bool,
         split: bool,
@@ -200,7 +205,7 @@ impl Context {
     }
 
     pub fn query_opt(
-        &self,
+        &mut self,
         name: impl AsRef<str>,
         quote: bool,
         split: bool,
@@ -210,7 +215,7 @@ impl Context {
     }
 
     pub fn query_reg(
-        &self,
+        &mut self,
         name: impl AsRef<str>,
         quote: bool,
         split: bool,
@@ -219,7 +224,7 @@ impl Context {
     }
 
     pub fn query_sh(
-        &self,
+        &mut self,
         cmd: impl AsRef<str>,
         buffer_ctx: Option<(String, i32)>,
     ) -> Result<Vec<String>> {
@@ -227,7 +232,7 @@ impl Context {
     }
 
     fn query_kak(
-        &self,
+        &mut self,
         (key, val): (&str, &str),
         quote: bool,
         split: bool,
@@ -244,13 +249,13 @@ impl Context {
         self.send(&buf, buffer_ctx).map(|s| parse_type.parse(s))
     }
 
-    fn check_status(&self, status: std::process::ExitStatus) -> Result<()> {
+    fn check_status(&mut self, status: std::process::ExitStatus) -> Result<()> {
         if status.success() {
             return Ok(());
         }
         Err(match status.code() {
             Some(code) => Error::InvalidSession {
-                session: self.share_session(),
+                session: self.own_session(),
                 exit_code: code,
             },
             None => anyhow::anyhow!("kak terminated by signal").into(),

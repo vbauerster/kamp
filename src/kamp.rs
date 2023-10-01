@@ -70,7 +70,7 @@ pub(super) fn run() -> Result<()> {
 }
 
 impl Dispatcher for sub {
-    fn dispatch<W: Write>(self, ctx: Context, mut writer: W) -> Result<()> {
+    fn dispatch<W: Write>(self, mut ctx: Context, mut writer: W) -> Result<()> {
         match self {
             sub::Attach(opt) => cmd::attach(ctx, opt.buffer),
             sub::Edit(opt) => cmd::edit(ctx, opt.focus, opt.files),

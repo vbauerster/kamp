@@ -1,5 +1,4 @@
 use std::rc::Rc;
-use std::sync::Arc;
 
 use super::Context;
 use super::Result;
@@ -7,13 +6,13 @@ use super::Result;
 #[allow(unused)]
 #[derive(Debug)]
 pub struct Session {
-    name: Arc<str>,
+    name: Box<str>,
     pwd: Box<str>,
     clients: Vec<Client>,
 }
 
 impl Session {
-    fn new(name: Arc<str>, pwd: Box<str>, clients: Vec<Client>) -> Self {
+    fn new(name: Box<str>, pwd: Box<str>, clients: Vec<Client>) -> Self {
         Session { name, pwd, clients }
     }
 }
@@ -43,7 +42,7 @@ pub(crate) fn list_current(ctx: Context) -> Result<Session> {
     to_session_struct(ctx)
 }
 
-fn to_session_struct(ctx: Context) -> Result<Session> {
+fn to_session_struct(mut ctx: Context) -> Result<Session> {
     let clients = ctx.query_val("client_list", false, true, None)?;
     let clients = clients
         .into_iter()
@@ -57,7 +56,7 @@ fn to_session_struct(ctx: Context) -> Result<Session> {
         .collect();
     ctx.query_sh("pwd", None).map(|mut pwd| {
         Session::new(
-            ctx.share_session(),
+            ctx.own_session(),
             pwd.pop().unwrap_or_default().into(),
             clients,
         )
