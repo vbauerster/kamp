@@ -15,7 +15,7 @@ name = "kamp"
 
 [dependencies]
 anyhow = "1.0.70"
-argh = "0.1.10"
+argh = "~0.1.9"
 crossbeam-channel = "0.5.7"
 thiserror = "1.0.40"
 
