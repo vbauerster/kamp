@@ -122,11 +122,8 @@ impl Dispatcher for SubCommand {
                         .map_err(|e| e.into())
                 })
             }
-            SubCommand::Cat(opt) => {
-                let buffer_ctx = to_buffer_ctx(opt.buffers);
-                cmd::cat(ctx, buffer_ctx)
-                    .and_then(|res| write!(writer, "{res}").map_err(|e| e.into()))
-            }
+            SubCommand::Cat(opt) => cmd::cat(ctx, to_buffer_ctx(opt.buffers))
+                .and_then(|res| write!(writer, "{res}").map_err(|e| e.into())),
             _ => unreachable!(),
         }
     }
