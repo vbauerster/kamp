@@ -86,22 +86,13 @@ impl Dispatcher for SubCommand {
             SubCommand::Kill(opt) => ctx.send_kill(opt.exit_status),
             SubCommand::Get(opt) => {
                 use argv::get::SubCommand;
+                let buffer_ctx = to_buffer_ctx(opt.buffers);
                 match opt.subcommand {
                     SubCommand::Value(o) => ctx
-                        .query_val(
-                            to_buffer_ctx(o.buffers),
-                            o.name,
-                            o.quote,
-                            o.split || o.zplit,
-                        )
+                        .query_val(buffer_ctx, o.name, o.quote, o.split || o.zplit)
                         .map(|v| (v, !o.quote && o.zplit)),
                     SubCommand::Option(o) => ctx
-                        .query_opt(
-                            to_buffer_ctx(o.buffers),
-                            o.name,
-                            o.quote,
-                            o.split || o.zplit,
-                        )
+                        .query_opt(buffer_ctx, o.name, o.quote, o.split || o.zplit)
                         .map(|v| (v, !o.quote && o.zplit)),
                     SubCommand::Register(o) => ctx
                         .query_reg(None, o.name, o.quote, o.split || o.zplit)
@@ -110,7 +101,7 @@ impl Dispatcher for SubCommand {
                         if o.command.is_empty() {
                             return Err(Error::CommandRequired);
                         }
-                        ctx.query_sh(to_buffer_ctx(o.buffers), o.command.join(" "))
+                        ctx.query_sh(buffer_ctx, o.command.join(" "))
                             .map(|v| (v, false))
                     }
                 }

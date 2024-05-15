@@ -148,6 +148,11 @@ pub(super) mod get {
     #[derive(FromArgs, PartialEq, Debug)]
     #[argh(subcommand, name = "get")]
     pub struct Options {
+        /// buffer context
+        /// or '*' for all non-debug buffers
+        #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
+        pub buffers: Vec<String>,
+
         #[argh(subcommand)]
         pub subcommand: SubCommand,
     }
@@ -167,11 +172,6 @@ pub(super) mod get {
         #[derive(FromArgs, PartialEq, Debug)]
         #[argh(subcommand, name = "val")]
         pub struct Options {
-            /// buffer context
-            /// or '*' for all non-debug buffers
-            #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
-            pub buffers: Vec<String>,
-
             /// quoting style kakoune, discards any --split
             #[argh(switch, short = 'q')]
             pub quote: bool,
@@ -196,11 +196,6 @@ pub(super) mod get {
         #[derive(FromArgs, PartialEq, Debug)]
         #[argh(subcommand, name = "opt")]
         pub struct Options {
-            /// buffer context
-            /// or '*' for all non-debug buffers
-            #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
-            pub buffers: Vec<String>,
-
             /// quoting style kakoune, discards any --split
             #[argh(switch, short = 'q')]
             pub quote: bool,
@@ -249,11 +244,6 @@ pub(super) mod get {
         #[derive(FromArgs, PartialEq, Eq, Debug)]
         #[argh(subcommand, name = "sh")]
         pub struct Options {
-            /// buffer context
-            /// or '*' for all non-debug buffers
-            #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
-            pub buffers: Vec<String>,
-
             /// shell command to evaluate
             #[argh(positional, greedy)]
             pub command: Vec<String>,
