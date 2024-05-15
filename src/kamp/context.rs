@@ -99,8 +99,8 @@ impl Context {
 
     pub fn send(
         &mut self,
-        body: impl AsRef<str>,
         buffer_ctx: Option<(String, i32)>,
+        body: impl AsRef<str>,
     ) -> Result<String> {
         let mut body = Cow::from(body.as_ref());
         let mut cmd = String::from("try %{\n");
@@ -246,7 +246,7 @@ impl Context {
         buf.push('{');
         buf.push_str(val);
         buf.push('}');
-        self.send(&buf, buffer_ctx).map(|s| parse_type.parse(s))
+        self.send(buffer_ctx, &buf).map(|s| parse_type.parse(s))
     }
 
     fn check_status(&mut self, status: std::process::ExitStatus) -> Result<()> {

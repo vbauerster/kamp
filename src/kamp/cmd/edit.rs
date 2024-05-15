@@ -57,7 +57,7 @@ pub(crate) fn edit(mut ctx: Context, focus: bool, files: Vec<String>) -> Result<
         if focus {
             buf.push_str("\nfocus");
         }
-        ctx.send(&buf, None).map(drop)
+        ctx.send(None, &buf).map(drop)
     }
 }
 
