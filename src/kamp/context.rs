@@ -196,47 +196,48 @@ impl Context {
 
     pub fn query_val(
         &mut self,
+        buffer_ctx: Option<(String, i32)>,
         name: impl AsRef<str>,
         quote: bool,
         split: bool,
-        buffer_ctx: Option<(String, i32)>,
     ) -> Result<Vec<String>> {
-        self.query_kak(("val", name.as_ref()), quote, split, buffer_ctx)
+        self.query_kak(buffer_ctx, ("val", name.as_ref()), quote, split)
     }
 
     pub fn query_opt(
         &mut self,
+        buffer_ctx: Option<(String, i32)>,
         name: impl AsRef<str>,
         quote: bool,
         split: bool,
-        buffer_ctx: Option<(String, i32)>,
     ) -> Result<Vec<String>> {
-        self.query_kak(("opt", name.as_ref()), quote, split, buffer_ctx)
+        self.query_kak(buffer_ctx, ("opt", name.as_ref()), quote, split)
     }
 
     pub fn query_reg(
         &mut self,
+        buffer_ctx: Option<(String, i32)>,
         name: impl AsRef<str>,
         quote: bool,
         split: bool,
     ) -> Result<Vec<String>> {
-        self.query_kak(("reg", name.as_ref()), quote, split, None)
+        self.query_kak(buffer_ctx, ("reg", name.as_ref()), quote, split)
     }
 
     pub fn query_sh(
         &mut self,
-        cmd: impl AsRef<str>,
         buffer_ctx: Option<(String, i32)>,
+        cmd: impl AsRef<str>,
     ) -> Result<Vec<String>> {
-        self.query_kak(("sh", cmd.as_ref()), false, false, buffer_ctx)
+        self.query_kak(buffer_ctx, ("sh", cmd.as_ref()), false, false)
     }
 
     fn query_kak(
         &mut self,
+        buffer_ctx: Option<(String, i32)>,
         (key, val): (&str, &str),
         quote: bool,
         split: bool,
-        buffer_ctx: Option<(String, i32)>,
     ) -> Result<Vec<String>> {
         let parse_type = ParseType::new(quote, split);
         let mut buf = String::from("echo -quoting ");

@@ -85,25 +85,28 @@ impl Dispatcher for sub {
             sub::Get(opt) => {
                 use argv::GetSubCommand as get;
                 match opt.subcommand {
-                    get::Val(o) => {
-                        let buffer_ctx = to_buffer_ctx(o.buffers);
-                        ctx.query_val(o.name, o.quote, o.split || o.zplit, buffer_ctx)
-                            .map(|v| (v, !o.quote && o.zplit))
-                    }
-                    get::Opt(o) => {
-                        let buffer_ctx = to_buffer_ctx(o.buffers);
-                        ctx.query_opt(o.name, o.quote, o.split || o.zplit, buffer_ctx)
-                            .map(|v| (v, !o.quote && o.zplit))
-                    }
+                    get::Val(o) => ctx
+                        .query_val(
+                            to_buffer_ctx(o.buffers),
+                            o.name,
+                            o.quote,
+                            o.split || o.zplit,
+                        )
+                        .map(|v| (v, !o.quote && o.zplit)),
+                    get::Opt(o) => ctx
+                        .query_opt(
+                            to_buffer_ctx(o.buffers),
+                            o.name,
+                            o.quote,
+                            o.split || o.zplit,
+                        )
+                        .map(|v| (v, !o.quote && o.zplit)),
                     get::Reg(o) => ctx
-                        .query_reg(o.name, o.quote, o.split || o.zplit)
+                        .query_reg(None, o.name, o.quote, o.split || o.zplit)
                         .map(|v| (v, !o.quote && o.zplit)),
                     get::Shell(o) => {
-                        if o.command.is_empty() {
-                            return Err(Error::CommandRequired);
-                        }
-                        let buffer_ctx = to_buffer_ctx(o.buffers);
-                        ctx.query_sh(o.command.join(" "), buffer_ctx)
+                        let command = to_send_body(o.command)?;
+                        ctx.query_sh(to_buffer_ctx(o.buffers), command)
                             .map(|v| (v, false))
                     }
                 }

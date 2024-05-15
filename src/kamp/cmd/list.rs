@@ -43,18 +43,18 @@ pub(crate) fn list_current(ctx: Context) -> Result<Session> {
 }
 
 fn to_session_struct(mut ctx: Context) -> Result<Session> {
-    let clients = ctx.query_val("client_list", false, true, None)?;
+    let clients = ctx.query_val(None, "client_list", false, true)?;
     let clients = clients
         .into_iter()
         .flat_map(|name| {
             let mut ctx = ctx.clone();
             let client: Rc<str> = name.into();
             ctx.set_client(client.clone());
-            ctx.query_val("bufname", false, false, None)
+            ctx.query_val(None, "bufname", false, false)
                 .map(|mut v| Client::new(client, v.pop().unwrap_or_default().into()))
         })
         .collect();
-    ctx.query_sh("pwd", None).map(|mut pwd| {
+    ctx.query_sh(None, "pwd").map(|mut pwd| {
         Session::new(
             ctx.own_session(),
             pwd.pop().unwrap_or_default().into(),
