@@ -155,97 +155,109 @@ pub(super) mod get {
     #[derive(FromArgs, PartialEq, Debug)]
     #[argh(subcommand)]
     pub enum SubCommand {
-        Value(ValueOptions),
-        Option(OptionOptions),
-        Register(RegisterOptions),
-        Shell(ShellOptions),
+        Value(value::Options),
+        Option(option::Options),
+        Register(register::Options),
+        Shell(shell::Options),
     }
 
-    /// value name
-    #[derive(FromArgs, PartialEq, Debug)]
-    #[argh(subcommand, name = "val")]
-    pub struct ValueOptions {
-        /// buffer context
-        /// or '*' for all non-debug buffers
-        #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
-        pub buffers: Vec<String>,
+    mod value {
+        use super::*;
+        /// get value
+        #[derive(FromArgs, PartialEq, Debug)]
+        #[argh(subcommand, name = "val")]
+        pub struct Options {
+            /// buffer context
+            /// or '*' for all non-debug buffers
+            #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
+            pub buffers: Vec<String>,
 
-        /// quoting style kakoune, discards any --split
-        #[argh(switch, short = 'q')]
-        pub quote: bool,
+            /// quoting style kakoune, discards any --split
+            #[argh(switch, short = 'q')]
+            pub quote: bool,
 
-        /// split by new line, for example 'buflist' value
-        #[argh(switch, short = 's')]
-        pub split: bool,
+            /// split by new line, for example 'buflist' value
+            #[argh(switch, short = 's')]
+            pub split: bool,
 
-        /// split by null character
-        #[argh(switch, short = 'z')]
-        pub zplit: bool,
+            /// split by null character
+            #[argh(switch, short = 'z')]
+            pub zplit: bool,
 
-        /// value name to query
-        #[argh(positional)]
-        pub name: String,
+            /// value name to query
+            #[argh(positional)]
+            pub name: String,
+        }
     }
 
-    /// option name
-    #[derive(FromArgs, PartialEq, Debug)]
-    #[argh(subcommand, name = "opt")]
-    pub struct OptionOptions {
-        /// buffer context
-        /// or '*' for all non-debug buffers
-        #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
-        pub buffers: Vec<String>,
+    mod option {
+        use super::*;
+        /// get option
+        #[derive(FromArgs, PartialEq, Debug)]
+        #[argh(subcommand, name = "opt")]
+        pub struct Options {
+            /// buffer context
+            /// or '*' for all non-debug buffers
+            #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
+            pub buffers: Vec<String>,
 
-        /// quoting style kakoune, discards any --split
-        #[argh(switch, short = 'q')]
-        pub quote: bool,
+            /// quoting style kakoune, discards any --split
+            #[argh(switch, short = 'q')]
+            pub quote: bool,
 
-        /// split by new line, for example 'str-list' type option
-        #[argh(switch, short = 's')]
-        pub split: bool,
+            /// split by new line, for example 'str-list' type option
+            #[argh(switch, short = 's')]
+            pub split: bool,
 
-        /// split by null character
-        #[argh(switch, short = 'z')]
-        pub zplit: bool,
+            /// split by null character
+            #[argh(switch, short = 'z')]
+            pub zplit: bool,
 
-        /// option name to query
-        #[argh(positional)]
-        pub name: String,
+            /// option name to query
+            #[argh(positional)]
+            pub name: String,
+        }
     }
 
-    /// register name
-    #[derive(FromArgs, PartialEq, Debug)]
-    #[argh(subcommand, name = "reg")]
-    pub struct RegisterOptions {
-        /// quoting style kakoune, discards any --split
-        #[argh(switch, short = 'q')]
-        pub quote: bool,
+    mod register {
+        use super::*;
+        /// get register
+        #[derive(FromArgs, PartialEq, Debug)]
+        #[argh(subcommand, name = "reg")]
+        pub struct Options {
+            /// quoting style kakoune, discards any --split
+            #[argh(switch, short = 'q')]
+            pub quote: bool,
 
-        /// split by new line, for example ':' register
-        #[argh(switch, short = 's')]
-        pub split: bool,
+            /// split by new line, for example ':' register
+            #[argh(switch, short = 's')]
+            pub split: bool,
 
-        /// split by null character
-        #[argh(switch, short = 'z')]
-        pub zplit: bool,
+            /// split by null character
+            #[argh(switch, short = 'z')]
+            pub zplit: bool,
 
-        /// register name to query, " is default
-        #[argh(positional, default = r#"String::from("dquote")"#)]
-        pub name: String,
+            /// register name to query, " is default
+            #[argh(positional, default = r#"String::from("dquote")"#)]
+            pub name: String,
+        }
     }
 
-    /// shell command
-    #[derive(FromArgs, PartialEq, Eq, Debug)]
-    #[argh(subcommand, name = "sh")]
-    pub struct ShellOptions {
-        /// buffer context
-        /// or '*' for all non-debug buffers
-        #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
-        pub buffers: Vec<String>,
+    mod shell {
+        use super::*;
+        /// evaluate shell command
+        #[derive(FromArgs, PartialEq, Eq, Debug)]
+        #[argh(subcommand, name = "sh")]
+        pub struct Options {
+            /// buffer context
+            /// or '*' for all non-debug buffers
+            #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
+            pub buffers: Vec<String>,
 
-        /// shell command to evaluate
-        #[argh(positional, greedy)]
-        pub command: Vec<String>,
+            /// shell command to evaluate
+            #[argh(positional, greedy)]
+            pub command: Vec<String>,
+        }
     }
 }
 
