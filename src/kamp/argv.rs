@@ -184,7 +184,7 @@ pub(super) mod get {
             #[argh(switch, short = 'z')]
             pub zplit: bool,
 
-            /// value name to query
+            /// value name to query (required)
             #[argh(positional)]
             pub name: String,
         }
@@ -208,7 +208,7 @@ pub(super) mod get {
             #[argh(switch, short = 'z')]
             pub zplit: bool,
 
-            /// option name to query
+            /// option name to query (required)
             #[argh(positional)]
             pub name: String,
         }
