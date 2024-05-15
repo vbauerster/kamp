@@ -44,7 +44,7 @@ fzf \
   --delimiter ':' \
   --ansi \
   --bind "change:reload($rg_cmd --color always --column -- {q} || true)" \
-  --bind 'enter:become(kamp send set global kamp_grep_query "{q}"; kamp edit {1} +{2}:{3})' \
+  --bind 'enter:execute-silent(kamp send set global kamp_grep_query "{q}")+become(kamp edit {1} +{2}:{3})' \
   --preview '
       highlight_line={2}
       line_range_begin=$((highlight_line - FZF_PREVIEW_LINES / 2))
