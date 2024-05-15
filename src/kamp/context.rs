@@ -110,7 +110,7 @@ impl Context {
                 cmd.push_str(" -buffer ");
                 cmd.push_str(b);
                 if *n == 0 || *n > 1 {
-                    body.to_mut().push_str(";echo -to-file %opt{kamp_out} ' '");
+                    body.to_mut().push_str("\necho -to-file %opt{kamp_out} ' '");
                 }
             }
             (_, Some(c)) => {
