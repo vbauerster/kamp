@@ -4,6 +4,7 @@ use std::fmt::Write;
 
 const KAKOUNE_INIT: &str = r#"
 define-command -hidden -override kamp-init %{
+    declare-option -hidden str kamp_grep_query
     declare-option -hidden str kamp_out
     declare-option -hidden str kamp_err
     evaluate-commands %sh{
