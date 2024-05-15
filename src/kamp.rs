@@ -75,10 +75,8 @@ impl Dispatcher for sub {
             sub::Attach(opt) => cmd::attach(ctx, opt.buffer),
             sub::Edit(opt) => cmd::edit(ctx, opt.focus, opt.files),
             sub::Send(opt) => {
-                if opt.command.is_empty() {
-                    return Err(Error::CommandRequired);
-                }
-                ctx.send(opt.command.join(" "), to_buffer_ctx(opt.buffers))
+                let body = to_send_body(opt.command)?;
+                ctx.send(to_buffer_ctx(opt.buffers), body)
                     .and_then(|res| write!(writer, "{res}").map_err(|e| e.into()))
             }
             sub::List(_) => cmd::list_current(ctx)
@@ -146,6 +144,25 @@ fn to_buffer_ctx(buffers: Vec<String>) -> Option<(String, i32)> {
     });
     res.push('\'');
     Some((res, count))
+}
+
+fn to_send_body(command: Vec<String>) -> Result<String> {
+    if command.is_empty() {
+        return Err(Error::CommandRequired);
+    }
+    let mut body = String::new();
+    body.push_str(&command[0]);
+    for s in &command[1..] {
+        body.push(' ');
+        if s.contains(' ') {
+            body.push('\'');
+            body.push_str(s);
+            body.push('\'');
+        } else {
+            body.push_str(s);
+        }
+    }
+    Ok(body)
 }
 
 #[cfg(test)]
