@@ -75,8 +75,10 @@ impl Dispatcher for SubCommand {
             SubCommand::Attach(opt) => cmd::attach(ctx, opt.buffer),
             SubCommand::Edit(opt) => cmd::edit(ctx, opt.focus, opt.files),
             SubCommand::Send(opt) => {
-                let body = to_send_body(opt.command)?;
-                ctx.send(to_buffer_ctx(opt.buffers), body)
+                if opt.command.is_empty() {
+                    return Err(Error::CommandRequired);
+                }
+                ctx.send(to_buffer_ctx(opt.buffers), opt.command.join(" "))
                     .and_then(|res| write!(writer, "{res}").map_err(|e| e.into()))
             }
             SubCommand::List(_) => cmd::list_current(ctx)
@@ -105,8 +107,10 @@ impl Dispatcher for SubCommand {
                         .query_reg(None, o.name, o.quote, o.split || o.zplit)
                         .map(|v| (v, !o.quote && o.zplit)),
                     SubCommand::Shell(o) => {
-                        let command = to_send_body(o.command)?;
-                        ctx.query_sh(to_buffer_ctx(o.buffers), command)
+                        if o.command.is_empty() {
+                            return Err(Error::CommandRequired);
+                        }
+                        ctx.query_sh(to_buffer_ctx(o.buffers), o.command.join(" "))
                             .map(|v| (v, false))
                     }
                 }
@@ -147,25 +151,6 @@ fn to_buffer_ctx(buffers: Vec<String>) -> Option<(String, i32)> {
     });
     res.push('\'');
     Some((res, count))
-}
-
-fn to_send_body(command: Vec<String>) -> Result<String> {
-    if command.is_empty() {
-        return Err(Error::CommandRequired);
-    }
-    let mut body = String::new();
-    body.push_str(&command[0]);
-    for s in &command[1..] {
-        body.push(' ');
-        if s.contains(' ') {
-            body.push('\'');
-            body.push_str(s);
-            body.push('\'');
-        } else {
-            body.push_str(s);
-        }
-    }
-    Ok(body)
 }
 
 #[cfg(test)]
