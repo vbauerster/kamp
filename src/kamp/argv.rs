@@ -107,8 +107,7 @@ mod send {
     #[derive(FromArgs, PartialEq, Debug)]
     #[argh(subcommand, name = "send")]
     pub struct Options {
-        /// buffer context
-        /// or '*' for all non-debug buffers
+        /// buffer context or '*' for all non-debug buffers
         #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
         pub buffers: Vec<String>,
 
@@ -148,8 +147,7 @@ pub(super) mod get {
     #[derive(FromArgs, PartialEq, Debug)]
     #[argh(subcommand, name = "get")]
     pub struct Options {
-        /// buffer context
-        /// or '*' for all non-debug buffers
+        /// buffer context or '*' for all non-debug buffers
         #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
         pub buffers: Vec<String>,
 
@@ -257,8 +255,7 @@ mod cat {
     #[derive(FromArgs, PartialEq, Debug)]
     #[argh(subcommand, name = "cat")]
     pub struct Options {
-        /// buffer context
-        /// or '*' for all non-debug buffers
+        /// buffer context or '*' for all non-debug buffers
         #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
         pub buffers: Vec<String>,
     }
