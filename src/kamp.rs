@@ -87,7 +87,7 @@ impl Dispatcher for SubCommand {
             SubCommand::Get(opt) => {
                 use argv::get::SubCommand;
                 match opt.subcommand {
-                    SubCommand::Val(o) => ctx
+                    SubCommand::Value(o) => ctx
                         .query_val(
                             to_buffer_ctx(o.buffers),
                             o.name,
@@ -95,7 +95,7 @@ impl Dispatcher for SubCommand {
                             o.split || o.zplit,
                         )
                         .map(|v| (v, !o.quote && o.zplit)),
-                    SubCommand::Opt(o) => ctx
+                    SubCommand::Option(o) => ctx
                         .query_opt(
                             to_buffer_ctx(o.buffers),
                             o.name,
@@ -103,7 +103,7 @@ impl Dispatcher for SubCommand {
                             o.split || o.zplit,
                         )
                         .map(|v| (v, !o.quote && o.zplit)),
-                    SubCommand::Reg(o) => ctx
+                    SubCommand::Register(o) => ctx
                         .query_reg(None, o.name, o.quote, o.split || o.zplit)
                         .map(|v| (v, !o.quote && o.zplit)),
                     SubCommand::Shell(o) => {

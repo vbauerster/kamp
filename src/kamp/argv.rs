@@ -155,16 +155,16 @@ pub(super) mod get {
     #[derive(FromArgs, PartialEq, Debug)]
     #[argh(subcommand)]
     pub enum SubCommand {
-        Val(ValueName),
-        Opt(OptionName),
-        Reg(RegisterName),
-        Shell(ShellCommand),
+        Value(ValueOptions),
+        Option(OptionOptions),
+        Register(RegisterOptions),
+        Shell(ShellOptions),
     }
 
     /// value name
     #[derive(FromArgs, PartialEq, Debug)]
     #[argh(subcommand, name = "val")]
-    pub struct ValueName {
+    pub struct ValueOptions {
         /// buffer context
         /// or '*' for all non-debug buffers
         #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
@@ -190,7 +190,7 @@ pub(super) mod get {
     /// option name
     #[derive(FromArgs, PartialEq, Debug)]
     #[argh(subcommand, name = "opt")]
-    pub struct OptionName {
+    pub struct OptionOptions {
         /// buffer context
         /// or '*' for all non-debug buffers
         #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
@@ -216,7 +216,7 @@ pub(super) mod get {
     /// register name
     #[derive(FromArgs, PartialEq, Debug)]
     #[argh(subcommand, name = "reg")]
-    pub struct RegisterName {
+    pub struct RegisterOptions {
         /// quoting style kakoune, discards any --split
         #[argh(switch, short = 'q')]
         pub quote: bool,
@@ -237,7 +237,7 @@ pub(super) mod get {
     /// shell command
     #[derive(FromArgs, PartialEq, Eq, Debug)]
     #[argh(subcommand, name = "sh")]
-    pub struct ShellCommand {
+    pub struct ShellOptions {
         /// buffer context
         /// or '*' for all non-debug buffers
         #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
