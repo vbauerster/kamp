@@ -1,5 +1,5 @@
 use super::Result;
-use crate::kamp::argv::KeyValue;
+use crate::kamp::argv::init::KeyValue;
 use std::fmt::Write;
 
 const KAKOUNE_INIT: &str = r#"

@@ -4,7 +4,7 @@ mod context;
 mod error;
 mod kak;
 
-use argv::SubCommand as sub;
+use argv::SubCommand;
 use context::Context;
 use error::{Error, Result};
 use std::io::Write;
@@ -54,14 +54,14 @@ pub(super) fn run() -> Result<()> {
     };
 
     match command {
-        sub::Init(opt) => cmd::init(opt.export, opt.alias)
+        SubCommand::Init(opt) => cmd::init(opt.export, opt.alias)
             .and_then(|res| write!(output, "{res}").map_err(|e| e.into())),
-        sub::List(opt) if opt.all => cmd::list_all().and_then(|res| {
+        SubCommand::List(opt) if opt.all => cmd::list_all().and_then(|res| {
             res.into_iter()
                 .try_for_each(|session| writeln!(output, "{session:#?}"))
                 .map_err(|e| e.into())
         }),
-        sub::Edit(opt) if session.is_none() => kak::proxy(opt.files).map_err(|e| e.into()),
+        SubCommand::Edit(opt) if session.is_none() => kak::proxy(opt.files).map_err(|e| e.into()),
         _ => match session {
             Some(session) => Context::new(session, client).dispatch(command, output),
             None => Err(Error::InvalidContext("session is required")),
@@ -69,23 +69,23 @@ pub(super) fn run() -> Result<()> {
     }
 }
 
-impl Dispatcher for sub {
+impl Dispatcher for SubCommand {
     fn dispatch<W: Write>(self, mut ctx: Context, mut writer: W) -> Result<()> {
         match self {
-            sub::Attach(opt) => cmd::attach(ctx, opt.buffer),
-            sub::Edit(opt) => cmd::edit(ctx, opt.focus, opt.files),
-            sub::Send(opt) => {
+            SubCommand::Attach(opt) => cmd::attach(ctx, opt.buffer),
+            SubCommand::Edit(opt) => cmd::edit(ctx, opt.focus, opt.files),
+            SubCommand::Send(opt) => {
                 let body = to_send_body(opt.command)?;
                 ctx.send(to_buffer_ctx(opt.buffers), body)
                     .and_then(|res| write!(writer, "{res}").map_err(|e| e.into()))
             }
-            sub::List(_) => cmd::list_current(ctx)
+            SubCommand::List(_) => cmd::list_current(ctx)
                 .and_then(|session| writeln!(writer, "{session:#?}").map_err(|e| e.into())),
-            sub::Kill(opt) => ctx.send_kill(opt.exit_status),
-            sub::Get(opt) => {
-                use argv::GetSubCommand as get;
+            SubCommand::Kill(opt) => ctx.send_kill(opt.exit_status),
+            SubCommand::Get(opt) => {
+                use argv::get::SubCommand;
                 match opt.subcommand {
-                    get::Val(o) => ctx
+                    SubCommand::Val(o) => ctx
                         .query_val(
                             to_buffer_ctx(o.buffers),
                             o.name,
@@ -93,7 +93,7 @@ impl Dispatcher for sub {
                             o.split || o.zplit,
                         )
                         .map(|v| (v, !o.quote && o.zplit)),
-                    get::Opt(o) => ctx
+                    SubCommand::Opt(o) => ctx
                         .query_opt(
                             to_buffer_ctx(o.buffers),
                             o.name,
@@ -101,10 +101,10 @@ impl Dispatcher for sub {
                             o.split || o.zplit,
                         )
                         .map(|v| (v, !o.quote && o.zplit)),
-                    get::Reg(o) => ctx
+                    SubCommand::Reg(o) => ctx
                         .query_reg(None, o.name, o.quote, o.split || o.zplit)
                         .map(|v| (v, !o.quote && o.zplit)),
-                    get::Shell(o) => {
+                    SubCommand::Shell(o) => {
                         let command = to_send_body(o.command)?;
                         ctx.query_sh(to_buffer_ctx(o.buffers), command)
                             .map(|v| (v, false))
@@ -118,7 +118,7 @@ impl Dispatcher for sub {
                         .map_err(|e| e.into())
                 })
             }
-            sub::Cat(opt) => {
+            SubCommand::Cat(opt) => {
                 let buffer_ctx = to_buffer_ctx(opt.buffers);
                 cmd::cat(ctx, buffer_ctx)
                     .and_then(|res| write!(writer, "{res}").map_err(|e| e.into()))
