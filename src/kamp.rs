@@ -95,7 +95,7 @@ impl Dispatcher for SubCommand {
                         .query_opt(buffer_ctx, o.name, o.quote, o.split || o.zplit)
                         .map(|v| (v, !o.quote && o.zplit)),
                     SubCommand::Register(o) => ctx
-                        .query_reg(None, o.name, o.quote, o.split || o.zplit)
+                        .query_reg(buffer_ctx, o.name, o.quote, o.split || o.zplit)
                         .map(|v| (v, !o.quote && o.zplit)),
                     SubCommand::Shell(o) => {
                         if o.command.is_empty() {
