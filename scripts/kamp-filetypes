@@ -8,5 +8,5 @@
 ft_dir="$(kamp get val runtime)/rc/filetype"
 
 find "$ft_dir"/*.kak -type f -exec basename -s .kak {} \; |
-	fzf --no-preview --prompt 'filetypes> ' |
-	xargs -I {} kamp send 'set buffer filetype {}'
+    fzf --no-preview --prompt 'filetypes> ' |
+    xargs -I {} kamp send set buffer filetype {}
