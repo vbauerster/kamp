@@ -45,7 +45,7 @@ define-command -override kamp-connect -params 1.. -command-completion %{{
         export KAKOUNE_CLIENT="$2"
         shift 3
 
-        [ $# = 0 ] && set "$SHELL"
+        [ $# -eq 0 ] && set "$SHELL"
 
         "$@"
     }} -- %val{{session}} %val{{client}} %arg{{@}}
