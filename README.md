@@ -10,6 +10,20 @@ Requires [Rust](https://www.rust-lang.org) installed on your system.
 
 Clone the repository and run `cargo install --path .`
 
+### Nix
+
+With nix-env:
+
+```shell-script
+nix-env -iA kamp
+```
+
+With modern nix command:
+
+```shell-script
+nix profile install nixpkgs#kamp
+```
+
 ## Kakoune integration
 
 Add following definition into your kakrc.
