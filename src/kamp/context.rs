@@ -44,20 +44,19 @@ impl ParseType {
 
 #[derive(Debug, Clone)]
 pub(crate) struct Context {
-    session: Arc<str>,
+    session: &'static str,
     client: Option<Rc<str>>,
     fifo_out: Arc<Path>,
     fifo_err: Arc<Path>,
 }
 
 impl Context {
-    pub fn new(session: impl AsRef<str>, client: Option<String>) -> Self {
-        let session = session.as_ref();
+    pub fn new(session: &'static str, client: Option<String>) -> Self {
         let mut path = std::env::temp_dir();
         path.push(format!("kamp-{session}"));
 
         Context {
-            session: session.into(),
+            session,
             client: client.map(|s| s.into()),
             fifo_out: path.with_extension("out").into(),
             fifo_err: path.with_extension("err").into(),
@@ -85,23 +84,19 @@ impl Context {
         dispatcher.dispatch(self, writer)
     }
 
-    pub fn send_kill(&mut self, exit_status: Option<i32>) -> Result<()> {
+    pub fn send_kill(self, exit_status: Option<i32>) -> Result<()> {
         let mut cmd = String::from("kill");
         if let Some(status) = exit_status {
             cmd.push(' ');
             cmd.push_str(&status.to_string());
         }
 
-        kak::pipe(&self.session, cmd)
+        kak::pipe(self.session, cmd)
             .map_err(|err| err.into())
             .and_then(|status| self.check_status(status))
     }
 
-    pub fn send(
-        &mut self,
-        buffer_ctx: Option<(String, i32)>,
-        body: impl AsRef<str>,
-    ) -> Result<String> {
+    pub fn send(self, buffer_ctx: Option<(String, i32)>, body: impl AsRef<str>) -> Result<String> {
         let mut body = Cow::from(body.as_ref());
         let mut cmd = String::from("try %{\n");
         cmd.push_str("eval");
@@ -131,7 +126,7 @@ impl Context {
         let err_h = self.read_fifo_err(s.clone());
         let out_h = self.read_fifo_out(s);
 
-        let status = kak::pipe(&self.session, cmd)?;
+        let status = kak::pipe(self.session, cmd)?;
         self.check_status(status)?;
 
         match r.recv().map_err(anyhow::Error::new)? {
@@ -146,7 +141,7 @@ impl Context {
         }
     }
 
-    pub fn connect(&mut self, body: impl AsRef<str>) -> Result<()> {
+    pub fn connect(self, body: impl AsRef<str>) -> Result<()> {
         let mut cmd = String::new();
         let body = body.as_ref();
         if !body.is_empty() {
@@ -167,10 +162,7 @@ impl Context {
         let err_h = self.read_fifo_err(s.clone());
         let out_h = self.read_fifo_out(s);
 
-        let kak_h = thread::spawn({
-            let session = self.session.clone();
-            move || kak::connect(session, cmd)
-        });
+        let kak_h = thread::spawn(move || kak::connect(self.session, cmd));
 
         let res = match r.recv() {
             Err(recv_err) => {
@@ -195,7 +187,7 @@ impl Context {
     }
 
     pub fn query_val(
-        &mut self,
+        self,
         buffer_ctx: Option<(String, i32)>,
         name: impl AsRef<str>,
         quote: bool,
@@ -205,7 +197,7 @@ impl Context {
     }
 
     pub fn query_opt(
-        &mut self,
+        self,
         buffer_ctx: Option<(String, i32)>,
         name: impl AsRef<str>,
         quote: bool,
@@ -215,7 +207,7 @@ impl Context {
     }
 
     pub fn query_reg(
-        &mut self,
+        self,
         buffer_ctx: Option<(String, i32)>,
         name: impl AsRef<str>,
         quote: bool,
@@ -225,7 +217,7 @@ impl Context {
     }
 
     pub fn query_sh(
-        &mut self,
+        self,
         buffer_ctx: Option<(String, i32)>,
         cmd: impl AsRef<str>,
     ) -> Result<Vec<String>> {
@@ -233,7 +225,7 @@ impl Context {
     }
 
     fn query_kak(
-        &mut self,
+        self,
         buffer_ctx: Option<(String, i32)>,
         (key, val): (&str, &str),
         quote: bool,
@@ -250,13 +242,13 @@ impl Context {
         self.send(buffer_ctx, &buf).map(|s| parse_type.parse(s))
     }
 
-    fn check_status(&mut self, status: std::process::ExitStatus) -> Result<()> {
+    fn check_status(self, status: std::process::ExitStatus) -> Result<()> {
         if status.success() {
             return Ok(());
         }
         Err(match status.code() {
             Some(code) => Error::InvalidSession {
-                session: self.own_session(),
+                session: self.session,
                 exit_code: code,
             },
             None => anyhow::anyhow!("kak terminated by signal").into(),

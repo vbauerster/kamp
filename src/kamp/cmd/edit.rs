@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use super::{Context, Error, Result};
 
-pub(crate) fn edit(mut ctx: Context, focus: bool, files: Vec<String>) -> Result<()> {
+pub(crate) fn edit(ctx: Context, focus: bool, files: Vec<String>) -> Result<()> {
     let mut buf = String::new();
     let mut pair = [None; 2];
     let mut coord = None;

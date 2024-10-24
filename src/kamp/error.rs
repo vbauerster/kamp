@@ -4,7 +4,10 @@ pub enum Error {
     InvalidContext(&'static str),
 
     #[error("invalid session {session:?} kak exited with code: {exit_code}")]
-    InvalidSession { session: Box<str>, exit_code: i32 },
+    InvalidSession {
+        session: &'static str,
+        exit_code: i32,
+    },
 
     #[error("invalid coordinates: {coord:?}")]
     InvalidCoordinates {

@@ -63,14 +63,14 @@ pub(super) fn run() -> Result<()> {
         }),
         SubCommand::Edit(opt) if session.is_none() => kak::proxy(opt.files).map_err(|e| e.into()),
         _ => match session {
-            Some(session) => Context::new(session, client).dispatch(command, output),
+            Some(session) => Context::new(session.leak(), client).dispatch(command, output),
             None => Err(Error::InvalidContext("session is required")),
         },
     }
 }
 
 impl Dispatcher for SubCommand {
-    fn dispatch<W: Write>(self, mut ctx: Context, mut writer: W) -> Result<()> {
+    fn dispatch<W: Write>(self, ctx: Context, mut writer: W) -> Result<()> {
         match self {
             SubCommand::Attach(opt) => cmd::attach(ctx, opt.buffer),
             SubCommand::Edit(opt) => cmd::edit(ctx, opt.focus, opt.files),
