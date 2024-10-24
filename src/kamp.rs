@@ -39,7 +39,9 @@ pub(super) fn run() -> Result<()> {
     let mut output = std::io::stdout();
 
     let Some(command) = kamp.subcommand else {
-        return if session.is_some() {
+        return if session.is_none() {
+            Err(Error::InvalidContext("session is required"))
+        } else {
             [session, client]
                 .into_iter()
                 .zip(["session", "client"])
@@ -48,8 +50,6 @@ pub(super) fn run() -> Result<()> {
                     None => Ok(()),
                 })
                 .map_err(|e| e.into())
-        } else {
-            Err(Error::InvalidContext("session is required"))
         };
     };
 
