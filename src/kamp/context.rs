@@ -50,6 +50,12 @@ pub(crate) struct Context {
     fifo_err: Arc<Path>,
 }
 
+impl From<&'static str> for Context {
+    fn from(s: &'static str) -> Self {
+        Context::new(s, None)
+    }
+}
+
 impl Context {
     pub fn new(session: &'static str, client: Option<String>) -> Self {
         let mut path = std::env::temp_dir();
@@ -67,9 +73,8 @@ impl Context {
         self.client = Some(client);
     }
 
-    pub fn own_session(&mut self) -> Box<str> {
-        let session = Arc::get_mut(&mut self.session).unwrap();
-        (&*session).into()
+    pub fn session(&self) -> &'static str {
+        self.session
     }
 
     pub fn is_draft(&self) -> bool {

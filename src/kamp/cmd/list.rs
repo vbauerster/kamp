@@ -6,13 +6,13 @@ use super::Result;
 #[allow(unused)]
 #[derive(Debug)]
 pub struct Session {
-    name: Box<str>,
-    pwd: Box<str>,
+    name: &'static str,
+    pwd: String,
     clients: Vec<Client>,
 }
 
 impl Session {
-    fn new(name: Box<str>, pwd: Box<str>, clients: Vec<Client>) -> Self {
+    fn new(name: &'static str, pwd: String, clients: Vec<Client>) -> Self {
         Session { name, pwd, clients }
     }
 }
@@ -21,44 +21,41 @@ impl Session {
 #[derive(Debug)]
 pub struct Client {
     name: Rc<str>,
-    bufname: Box<str>,
+    bufname: String,
 }
 
 impl Client {
-    fn new(name: Rc<str>, bufname: Box<str>) -> Client {
+    fn new(name: Rc<str>, bufname: String) -> Client {
         Client { name, bufname }
     }
 }
 
 pub(crate) fn list_all() -> Result<Vec<Session>> {
     let v = crate::kamp::kak::list_sessions()?;
-    let s = String::from_utf8(v).map_err(anyhow::Error::new)?;
-    s.lines()
-        .map(|session| to_session_struct(Context::new(session, None)))
+    String::from_utf8(v)
+        .map_err(anyhow::Error::new)?
+        .lines()
+        .map(|s| to_session_struct(String::from(s).leak()))
         .collect()
 }
 
-pub(crate) fn list_current(ctx: Context) -> Result<Session> {
-    to_session_struct(ctx)
+pub(crate) fn list_current(session: &'static str) -> Result<Session> {
+    to_session_struct(session)
 }
 
-fn to_session_struct(mut ctx: Context) -> Result<Session> {
-    let clients = ctx.query_val(None, "client_list", false, true)?;
+fn to_session_struct(session: &'static str) -> Result<Session> {
+    let clients = Context::from(session).query_val(None, "client_list", false, true)?;
     let clients = clients
         .into_iter()
         .flat_map(|name| {
-            let mut ctx = ctx.clone();
-            let client: Rc<str> = name.into();
+            let client: Rc<str> = Rc::from(name.into_boxed_str());
+            let mut ctx = Context::from(session);
             ctx.set_client(client.clone());
             ctx.query_val(None, "bufname", false, false)
-                .map(|mut v| Client::new(client, v.pop().unwrap_or_default().into()))
+                .map(|mut v| Client::new(client, v.pop().unwrap_or_default()))
         })
         .collect();
-    ctx.query_sh(None, "pwd").map(|mut pwd| {
-        Session::new(
-            ctx.own_session(),
-            pwd.pop().unwrap_or_default().into(),
-            clients,
-        )
-    })
+    Context::from(session)
+        .query_sh(None, "pwd")
+        .map(|mut pwd| Session::new(session, pwd.pop().unwrap_or_default(), clients))
 }
