@@ -52,8 +52,8 @@ pub(crate) struct Context {
 
 impl From<&str> for Context {
     fn from(s: &str) -> Self {
-        let s = s as *const str;
-        Context::new(unsafe { s.as_ref().unwrap() }, None)
+        let s = String::from(s);
+        Context::new(Box::leak(s.into_boxed_str()), None)
     }
 }
 
