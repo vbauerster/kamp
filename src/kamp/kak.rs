@@ -1,4 +1,4 @@
-use std::io::{Error, ErrorKind, Result, Write};
+use std::io::{Error, Result, Write};
 use std::process::{Command, ExitStatus, Stdio};
 
 pub(crate) fn list_sessions() -> Result<Vec<u8>> {
@@ -6,11 +6,8 @@ pub(crate) fn list_sessions() -> Result<Vec<u8>> {
 
     if !output.status.success() {
         return Err(match output.status.code() {
-            Some(code) => Error::new(
-                ErrorKind::Other,
-                format!("kak exited with status code: {code}"),
-            ),
-            None => Error::new(ErrorKind::Other, "kak terminated by signal"),
+            Some(code) => Error::other(format!("kak exited with status code: {code}")),
+            None => Error::other("kak terminated by signal"),
         });
     }
 
@@ -29,10 +26,7 @@ where
         .spawn()?;
 
     let Some(stdin) = child.stdin.as_mut() else {
-        return Err(Error::new(
-            ErrorKind::Other,
-            "cannot capture stdin of kak process",
-        ));
+        return Err(Error::other("cannot capture stdin of kak process"));
     };
 
     stdin.write_all(cmd.as_ref()).and_then(|_| child.wait())
