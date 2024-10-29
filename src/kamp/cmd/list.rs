@@ -31,11 +31,10 @@ impl Client {
 }
 
 pub(crate) fn list_all<'a>(sessions: impl Iterator<Item = &'a str>) -> Result<Vec<Session<'a>>> {
-    sessions.map(list_current).collect()
+    sessions.map(|s| list_current(Context::from(s))).collect()
 }
 
-pub(crate) fn list_current(session: &str) -> Result<Session> {
-    let mut ctx = Context::from(session);
+pub(crate) fn list_current(mut ctx: Context) -> Result<Session<'static>> {
     let clients = ctx.query_val(None, "client_list", false, true)?;
     let clients = clients
         .into_iter()
@@ -47,5 +46,5 @@ pub(crate) fn list_current(session: &str) -> Result<Session> {
         .collect();
     ctx.unset_client();
     ctx.query_sh(None, "pwd")
-        .map(|mut pwd| Session::new(session, pwd.pop().unwrap_or_default(), clients))
+        .map(|mut pwd| Session::new(ctx.session(), pwd.pop().unwrap_or_default(), clients))
 }

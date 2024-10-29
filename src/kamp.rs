@@ -87,7 +87,7 @@ impl Dispatcher for SubCommand {
                 ctx.send(to_buffer_ctx(opt.buffers), opt.command.join(" "))
                     .and_then(|res| write!(writer, "{res}").map_err(|e| e.into()))
             }
-            SubCommand::List(_) => cmd::list_current(ctx.session())
+            SubCommand::List(_) => cmd::list_current(ctx)
                 .and_then(|session| writeln!(writer, "{session:#?}").map_err(|e| e.into())),
             SubCommand::Kill(opt) => ctx.send_kill(opt.exit_status),
             SubCommand::Get(opt) => {
