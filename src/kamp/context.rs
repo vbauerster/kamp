@@ -114,17 +114,17 @@ impl Context {
         let mut body = Cow::from(body.as_ref());
         let mut cmd = String::from("try %{\n");
         cmd.push_str("eval");
-        match (&buffer_ctx, &self.client) {
+        match (buffer_ctx, self.client()) {
             (Some((b, n)), _) => {
                 cmd.push_str(" -buffer ");
-                cmd.push_str(b);
-                if *n == 0 || *n > 1 {
+                cmd.push_str(&b);
+                if n == 0 || n > 1 {
                     body.to_mut().push_str("\necho -to-file %opt{kamp_out} ' '");
                 }
             }
             (_, Some(c)) => {
                 cmd.push_str(" -client ");
-                cmd.push_str(c);
+                cmd.push_str(&c);
             }
             _ => (), // 'get val client_list' for example need neither buffer nor client
         }
