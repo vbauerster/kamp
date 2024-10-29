@@ -70,8 +70,16 @@ impl Context {
         }
     }
 
-    pub fn set_client(&mut self, client: Rc<str>) {
-        self.client = Some(client);
+    pub fn set_client(&mut self, client: String) {
+        self.client = Some(Rc::from(client.into_boxed_str()));
+    }
+
+    pub fn unset_client(&mut self) {
+        self.client = None;
+    }
+
+    pub fn client(&self) -> Option<Rc<str>> {
+        self.client.clone()
     }
 
     pub fn session(&self) -> &'static str {

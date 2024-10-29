@@ -39,9 +39,9 @@ pub(crate) fn list_current(session: &str) -> Result<Session> {
     let clients = clients
         .into_iter()
         .flat_map(|name| {
-            let client: Rc<str> = Rc::from(name.into_boxed_str());
             let mut ctx = Context::from(session);
-            ctx.set_client(client.clone());
+            ctx.set_client(name);
+            let client = ctx.client().unwrap();
             ctx.query_val(None, "bufname", false, false)
                 .map(|mut v| Client::new(client, v.pop().unwrap_or_default()))
         })
