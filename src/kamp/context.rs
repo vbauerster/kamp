@@ -110,7 +110,7 @@ impl Context {
             .and_then(|status| self.check_status(status))
     }
 
-    pub fn send(self, buffer_ctx: Option<(String, i32)>, body: impl AsRef<str>) -> Result<String> {
+    pub fn send(&self, buffer_ctx: Option<(String, i32)>, body: impl AsRef<str>) -> Result<String> {
         let mut body = Cow::from(body.as_ref());
         let mut cmd = String::from("try %{\n");
         cmd.push_str("eval");
@@ -201,7 +201,7 @@ impl Context {
     }
 
     pub fn query_val(
-        self,
+        &self,
         buffer_ctx: Option<(String, i32)>,
         name: impl AsRef<str>,
         quote: bool,
@@ -211,7 +211,7 @@ impl Context {
     }
 
     pub fn query_opt(
-        self,
+        &self,
         buffer_ctx: Option<(String, i32)>,
         name: impl AsRef<str>,
         quote: bool,
@@ -221,7 +221,7 @@ impl Context {
     }
 
     pub fn query_reg(
-        self,
+        &self,
         buffer_ctx: Option<(String, i32)>,
         name: impl AsRef<str>,
         quote: bool,
@@ -231,7 +231,7 @@ impl Context {
     }
 
     pub fn query_sh(
-        self,
+        &self,
         buffer_ctx: Option<(String, i32)>,
         cmd: impl AsRef<str>,
     ) -> Result<Vec<String>> {
@@ -239,7 +239,7 @@ impl Context {
     }
 
     fn query_kak(
-        self,
+        &self,
         buffer_ctx: Option<(String, i32)>,
         (key, val): (&str, &str),
         quote: bool,
@@ -256,7 +256,7 @@ impl Context {
         self.send(buffer_ctx, &buf).map(|s| parse_type.parse(s))
     }
 
-    fn check_status(self, status: std::process::ExitStatus) -> Result<()> {
+    fn check_status(&self, status: std::process::ExitStatus) -> Result<()> {
         if status.success() {
             return Ok(());
         }
