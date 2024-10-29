@@ -67,7 +67,9 @@ pub(super) fn run() -> Result<()> {
         }
         SubCommand::Edit(opt) if session.is_none() => kak::proxy(opt.files).map_err(|e| e.into()),
         _ => match session {
-            Some(session) => Context::new(session.leak(), client).dispatch(command, output),
+            Some(session) => {
+                Context::new(Box::leak(session.into_boxed_str()), client).dispatch(command, output)
+            }
             None => Err(Error::InvalidContext("session is required")),
         },
     }
