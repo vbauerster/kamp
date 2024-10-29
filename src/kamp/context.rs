@@ -50,9 +50,10 @@ pub(crate) struct Context {
     fifo_err: Arc<Path>,
 }
 
-impl From<&'static str> for Context {
-    fn from(s: &'static str) -> Self {
-        Context::new(s, None)
+impl From<&str> for Context {
+    fn from(s: &str) -> Self {
+        let s = s as *const str;
+        Context::new(unsafe { s.as_ref().unwrap() }, None)
     }
 }
 

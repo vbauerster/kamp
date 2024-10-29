@@ -56,11 +56,15 @@ pub(super) fn run() -> Result<()> {
     match command {
         SubCommand::Init(opt) => cmd::init(opt.export, opt.alias)
             .and_then(|res| write!(output, "{res}").map_err(|e| e.into())),
-        SubCommand::List(opt) if opt.all => cmd::list_all().and_then(|res| {
-            res.into_iter()
-                .try_for_each(|session| writeln!(output, "{session:#?}"))
-                .map_err(|e| e.into())
-        }),
+        SubCommand::List(opt) if opt.all => {
+            let sessions = kak::list_sessions()?;
+            let sessions = String::from_utf8(sessions).map_err(anyhow::Error::new)?;
+            cmd::list_all(sessions.lines()).and_then(|v| {
+                v.into_iter()
+                    .try_for_each(|session| writeln!(output, "{session:#?}"))
+                    .map_err(|e| e.into())
+            })
+        }
         SubCommand::Edit(opt) if session.is_none() => kak::proxy(opt.files).map_err(|e| e.into()),
         _ => match session {
             Some(session) => Context::new(session.leak(), client).dispatch(command, output),

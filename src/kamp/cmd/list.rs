@@ -5,14 +5,14 @@ use super::Result;
 
 #[allow(unused)]
 #[derive(Debug)]
-pub struct Session {
-    name: &'static str,
+pub struct Session<'a> {
+    name: &'a str,
     pwd: String,
     clients: Vec<Client>,
 }
 
-impl Session {
-    fn new(name: &'static str, pwd: String, clients: Vec<Client>) -> Self {
+impl<'a> Session<'a> {
+    fn new(name: &'a str, pwd: String, clients: Vec<Client>) -> Self {
         Session { name, pwd, clients }
     }
 }
@@ -30,20 +30,11 @@ impl Client {
     }
 }
 
-pub(crate) fn list_all() -> Result<Vec<Session>> {
-    let v = crate::kamp::kak::list_sessions()?;
-    String::from_utf8(v)
-        .map_err(anyhow::Error::new)?
-        .lines()
-        .map(|s| to_session_struct(String::from(s).leak()))
-        .collect()
+pub(crate) fn list_all<'a>(sessions: impl Iterator<Item = &'a str>) -> Result<Vec<Session<'a>>> {
+    sessions.map(list_current).collect()
 }
 
-pub(crate) fn list_current(session: &'static str) -> Result<Session> {
-    to_session_struct(session)
-}
-
-fn to_session_struct(session: &'static str) -> Result<Session> {
+pub(crate) fn list_current(session: &str) -> Result<Session> {
     let clients = Context::from(session).query_val(None, "client_list", false, true)?;
     let clients = clients
         .into_iter()
