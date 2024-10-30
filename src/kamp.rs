@@ -66,12 +66,10 @@ pub(super) fn run() -> Result<()> {
             })
         }
         SubCommand::Edit(opt) if session.is_none() => kak::proxy(opt.files).map_err(|e| e.into()),
-        _ => match session {
-            Some(session) => {
-                Context::new(Box::leak(session.into_boxed_str()), client).dispatch(command, output)
-            }
-            None => Err(Error::InvalidContext("session is required")),
-        },
+        _ => session
+            .ok_or_else(|| Error::InvalidContext("session is required"))
+            .map(|s| Context::new(Box::leak(s.into_boxed_str()), client))
+            .and_then(|ctx| ctx.dispatch(command, output)),
     }
 }
 
