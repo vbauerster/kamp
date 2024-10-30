@@ -189,7 +189,7 @@ impl Context {
             // need to write to err pipe in order to complete its read thread
             std::fs::OpenOptions::new()
                 .write(true)
-                .open(&self.fifo_err)
+                .open(self.fifo_err)
                 .and_then(|mut f| f.write_all(b""))?;
             out_h.join().unwrap()?;
         }
