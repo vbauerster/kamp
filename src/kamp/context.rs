@@ -1,10 +1,10 @@
 use super::kak;
 use super::{Error, Result};
-use crossbeam_channel::Sender;
 use std::borrow::Cow;
 use std::io::prelude::*;
 use std::path::Path;
 use std::rc::Rc;
+use std::sync::mpsc::{sync_channel, SyncSender};
 use std::sync::Arc;
 use std::thread;
 
@@ -136,14 +136,14 @@ impl Context {
         cmd.push_str("echo -debug kamp: %val{error};");
         cmd.push_str("echo -to-file %opt{kamp_err} %val{error}\n}");
 
-        let (s, r) = crossbeam_channel::bounded(0);
-        let err_h = self.read_fifo_err(s.clone());
-        let out_h = self.read_fifo_out(s);
+        let (tx, rx) = sync_channel(0);
+        let err_h = self.read_fifo_err(tx.clone());
+        let out_h = self.read_fifo_out(tx);
 
         let status = kak::pipe(self.session, cmd)?;
         self.check_status(status)?;
 
-        match r.recv().map_err(anyhow::Error::new)? {
+        match rx.recv().map_err(anyhow::Error::new)? {
             Err(e) => {
                 err_h.join().unwrap()?;
                 Err(e)
@@ -172,13 +172,13 @@ impl Context {
             cmd.pop();
         }
 
-        let (s, r) = crossbeam_channel::bounded(1);
-        let err_h = self.read_fifo_err(s.clone());
-        let out_h = self.read_fifo_out(s);
+        let (tx, rx) = sync_channel(1);
+        let err_h = self.read_fifo_err(tx.clone());
+        let out_h = self.read_fifo_out(tx);
 
         let kak_h = thread::spawn(move || kak::connect(self.session, cmd));
 
-        let res = match r.recv() {
+        let res = match rx.recv() {
             Err(recv_err) => {
                 let status = kak_h.join().unwrap()?;
                 return self
@@ -271,7 +271,7 @@ impl Context {
 
     fn read_fifo_err(
         &self,
-        send_ch: Sender<Result<String>>,
+        send_ch: SyncSender<Result<String>>,
     ) -> thread::JoinHandle<anyhow::Result<()>> {
         let path = self.fifo_err.clone();
         thread::spawn(move || {
@@ -288,7 +288,7 @@ impl Context {
 
     fn read_fifo_out(
         &self,
-        send_ch: Sender<Result<String>>,
+        send_ch: SyncSender<Result<String>>,
     ) -> thread::JoinHandle<anyhow::Result<()>> {
         let path = self.fifo_out.clone();
         thread::spawn(move || {
