@@ -178,12 +178,10 @@ impl Context {
 
         let kak_h = thread::spawn(move || kak::connect(self.session, cmd));
 
-        let res = match rx.recv() {
-            Err(recv_err) => {
+        let res = match rx.recv().map_err(anyhow::Error::new) {
+            Err(e) => {
                 let status = kak_h.join().unwrap()?;
-                return self
-                    .check_status(status)
-                    .and_then(|_| Err(anyhow::Error::new(recv_err).into()));
+                return self.check_status(status).and_then(|_| Err(e.into()));
             }
             Ok(res) => res,
         };
