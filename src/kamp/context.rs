@@ -140,8 +140,9 @@ impl Context {
         let err_h = self.read_fifo_err(tx.clone());
         let out_h = self.read_fifo_out(tx);
 
-        let status = kak::pipe(self.session, cmd)?;
-        self.check_status(status)?;
+        kak::pipe(self.session, cmd)
+            .map_err(|err| err.into())
+            .and_then(|status| self.check_status(status))?;
 
         match rx.recv().map_err(anyhow::Error::new)? {
             Err(e) => {
