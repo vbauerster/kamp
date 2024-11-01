@@ -178,7 +178,7 @@ impl Context {
         let out_h = self.read_fifo_out(tx);
 
         let kak_h = thread::spawn(move || kak::connect(self.session, cmd));
-        let kak_check_and = |res| {
+        let kak_join_and = |res| {
             kak_h
                 .join()
                 .unwrap()
@@ -189,7 +189,7 @@ impl Context {
 
         let res = match rx.recv().map_err(anyhow::Error::new) {
             Err(e) => {
-                return kak_check_and(Err(e.into()));
+                return kak_join_and(Err(e.into()));
             }
             Ok(res) => res,
         };
@@ -202,7 +202,7 @@ impl Context {
             out_h.join().unwrap()?;
         }
         err_h.join().unwrap()?;
-        kak_check_and(res.map(drop))
+        kak_join_and(res.map(drop))
     }
 
     pub fn query_val(
