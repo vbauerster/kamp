@@ -41,7 +41,7 @@ dependencies = [
 
 [[package]]
 name = "kamp"
-version = "0.2.2-dev"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "argh",
