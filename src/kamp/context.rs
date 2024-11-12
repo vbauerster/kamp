@@ -178,31 +178,28 @@ impl Context {
         let out_h = self.read_fifo_out(tx);
 
         let kak_h = thread::spawn(move || kak::connect(self.session, cmd));
-        let kak_join_and = |res| {
-            kak_h
-                .join()
-                .unwrap()
-                .map_err(|err| err.into())
-                .and_then(|status| self.check_status(status))
-                .and(res)
-        };
 
-        let res = match rx.recv().map_err(anyhow::Error::new) {
+        match rx.recv().map_err(anyhow::Error::new)? {
             Err(e) => {
-                return kak_join_and(Err(e.into()));
+                err_h.join().unwrap()?;
+                kak_h.join().unwrap()?;
+                Err(e)
             }
-            Ok(res) => res,
-        };
-        if res.is_ok() {
-            // need to write to err pipe in order to complete its read thread
-            std::fs::OpenOptions::new()
-                .write(true)
-                .open(&self.fifo_err)
-                .and_then(|mut f| f.write_all(b""))?;
-            out_h.join().unwrap()?;
+            Ok(_) => {
+                // need to write to err pipe in order to complete its read thread
+                // send on read_fifo_err side is going to be non blocking because of channel's bound = 1
+                std::fs::OpenOptions::new()
+                    .write(true)
+                    .open(&self.fifo_err)
+                    .and_then(|mut f| f.write_all(b""))?;
+                out_h.join().unwrap()?;
+                kak_h
+                    .join()
+                    .unwrap()
+                    .map_err(|err| err.into())
+                    .and_then(|status| self.check_status(status))
+            }
         }
-        err_h.join().unwrap()?;
-        kak_join_and(res.map(drop))
     }
 
     pub fn query_val(
