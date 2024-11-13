@@ -179,7 +179,19 @@ impl Context {
 
         let kak_h = thread::spawn(move || kak::connect(self.session, cmd));
 
-        match rx.recv().map_err(anyhow::Error::new)? {
+        let res = match rx.recv().map_err(anyhow::Error::new) {
+            Err(e) => {
+                return kak_h
+                    .join()
+                    .unwrap()
+                    .map_err(|err| err.into())
+                    .and_then(|status| self.check_status(status))
+                    .and(Err(e.into())); // fallback to recv error
+            }
+            Ok(res) => res,
+        };
+
+        match res {
             Err(e) => {
                 err_h.join().unwrap()?;
                 kak_h.join().unwrap()?;
