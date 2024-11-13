@@ -91,7 +91,7 @@ mod edit {
     #[derive(FromArgs, PartialEq, Debug)]
     #[argh(subcommand, name = "edit")]
     pub struct Options {
-        /// focus client
+        /// focus client in context
         #[argh(switch, short = 'f')]
         pub focus: bool,
 
