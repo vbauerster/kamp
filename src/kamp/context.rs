@@ -279,7 +279,7 @@ impl Context {
                 session: self.session,
                 exit_code: code,
             },
-            None => anyhow::anyhow!("kak terminated by signal").into(),
+            None => anyhow::Error::msg("kak terminated by signal").into(),
         })
     }
 
