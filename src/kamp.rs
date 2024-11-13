@@ -77,7 +77,19 @@ impl Dispatcher for SubCommand {
     fn dispatch<W: Write>(self, ctx: Context, mut writer: W) -> Result<()> {
         match self {
             SubCommand::Attach(opt) => cmd::attach(ctx, opt.buffer),
-            SubCommand::Edit(opt) => cmd::edit(ctx, opt.focus, opt.files),
+            SubCommand::Edit(opt) => {
+                let session = ctx.session();
+                let client = ctx.client();
+                let scratch = cmd::edit(ctx, opt.focus, opt.files)?;
+                if let (Some(client), false) = (client, opt.focus) {
+                    writeln!(
+                        writer,
+                        "{} is opened in client: {client}, session: {session}",
+                        if scratch { "scratch" } else { "file" }
+                    )?;
+                }
+                Ok(())
+            }
             SubCommand::Send(opt) => {
                 if opt.command.is_empty() {
                     return Err(Error::CommandRequired);
