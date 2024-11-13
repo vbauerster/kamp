@@ -4,6 +4,9 @@ use std::path::PathBuf;
 use super::{Context, Error, Result};
 
 pub(crate) fn edit(ctx: Context, focus: bool, files: Vec<String>) -> Result<bool> {
+    if focus && ctx.is_draft() {
+        return Err(anyhow::Error::msg("no client in context").into());
+    }
     let mut buf = String::new();
     let mut pair = [None; 2];
     let mut coord = None;
@@ -57,8 +60,6 @@ pub(crate) fn edit(ctx: Context, focus: bool, files: Vec<String>) -> Result<bool
             buf.push_str("\nfocus");
         }
         ctx.send(None, &buf).map(|_| is_scratch)
-    } else if focus {
-        Err(anyhow::Error::msg("no client in context").into())
     } else {
         // this one acts like attach
         ctx.connect(&buf).map(|_| is_scratch)
