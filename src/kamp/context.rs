@@ -160,7 +160,7 @@ impl Context {
         let mut cmd = String::new();
         let body = body.as_ref();
         if !body.is_empty() {
-            cmd.push_str("try %{\neval -try-client '' %{\n");
+            cmd.push_str("try %{\neval %{\n");
             cmd.push_str(body);
             cmd.push_str("\n}\n");
             write_end_token(&mut cmd);
