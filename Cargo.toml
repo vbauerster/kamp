@@ -16,7 +16,7 @@ name = "kamp"
 [dependencies]
 anyhow = "1.0.70"
 argh = "~0.1.9"
-thiserror = "1.0.40"
+thiserror = "2.0.3"
 
 [profile.release]
 lto = true
