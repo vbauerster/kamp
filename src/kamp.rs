@@ -49,23 +49,23 @@ pub(super) fn run() -> Result<()> {
                     Some(val) => writeln!(output, "{name}: {val}"),
                     None => Ok(()),
                 })
-                .map_err(|e| e.into())
+                .map_err(From::from)
         };
     };
 
     match command {
         SubCommand::Init(opt) => cmd::init(opt.export, opt.alias)
-            .and_then(|res| write!(output, "{res}").map_err(|e| e.into())),
+            .and_then(|res| write!(output, "{res}").map_err(From::from)),
         SubCommand::List(opt) if opt.all => {
             let sessions = kak::list_sessions()?;
             let sessions = String::from_utf8(sessions).map_err(anyhow::Error::new)?;
             cmd::list_all(sessions.lines()).and_then(|v| {
                 v.into_iter()
                     .try_for_each(|session| writeln!(output, "{session:#?}"))
-                    .map_err(|e| e.into())
+                    .map_err(From::from)
             })
         }
-        SubCommand::Edit(opt) if session.is_none() => kak::proxy(opt.files).map_err(|e| e.into()),
+        SubCommand::Edit(opt) if session.is_none() => kak::proxy(opt.files).map_err(From::from),
         _ => session
             .ok_or_else(|| Error::InvalidContext("session is required"))
             .map(|s| Context::new(Box::leak(s.into_boxed_str()), client))
@@ -95,10 +95,10 @@ impl Dispatcher for SubCommand {
                     return Err(Error::CommandRequired);
                 }
                 ctx.send(to_buffer_ctx(opt.buffers), opt.command.join(" "))
-                    .and_then(|res| write!(writer, "{res}").map_err(|e| e.into()))
+                    .and_then(|res| write!(writer, "{res}").map_err(From::from))
             }
             SubCommand::List(_) => cmd::list_current(ctx)
-                .and_then(|session| writeln!(writer, "{session:#?}").map_err(|e| e.into())),
+                .and_then(|session| writeln!(writer, "{session:#?}").map_err(From::from)),
             SubCommand::Kill(opt) => ctx.send_kill(opt.exit_status),
             SubCommand::Get(opt) => {
                 use argv::get::SubCommand;
@@ -126,11 +126,11 @@ impl Dispatcher for SubCommand {
                     items
                         .into_iter()
                         .try_for_each(|item| write!(writer, "{item}{split_char}"))
-                        .map_err(|e| e.into())
+                        .map_err(From::from)
                 })
             }
             SubCommand::Cat(opt) => cmd::cat(ctx, to_buffer_ctx(opt.buffers))
-                .and_then(|res| write!(writer, "{res}").map_err(|e| e.into())),
+                .and_then(|res| write!(writer, "{res}").map_err(From::from)),
             _ => unreachable!(),
         }
     }

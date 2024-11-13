@@ -106,7 +106,7 @@ impl Context {
         }
 
         kak::pipe(self.session, cmd)
-            .map_err(|err| err.into())
+            .map_err(From::from)
             .and_then(|status| self.check_status(status))
     }
 
@@ -141,7 +141,7 @@ impl Context {
         let out_h = self.read_fifo_out(tx);
 
         kak::pipe(self.session, cmd)
-            .map_err(|err| err.into())
+            .map_err(From::from)
             .and_then(|status| self.check_status(status))?;
 
         match rx.recv().map_err(anyhow::Error::new)? {
@@ -184,7 +184,7 @@ impl Context {
                 return kak_h
                     .join()
                     .unwrap()
-                    .map_err(|err| err.into())
+                    .map_err(From::from)
                     .and_then(|status| self.check_status(status))
                     .and(Err(e.into())); // fallback to recv error
             }
@@ -208,7 +208,7 @@ impl Context {
                 kak_h
                     .join()
                     .unwrap()
-                    .map_err(|err| err.into())
+                    .map_err(From::from)
                     .and_then(|status| self.check_status(status))
             }
         }
