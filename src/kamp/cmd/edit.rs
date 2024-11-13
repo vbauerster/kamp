@@ -51,13 +51,15 @@ pub(crate) fn edit(ctx: Context, focus: bool, files: Vec<String>) -> Result<()> 
         buf.push_str("edit -scratch");
     }
 
-    if ctx.is_draft() {
-        ctx.connect(&buf) // this one acts like attach
-    } else {
+    if !ctx.is_draft() {
         if focus {
             buf.push_str("\nfocus");
         }
         ctx.send(None, &buf).map(drop)
+    } else if focus {
+        Err(anyhow::Error::msg("no client in context").into())
+    } else {
+        ctx.connect(&buf) // this one acts like attach
     }
 }
 
