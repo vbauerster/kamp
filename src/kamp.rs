@@ -103,7 +103,7 @@ impl Dispatcher for SubCommand {
             SubCommand::Get(opt) => {
                 use argv::get::SubCommand;
                 let buffer_ctx = to_buffer_ctx(opt.buffers);
-                match opt.subcommand {
+                let res = match opt.subcommand {
                     SubCommand::Value(o) => ctx
                         .query_val(buffer_ctx, o.name, o.quote, o.split || o.zplit)
                         .map(|v| (v, !o.quote && o.zplit)),
@@ -120,8 +120,8 @@ impl Dispatcher for SubCommand {
                         ctx.query_sh(buffer_ctx, o.command.join(" "))
                             .map(|v| (v, false))
                     }
-                }
-                .and_then(|(items, zplit)| {
+                };
+                res.and_then(|(items, zplit)| {
                     let split_char = if zplit { '\0' } else { '\n' };
                     items
                         .into_iter()
