@@ -118,7 +118,7 @@ impl Context {
             (Some((b, n)), _) => {
                 cmd.push_str(" -buffer ");
                 cmd.push_str(&b);
-                if n == 0 || n > 1 {
+                if n != 1 {
                     body.to_mut().push_str("\necho -to-file %opt{kamp_out} ' '");
                 }
             }
