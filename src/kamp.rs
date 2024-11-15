@@ -23,17 +23,17 @@ pub(super) fn run() -> Result<()> {
         return Ok(());
     }
 
-    let (session, client) = match (kamp.session, kamp.client) {
-        (None, Some(c)) if c.is_empty() => (std::env::var(KAKOUNE_SESSION).ok(), None),
-        (None, Some(c)) => (std::env::var(KAKOUNE_SESSION).ok(), Some(c)),
-        (None, None) => (
-            std::env::var(KAKOUNE_SESSION).ok(),
-            std::env::var(KAKOUNE_CLIENT).ok(),
-        ),
-        (session, client) => (
-            session.filter(|s| !s.is_empty()),
-            client.filter(|c| !c.is_empty()),
-        ),
+    let session = kamp
+        .session
+        .filter(|s| !s.is_empty())
+        .or_else(|| std::env::var(KAKOUNE_SESSION).ok());
+
+    let client = match session {
+        None => None,
+        Some(_) => kamp
+            .client
+            .filter(|s| !s.is_empty())
+            .or_else(|| std::env::var(KAKOUNE_CLIENT).ok()),
     };
 
     let command = kamp
