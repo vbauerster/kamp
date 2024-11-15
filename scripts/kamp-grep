@@ -2,10 +2,6 @@
 #
 # Open files by content.
 #
-# Usage:
-#
-# kamp-grep [<query=...>] [rg_options]
-
 # requires:
 # – fzf (https://github.com/junegunn/fzf)
   # https://github.com/junegunn/fzf/blob/master/CHANGELOG.md#0190
@@ -19,32 +15,45 @@ set -euf
 # define SHELL so --preview arguments do not error if current SHELL is not POSIX
 SHELL=/bin/sh
 
-query="$(kamp get opt kamp_grep_query)"
+usage() {
+    printf "Usage: %s: [-q query] [rg_options]\n" "$(basename "$0")" >&2
+    exit 2
+}
 
-if [ $# -ne 0 ]; then
-  case "$1" in
-    query=*)
-      query="${1#*=}"
-      shift
-    ;;
-  esac
+qflag=
+while getopts 'q:h' OPTION; do
+    case $OPTION in
+    q)
+        qflag=1
+        query="$OPTARG"
+        ;;
+    h|?)
+        usage
+        ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+rg_cmd="rg --color always --column $*"
+
+if [ ! "$qflag" ]; then
+    query="$(kamp get opt kamp_grep_query)"
 fi
 
-rg_cmd="rg $*"
-
 if [ -z "$query" ]; then
-  export FZF_DEFAULT_COMMAND="$rg_cmd --files"
+    export FZF_DEFAULT_COMMAND="rg --files $*"
 else
-  export FZF_DEFAULT_COMMAND="$rg_cmd --color always --column -- '$query'"
+    pattern=$(printf %s "$query" | sed 's/"/\\"/')
+    export FZF_DEFAULT_COMMAND="$rg_cmd -- \"$pattern\""
 fi
 
 fzf \
   --phony \
-  --query "${query:-}" \
+  --query "$query" \
   --delimiter ':' \
   --ansi \
-  --bind "change:reload($rg_cmd --color always --column -- {q} || true)" \
-  --bind 'enter:execute-silent(kamp send set global kamp_grep_query "{q}")+become(kamp edit {1} +{2}:{3})' \
+  --bind "change:reload($rg_cmd -- {q} || true)" \
+  --bind 'enter:execute-silent(kamp send set global kamp_grep_query {q})+become(kamp edit {1} +{2}:{3})' \
   --preview '
       highlight_line={2}
       line_range_begin=$((highlight_line - FZF_PREVIEW_LINES / 2))

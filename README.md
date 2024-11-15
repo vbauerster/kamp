@@ -58,8 +58,8 @@ alias global popup tmux-terminal-popup
 map global normal -docstring 'files'          <c-f> ':connect popup kamp-files<ret>'
 map global normal -docstring 'git ls-files'   <c-l> ':connect popup kamp-files -b git<ret>'
 map global normal -docstring 'buffers'        <c-b> ':connect popup kamp-buffers<ret>'
-map global normal -docstring 'grep selection' <c-g> ':connect popup kamp-grep ''query=%val{selection}<a-!>''<ret>'
-map global normal -docstring 'grep limit by filetype' <c-y> ':connect popup kamp-grep -t %opt{filetype}<ret>'
+map global normal -docstring 'grep selection' <c-g> ':connect popup kamp-grep -q ''%val{selection}<a-!>''<ret>'
+map global normal -docstring 'grep by filetype' <c-y> ':connect popup kamp-grep -- -t %opt{filetype}<ret>'
 ```
 
 ## Shell integration
