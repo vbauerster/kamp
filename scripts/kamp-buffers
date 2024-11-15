@@ -27,7 +27,6 @@ shift $(($OPTIND - 1))
 
 : ${session:=$KAKOUNE_SESSION}
 
-exec_cmd=
 if kamp ctx -c >/dev/null 2>/dev/null; then
     exec_cmd="kamp -s $session send buffer {}"
 else
