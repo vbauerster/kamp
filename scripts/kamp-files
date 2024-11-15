@@ -2,10 +2,6 @@
 #
 # pick files
 #
-# Usage:
-#
-# kamp-files [<backend=fd|rg|find|git>] [backend_options]
-
 # requires:
 # - fd (https://github.com/sharkdp/fd)
 # - fzf (https://github.com/junegunn/fzf)
@@ -13,28 +9,44 @@
 
 set -euf
 
-preview_cmd='bat --color=always --line-range=:500 {}'
+usage() {
+    printf "Usage: %s: [-b <fd|rg|find|git>] [backend_options]\n" "$(basename "$0")" >&2
+    exit 2
+}
 
 backend="fd"
-if [ $# -ne 0 ]; then
-  case "$1" in
-    backend=*)
-      backend="${1#*=}"
-      shift
-    ;;
-  esac
-fi
+while getopts 'b:h' OPTION; do
+    case $OPTION in
+    b)
+        backend="$OPTARG"
+        ;;
+    h|?)
+        usage
+        ;;
+    esac
+done
+shift $((OPTIND - 1))
 
-backend_cmd=""
 case "$backend" in
-  fd) backend_cmd="fd --strip-cwd-prefix --color never --type file" ;;
-  rg) backend_cmd="rg --color never --files" ;;
-  find) backend_cmd="find . -type f" ;;
-  git) backend_cmd="git ls-files" ;;
-  *) backend_cmd="$backend" ;;
+    fd)
+        backend_cmd="fd --strip-cwd-prefix --type file"
+        ;;
+    rg)
+        backend_cmd="rg --color never --files"
+        ;;
+    find)
+        backend_cmd="find . -type f"
+        ;;
+    git)
+        backend_cmd="git ls-files"
+        ;;
+    *)
+        usage
+        ;;
 esac
 
 backend_cmd="$backend_cmd $*"
+preview_cmd='bat --color=always --line-range=:500 {}'
 
 eval "$backend_cmd" |
   fzf --multi --prompt "${backend}> " --preview "$preview_cmd" --bind 'enter:become(kamp edit {+})'
