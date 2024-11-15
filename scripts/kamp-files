@@ -10,7 +10,7 @@
 set -euf
 
 usage() {
-    printf "Usage: %s: [-b <fd|rg|find|git>] [backend_options]\n" "$(basename "$0")" >&2
+    printf "Usage: %s: [-b <fd|rg|find|git>] -- [backend_options]\n" "$(basename "$0")" >&2
     exit 2
 }
 

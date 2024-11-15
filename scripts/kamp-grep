@@ -16,7 +16,7 @@ set -euf
 SHELL=/bin/sh
 
 usage() {
-    printf "Usage: %s: [-q query] [rg_options]\n" "$(basename "$0")" >&2
+    printf "Usage: %s: [-q query] -- [rg_options]\n" "$(basename "$0")" >&2
     exit 2
 }
 
