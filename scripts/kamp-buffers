@@ -5,23 +5,32 @@
 # requires:
 # - fzf (https://github.com/junegunn/fzf)
 # - bat (https://github.com/sharkdp/bat)
-#
-# optional param: $1 = attach
-# optional param: $2 = session
 
 set -euf
 
-session=""
-exec_cmd=""
+usage() {
+    printf "Usage: %s: [-s session]\n" "$(basename "$0")" >&2
+    exit 2
+}
 
-if [ $# -eq 0 ]; then
-    session="$KAKOUNE_SESSION"
-    exec_cmd="kamp -s $session -c ${KAKOUNE_CLIENT:-client0} send buffer {}"
-elif [ "$1" = "attach" ]; then
-    session="${2:-$KAKOUNE_SESSION}"
-    exec_cmd="kamp -s $session attach -b {}"
+session="$KAKOUNE_SESSION"
+while getopts 's:h' OPTION; do
+    case $OPTION in
+    s)
+        session="$OPTARG"
+        ;;
+    h|?)
+        usage
+        ;;
+    esac
+done
+shift $(($OPTIND - 1))
+
+exec_cmd=
+if kamp ctx -c >/dev/null 2>/dev/null; then
+    exec_cmd="kamp -s $session send buffer {}"
 else
-    exit 1
+    exec_cmd="kamp -s $session attach -b {}"
 fi
 
 buffers_cmd="kamp -s $session get -b \* val -s bufname"
