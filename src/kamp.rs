@@ -95,7 +95,7 @@ impl Dispatcher for SubCommand {
                     return Err(Error::CommandRequired);
                 }
                 ctx.send(to_buffer_ctx(opt.buffers), opt.command.join(" "))
-                    .and_then(|res| write!(writer, "{res}").map_err(From::from))
+                    .map(drop)
             }
             SubCommand::List(_) => cmd::list_current(ctx)
                 .and_then(|session| writeln!(writer, "{session:#?}").map_err(From::from)),
