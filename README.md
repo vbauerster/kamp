@@ -56,7 +56,7 @@ Following mappings use [tmux-terminal-popup](https://github.com/alexherbo2/tmux.
 ```kak
 alias global popup tmux-terminal-popup
 map global normal -docstring 'files'          <c-f> ':connect popup kamp-files<ret>'
-map global normal -docstring 'git ls-files'   <c-l> ':connect popup kamp-files backend=git<ret>'
+map global normal -docstring 'git ls-files'   <c-l> ':connect popup kamp-files -b git<ret>'
 map global normal -docstring 'buffers'        <c-b> ':connect popup kamp-buffers<ret>'
 map global normal -docstring 'grep selection' <c-g> ':connect popup kamp-grep ''query=%val{selection}<a-!>''<ret>'
 map global normal -docstring 'grep limit by filetype' <c-y> ':connect popup kamp-grep -t %opt{filetype}<ret>'
