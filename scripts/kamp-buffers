@@ -13,7 +13,6 @@ usage() {
     exit 2
 }
 
-session="$KAKOUNE_SESSION"
 while getopts 's:h' OPTION; do
     case $OPTION in
     s)
@@ -25,6 +24,8 @@ while getopts 's:h' OPTION; do
     esac
 done
 shift $(($OPTIND - 1))
+
+: ${session:=$KAKOUNE_SESSION}
 
 exec_cmd=
 if kamp ctx -c >/dev/null 2>/dev/null; then
