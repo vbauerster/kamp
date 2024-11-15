@@ -23,7 +23,7 @@ while getopts 's:h' OPTION; do
         ;;
     esac
 done
-shift $(($OPTIND - 1))
+shift $((OPTIND - 1))
 
 : ${session:=$KAKOUNE_SESSION}
 

@@ -23,7 +23,7 @@ while getopts 'c:h' OPTION; do
         ;;
     esac
 done
-shift $(($OPTIND - 1))
+shift $((OPTIND - 1))
 
 kamp >/dev/null # fail early if there is no session
 
