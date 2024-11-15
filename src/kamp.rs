@@ -93,8 +93,27 @@ impl Dispatcher for SubCommand {
                 if opt.command.is_empty() {
                     return Err(Error::CommandRequired);
                 }
-                ctx.send(to_buffer_ctx(opt.buffers), opt.command.join(" "))
-                    .map(drop)
+                let body = if opt.verbatim {
+                    opt.command.join(" ")
+                } else {
+                    opt.command
+                        .into_iter()
+                        .fold(String::new(), |mut buf, next| {
+                            if !buf.is_empty() {
+                                buf.push(' ');
+                            }
+                            let s = next.replace("'", "''");
+                            if s.is_empty() || s.contains(' ') {
+                                buf.push('\'');
+                                buf.push_str(&s);
+                                buf.push('\'');
+                            } else {
+                                buf.push_str(&s);
+                            }
+                            buf
+                        })
+                };
+                ctx.send(to_buffer_ctx(opt.buffers), body).map(drop)
             }
             SubCommand::List(_) => cmd::list_current(ctx)
                 .and_then(|session| writeln!(writer, "{session:#?}").map_err(From::from)),

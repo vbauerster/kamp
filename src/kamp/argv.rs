@@ -108,6 +108,10 @@ mod send {
     #[derive(FromArgs, PartialEq, Debug)]
     #[argh(subcommand, name = "send")]
     pub struct Options {
+        /// do not parse/escape command
+        #[argh(switch, short = 'v')]
+        pub verbatim: bool,
+
         /// buffer context or '*' for all non-debug buffers
         #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
         pub buffers: Vec<String>,
