@@ -29,9 +29,9 @@ kamp >/dev/null # fail early if there is no session
 
 d=$(mktemp -d)
 fifo="$d/fifo"
+mkfifo "$fifo"
 
 trap 'unlink "$fifo" && rmdir "$d"; exit' EXIT HUP INT TERM
-mkfifo "$fifo"
 
 if [ "$cflag" ]; then
     kamp -c "$cval" send "edit -scroll -fifo $fifo *${1:-kamp-fifo}*; focus"
