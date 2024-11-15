@@ -34,10 +34,10 @@ mkfifo "$fifo"
 trap 'unlink "$fifo" && rmdir "$d"; exit' EXIT HUP INT TERM
 
 if [ "$cflag" ]; then
-    kamp -c "$cval" send "edit -scroll -fifo $fifo *${1:-kamp-fifo}*; focus"
+    kamp -c "$cval" send edit -scroll -fifo "$fifo" "*${1:-kamp-fifo}*" \; focus
 else
     kamp ctx -c >/dev/null # fail early if there is no client
-    kamp send "edit -scroll -fifo $fifo *${1:-kamp-fifo}*; focus"
+    kamp send edit -scroll -fifo "$fifo" "*${1:-kamp-fifo}*" \; focus
 fi
 
 cat >"$fifo"
