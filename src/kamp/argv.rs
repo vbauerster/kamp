@@ -30,6 +30,7 @@ pub(super) enum SubCommand {
     List(list::Options),
     Get(get::Options),
     Cat(cat::Options),
+    Ctx(ctx::Options),
 }
 
 pub(super) mod init {
@@ -258,5 +259,17 @@ mod cat {
         /// buffer context or '*' for all non-debug buffers
         #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
         pub buffers: Vec<String>,
+    }
+}
+
+mod ctx {
+    use super::*;
+    /// print session context
+    #[derive(FromArgs, PartialEq, Debug, Default)]
+    #[argh(subcommand, name = "ctx")]
+    pub struct Options {
+        /// print client if any otherwise throw an error
+        #[argh(switch, short = 'c')]
+        pub client: bool,
     }
 }

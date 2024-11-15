@@ -36,26 +36,25 @@ pub(super) fn run() -> Result<()> {
         ),
     };
 
-    let mut output = std::io::stdout();
+    let command = kamp
+        .subcommand
+        .unwrap_or_else(|| SubCommand::Ctx(Default::default()));
 
-    let Some(command) = kamp.subcommand else {
-        return if session.is_none() {
-            Err(Error::InvalidContext("session is required"))
-        } else {
-            [session, client]
-                .into_iter()
-                .zip(["session", "client"])
-                .try_for_each(|(opt, name)| match opt {
-                    Some(val) => writeln!(output, "{name}: {val}"),
-                    None => Ok(()),
-                })
-                .map_err(From::from)
-        };
-    };
+    let mut output = std::io::stdout();
 
     match command {
         SubCommand::Init(opt) => cmd::init(opt.export, opt.alias)
             .and_then(|res| write!(output, "{res}").map_err(From::from)),
+        SubCommand::Ctx(opt) => {
+            let Some(session) = session else {
+                return Err(Error::InvalidContext("session is required"));
+            };
+            match (opt.client, client) {
+                (true, None) => Err(Error::InvalidContext("client is required")),
+                (true, Some(client)) => writeln!(output, "client: {client}").map_err(From::from),
+                (false, _) => writeln!(output, "session: {session}").map_err(From::from),
+            }
+        }
         SubCommand::List(opt) if opt.all => {
             let sessions = kak::list_sessions()?;
             let sessions = String::from_utf8(sessions).map_err(anyhow::Error::new)?;
