@@ -2,18 +2,42 @@
 #
 # pipe stdin into fifo buffer
 #
-# Example:
-#    make | kamp-fifo [output_buffer_name]
+# Example: make | kamp-fifo
 
 set -euf
 
-# Fail early if there is no session
-kamp > /dev/null
+usage() {
+    printf "Usage: %s: [-c client] [fifo_buffer_name]\n" "$(basename "$0")" >&2
+    exit 2
+}
+
+cflag=
+while getopts 'c:h' OPTION; do
+    case $OPTION in
+    c)
+        cflag=1
+        cval="$OPTARG"
+        ;;
+    h|?)
+        usage
+        ;;
+    esac
+done
+shift $(($OPTIND - 1))
+
+kamp >/dev/null # fail early if there is no session
 
 d=$(mktemp -d)
 fifo="$d/fifo"
 
-trap 'rm -rf "$d"; exit' EXIT HUP INT TERM
+trap 'unlink "$fifo" && rmdir "$d"; exit' EXIT HUP INT TERM
 mkfifo "$fifo"
-kamp send "edit -scroll -fifo $fifo *${1:-fifo}*"
+
+if [ "$cflag" ]; then
+    kamp -c "$cval" send "edit -scroll -fifo $fifo *${1:-kamp-fifo}*; focus"
+else
+    kamp ctx -c >/dev/null # fail early if there is no client
+    kamp send "edit -scroll -fifo $fifo *${1:-kamp-fifo}*; focus"
+fi
+
 cat >"$fifo"
