@@ -32,7 +32,7 @@ case "$backend" in
         backend_cmd="fd --strip-cwd-prefix --type file $*"
         ;;
     rg)
-        backend_cmd="rg --color never --files $*"
+        backend_cmd="rg --files $*"
         ;;
     find)
         backend_cmd="find . -type f $*"
