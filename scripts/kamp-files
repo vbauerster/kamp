@@ -29,23 +29,22 @@ shift $((OPTIND - 1))
 
 case "$backend" in
     fd)
-        backend_cmd="fd --strip-cwd-prefix --type file"
+        backend_cmd="fd --strip-cwd-prefix --type file $*"
         ;;
     rg)
-        backend_cmd="rg --color never --files"
+        backend_cmd="rg --color never --files $*"
         ;;
     find)
-        backend_cmd="find . -type f"
+        backend_cmd="find . -type f $*"
         ;;
     git)
-        backend_cmd="git ls-files"
+        backend_cmd="git ls-files $*"
         ;;
     *)
         usage
         ;;
 esac
 
-backend_cmd="$backend_cmd $*"
 preview_cmd='bat --color=always --line-range=:500 {}'
 
 eval "$backend_cmd" |
