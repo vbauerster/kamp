@@ -268,7 +268,7 @@ mod cat {
 
 mod ctx {
     use super::*;
-    /// print session context
+    /// print session context (default)
     #[derive(FromArgs, PartialEq, Debug, Default)]
     #[argh(subcommand, name = "ctx")]
     pub struct Options {
