@@ -29,7 +29,8 @@ where
         return Err(Error::other("cannot capture stdin of kak process"));
     };
 
-    stdin.write_all(cmd.as_ref()).and_then(|_| child.wait())
+    stdin.write_all(cmd.as_ref())?;
+    child.wait()
 }
 
 pub(crate) fn connect<S: AsRef<str>>(session: S, cmd: String) -> Result<ExitStatus> {
