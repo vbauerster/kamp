@@ -48,7 +48,7 @@ else
 fi
 
 fzf \
-  --phony \
+  --disabled \
   --query "$query" \
   --delimiter ':' \
   --ansi \
