@@ -100,13 +100,10 @@ impl Context {
 
     pub fn send_kill(self, exit_status: Option<i32>) -> Result<()> {
         let mut cmd = String::from("kill");
-
-        exit_status
-            .map(|status| status.to_string())
-            .inspect(|status| {
-                cmd.push(' ');
-                cmd.push_str(status);
-            });
+        if let Some(status) = exit_status {
+            cmd.push(' ');
+            cmd.push_str(&status.to_string());
+        }
 
         kak::pipe(self.session, cmd)
             .map_err(From::from)
