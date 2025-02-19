@@ -1,6 +1,6 @@
 [package]
 name = "kamp"
-version = "0.2.3"
+version = "0.2.4-dev"
 authors = ["Vladimir Bauer <vbauerster@gmail.com>"]
 description = "kamp is a tool to control kakoune editor from the command line"
 repository = "https://github.com/vbauerster/kamp"
