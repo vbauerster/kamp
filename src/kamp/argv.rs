@@ -58,18 +58,11 @@ pub(super) mod init {
         fn from_arg_value(value: &str) -> Result<Self, String> {
             value
                 .split_once('=')
-                .ok_or_else(|| "invalid KEY=VALUE pair".into())
-                .and_then(|kv| {
-                    if kv.0.is_empty() || kv.0.contains(' ') {
-                        Err("invalid key format".into())
-                    } else {
-                        Ok(kv)
-                    }
-                })
                 .map(|(key, value)| KeyValue {
-                    key: key.into(),
+                    key: key.trim().into(),
                     value: value.trim_matches(|c| c == '\'' || c == '"').into(),
                 })
+                .ok_or_else(|| "invalid KEY=VALUE pair".into())
         }
     }
 }
