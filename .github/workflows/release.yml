@@ -69,8 +69,8 @@ jobs:
         tar -C "$ARCHIVE_DIR" -czf "$PKG_STAGING/$PKG_NAME" .
 
         # Let subsequent steps know where to find the compressed package
-        echo "PKG_NAME=$PKG_NAME" >> $GITHUB_ENV
-        echo "PKG_PATH=$PKG_STAGING/$PKG_NAME" >> $GITHUB_ENV
+        echo "PKG_NAME=$PKG_NAME" | tee -a $GITHUB_ENV
+        echo "PKG_PATH=$PKG_STAGING/$PKG_NAME" | tee -a $GITHUB_ENV
 
     - uses: actions/upload-artifact@v4
       with:
