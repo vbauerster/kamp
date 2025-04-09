@@ -10,4 +10,4 @@
 
 set -ef
 
-nnn -p - "$1" | xargs -r kamp edit
+nnn -e -p - "$1" | xargs -r kamp edit
