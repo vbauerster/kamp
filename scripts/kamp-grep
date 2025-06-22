@@ -4,10 +4,10 @@
 #
 # requires:
 # – fzf (https://github.com/junegunn/fzf)
-  # https://github.com/junegunn/fzf/blob/master/CHANGELOG.md#0190
+#   https://github.com/junegunn/fzf/blob/master/CHANGELOG.md#0190
 # – ripgrep (https://github.com/BurntSushi/ripgrep)
-  # 'rg --no-heading --with-filename' are defaults when not printing to a terminal
-  # 'rg --column' implies --line-number
+#   'rg --no-heading --with-filename' are defaults when not printing to a terminal
+#   'rg --column' implies --line-number
 # - bat (https://github.com/sharkdp/bat)
 
 set -euf
@@ -21,15 +21,15 @@ usage() {
 }
 
 qflag=
-while getopts 'q:h' OPTION; do
+while getopts hq: OPTION; do
     case "$OPTION" in
     q)
         qflag=1
         query="$OPTARG"
-        ;;
+    ;;
     h|?)
         usage
-        ;;
+    ;;
     esac
 done
 shift $((OPTIND - 1))
@@ -51,12 +51,13 @@ else
 fi
 
 fzf \
-  --disabled \
+  --disabled --ansi \
+  --delimiter : \
   --query "$query" \
-  --delimiter ':' \
-  --ansi \
-  --bind "change:reload($rg_cmd -- {q} || true)" \
-  --bind 'enter:execute-silent(kamp send set global kamp_grep_query {q})+become(kamp edit {1} +{2}:{3})' \
+  --prompt 'grep> ' \
+  --header 'type to grep' \
+  --bind "change:reload:$rg_cmd -- {q} || true" \
+  --bind 'enter:execute-silent(kamp send set global kamp_grep_query {q})+become:kamp edit {1} +{2}:{3}' \
   --preview '
       highlight_line={2}
       line_range_begin=$((highlight_line - FZF_PREVIEW_LINES / 2))
@@ -65,6 +66,4 @@ fzf \
         --style=numbers \
         --color=always \
         --line-range "$((line_range_begin < 0 ? 1 : line_range_begin)):+$FZF_PREVIEW_LINES" \
-        --highlight-line {2} {1} 2> /dev/null' \
-  --header 'type to grep' \
-  --prompt 'grep> '
+        --highlight-line {2} {1} 2> /dev/null'
