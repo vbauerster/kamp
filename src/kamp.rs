@@ -96,22 +96,24 @@ impl Dispatcher for SubCommand {
                 let body = if opt.verbatim {
                     opt.command.join(" ")
                 } else {
-                    opt.command
-                        .into_iter()
-                        .fold(String::new(), |mut buf, next| {
-                            if !buf.is_empty() {
-                                buf.push(' ');
-                            }
-                            let s = next.replace("'", "''");
-                            if s.is_empty() || s.contains(' ') {
-                                buf.push('\'');
-                                buf.push_str(&s);
-                                buf.push('\'');
-                            } else {
-                                buf.push_str(&s);
-                            }
-                            buf
-                        })
+                    opt.command.into_iter().fold(String::new(), |mut buf, x| {
+                        if !buf.is_empty() {
+                            buf.push(' ');
+                        }
+                        if x.contains([' ', '"', '\'']) {
+                            let s = x.replace("'", "''");
+                            buf.push('\'');
+                            buf.push_str(&s);
+                            buf.push('\'');
+                        } else if x.is_empty() {
+                            buf.push('\'');
+                            buf.push_str(&x);
+                            buf.push('\'');
+                        } else {
+                            buf.push_str(&x);
+                        }
+                        buf
+                    })
                 };
                 ctx.send(to_buffer_ctx(opt.buffers), body).map(drop)
             }
