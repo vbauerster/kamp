@@ -34,7 +34,7 @@ while getopts 'q:h' OPTION; do
 done
 shift $((OPTIND - 1))
 
-rg_cmd="rg --color always --column $*"
+rg_cmd="rg --column --no-heading --color=always $*"
 
 if [ ! "$qflag" ]; then
     query="$(kamp get opt kamp_grep_query)"
