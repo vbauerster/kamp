@@ -16,7 +16,7 @@ usage() {
 
 backend="fd"
 while getopts 'b:h' OPTION; do
-    case $OPTION in
+    case "$OPTION" in
     b)
         backend="$OPTARG"
         ;;

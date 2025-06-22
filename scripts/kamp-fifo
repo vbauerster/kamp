@@ -13,7 +13,7 @@ usage() {
 
 cflag=
 while getopts 'c:h' OPTION; do
-    case $OPTION in
+    case "$OPTION" in
     c)
         cflag=1
         cval="$OPTARG"

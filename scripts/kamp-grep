@@ -22,7 +22,7 @@ usage() {
 
 qflag=
 while getopts 'q:h' OPTION; do
-    case $OPTION in
+    case "$OPTION" in
     q)
         qflag=1
         query="$OPTARG"

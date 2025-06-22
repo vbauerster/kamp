@@ -14,7 +14,7 @@ usage() {
 }
 
 while getopts 's:h' OPTION; do
-    case $OPTION in
+    case "$OPTION" in
     s)
         session="$OPTARG"
         ;;
