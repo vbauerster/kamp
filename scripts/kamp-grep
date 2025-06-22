@@ -43,8 +43,7 @@ fi
 if [ -z "$query" ]; then
     export FZF_DEFAULT_COMMAND="rg --files $*"
 else
-    pattern=$(printf %s "$query" | sed 's/"/\\"/')
-    export FZF_DEFAULT_COMMAND="$rg_cmd -- \"$pattern\""
+    export FZF_DEFAULT_COMMAND="$(printf '%s -- %q' "$rg_cmd" "$query")"
 fi
 
 fzf \
