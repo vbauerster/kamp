@@ -42,8 +42,12 @@ fi
 
 if [ -z "$query" ]; then
     export FZF_DEFAULT_COMMAND="rg --files $*"
-else
+elif printf %q > /dev/null 2>/dev/null; then
     export FZF_DEFAULT_COMMAND="$(printf '%s -- %q' "$rg_cmd" "$query")"
+else
+    # printf doesn't support %q fallback instead of failure
+    qq=$(echo "$query" | sed 's/"/\\"/g')
+    export FZF_DEFAULT_COMMAND="$rg_cmd -- \"$qq\""
 fi
 
 fzf \
