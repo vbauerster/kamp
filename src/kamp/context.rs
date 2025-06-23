@@ -133,7 +133,7 @@ impl Context {
         cmd.push_str("\n}\n");
         write_end_token(&mut cmd);
         cmd.push_str("} catch %{\n");
-        cmd.push_str("echo -debug kamp: %val{error};");
+        cmd.push_str("echo -debug kamp: %val{error}\n");
         cmd.push_str("echo -to-file %opt{kamp_err} %val{error}\n}");
 
         let (tx, rx) = sync_channel(0);
