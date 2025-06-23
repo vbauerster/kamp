@@ -16,6 +16,8 @@ set -euf
 SHELL=/bin/sh
 
 usage() {
+    # passing -F to rg_options implies it must be last in the sequence;
+    # otherwise switching between fixed/regex mode will fail
     printf "Usage: %s: [-q query] -- [rg_options]\n" "$(basename "$0")" >&2
     exit 2
 }
@@ -33,6 +35,16 @@ while getopts hq: OPTION; do
     esac
 done
 shift $((OPTIND - 1))
+
+ctrlx_bind=
+case "$*" in
+    *-F*)
+        ctrlx_bind="ctrl-x:become:$0 -q {q} -- ${*%-F*}"
+    ;;
+    *)
+        ctrlx_bind="ctrl-x:become:$0 -q {q} -- $* -F"
+    ;;
+esac
 
 rg_cmd="rg --column --color=always $*"
 
@@ -55,7 +67,8 @@ fzf \
   --delimiter : \
   --query "$query" \
   --prompt "rg($*)> " \
-  --header 'type to grep' \
+  --header '<c-x> toggle fixed/regex mode' \
+  --bind "$ctrlx_bind" \
   --bind "change:reload:$rg_cmd -- {q} || true" \
   --bind 'enter:execute-silent(kamp send set global kamp_grep_query {q})+become:kamp edit {1} +{2}:{3}' \
   --preview '
