@@ -1,7 +1,7 @@
 use super::kak;
 use super::{Error, Result};
 use std::borrow::Cow;
-use std::io::prelude::*;
+use std::io::{prelude::*, Cursor};
 use std::path::Path;
 use std::rc::Rc;
 use std::sync::mpsc::{sync_channel, SyncSender};
@@ -112,30 +112,32 @@ impl Context {
 
     pub fn send(&self, buffer_ctx: Option<(String, i32)>, body: impl AsRef<str>) -> Result<String> {
         let mut body = Cow::from(body.as_ref());
-        let mut cmd = String::from("try %{\n");
-        cmd.push_str("eval");
+        let mut buf = Cursor::new(Vec::with_capacity(512));
+        writeln!(buf, "try %🐪")?;
         match (buffer_ctx, self.client()) {
             (Some((b, n)), _) => {
-                cmd.push_str(" -buffer ");
-                cmd.push_str(&b);
+                writeln!(buf, "eval -buffer {b} %🐫")?;
                 if n != 1 {
                     body.to_mut().push_str("\necho -to-file %opt{kamp_out} ' '");
                 }
             }
             (_, Some(c)) => {
-                cmd.push_str(" -client ");
-                cmd.push_str(&c);
+                writeln!(buf, "eval -client {c} %🐫")?;
             }
-            _ => (), // 'get val client_list' for example need neither buffer nor client
+            _ => {
+                // 'get val client_list' for example need neither buffer nor client
+                writeln!(buf, "eval %🐫")?;
+            }
         }
-        cmd.push_str(" %{\n");
-        cmd.push_str(&body);
-        cmd.push_str("\n}\n");
-        write_end_token(&mut cmd);
-        cmd.push_str("} catch %{\n");
-        cmd.push_str("echo -debug kamp: %val{error}\n");
-        cmd.push_str("echo -to-file %opt{kamp_err} %val{error}\n}");
+        writeln!(buf, "{body}")?;
+        writeln!(buf, "🐫")?;
+        writeln!(buf, "echo -to-file %opt{{kamp_out}} {END_TOKEN}")?;
+        writeln!(buf, "🐪 catch %{{")?;
+        writeln!(buf, "echo -debug kamp: %val{{error}}")?;
+        writeln!(buf, "echo -to-file %opt{{kamp_err}} %val{{error}}")?;
+        writeln!(buf, "}}")?;
 
+        let cmd = String::from_utf8(buf.into_inner())?;
         let (tx, rx) = sync_channel(0);
         let err_h = self.read_fifo_err(tx.clone());
         let out_h = self.read_fifo_out(tx);
@@ -157,22 +159,25 @@ impl Context {
     }
 
     pub fn connect(self, body: impl AsRef<str>) -> Result<()> {
-        let mut cmd = String::new();
         let body = body.as_ref();
-        if !body.is_empty() {
-            cmd.push_str("try %{\neval %{\n");
-            cmd.push_str(body);
-            cmd.push_str("\n}\n");
-            write_end_token(&mut cmd);
-            cmd.push_str("} catch %{\n");
-            cmd.push_str("echo -debug kamp: %val{error};");
-            cmd.push_str("echo -to-file %opt{kamp_err} %val{error};");
-            cmd.push_str("quit 1\n}");
+        let mut buf = Cursor::new(Vec::with_capacity(512));
+
+        if body.is_empty() {
+            write!(buf, "echo -to-file %opt{{kamp_out}} {END_TOKEN}")?;
         } else {
-            write_end_token(&mut cmd);
-            cmd.pop();
+            writeln!(buf, "try %🐪")?;
+            writeln!(buf, "eval %🐫")?;
+            writeln!(buf, "{body}")?;
+            writeln!(buf, "🐫")?;
+            writeln!(buf, "echo -to-file %opt{{kamp_out}} {END_TOKEN}")?;
+            writeln!(buf, "🐪 catch %{{")?;
+            writeln!(buf, "echo -debug kamp: %val{{error}}")?;
+            writeln!(buf, "echo -to-file %opt{{kamp_err}} %val{{error}}")?;
+            writeln!(buf, "quit")?;
+            writeln!(buf, "}}")?;
         }
 
+        let cmd = String::from_utf8(buf.into_inner())?;
         let (tx, rx) = sync_channel(1);
         let err_h = self.read_fifo_err(tx.clone());
         let out_h = self.read_fifo_out(tx);
@@ -260,14 +265,14 @@ impl Context {
         split: bool,
     ) -> Result<Vec<String>> {
         let parse_type = ParseType::new(quote, split);
-        let mut buf = String::from("echo -quoting ");
-        buf.push_str(parse_type.quoting());
-        buf.push_str(" -to-file %opt{kamp_out} %");
-        buf.push_str(key);
-        buf.push('{');
-        buf.push_str(val);
-        buf.push('}');
-        self.send(buffer_ctx, &buf).map(|s| parse_type.parse(s))
+        let mut buf = Cursor::new(Vec::with_capacity(64));
+        write!(
+            buf,
+            "echo -quoting {} -to-file %opt{{kamp_out}} %{key}{{{val}}}",
+            parse_type.quoting()
+        )?;
+        let body = String::from_utf8(buf.into_inner())?;
+        self.send(buffer_ctx, &body).map(|s| parse_type.parse(s))
     }
 
     fn check_status(&self, status: std::process::ExitStatus) -> Result<()> {
@@ -318,12 +323,6 @@ impl Context {
             send_ch.send(Ok(res.into())).map_err(anyhow::Error::new)
         })
     }
-}
-
-fn write_end_token(buf: &mut String) {
-    buf.push_str("echo -to-file %opt{kamp_out} ");
-    buf.push_str(END_TOKEN);
-    buf.push('\n');
 }
 
 fn parse_kak_style_quoting(input: &str) -> Vec<String> {

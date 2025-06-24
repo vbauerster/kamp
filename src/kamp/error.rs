@@ -28,6 +28,9 @@ pub enum Error {
     Fmt(#[from] std::fmt::Error),
 
     #[error(transparent)]
+    Utf8(#[from] std::string::FromUtf8Error),
+
+    #[error(transparent)]
     Other(#[from] anyhow::Error), // source and Display delegate to anyhow::Error
 }
 
