@@ -1,6 +1,6 @@
 use super::Result;
 use crate::argv::init::KeyValue;
-use std::fmt::Write;
+use std::io::{Cursor, Write};
 
 const KAKOUNE_INIT: &str = r#"
 define-command -hidden -override kamp-init %{
@@ -34,10 +34,10 @@ pub(crate) fn init(export: Vec<KeyValue>, alias: bool) -> Result<String> {
         buf
     });
 
-    let mut buf = String::new();
+    let mut buf = Cursor::new(Vec::with_capacity(1024));
 
     writeln!(
-        &mut buf,
+        buf,
         r#"
 define-command -override kamp-connect -params 1.. -command-completion %{{
     %arg{{1}} sh -c %{{
@@ -52,11 +52,11 @@ define-command -override kamp-connect -params 1.. -command-completion %{{
 }} -docstring 'run Kakoune command in connected context'"#
     )?;
 
-    buf.push_str(KAKOUNE_INIT);
+    writeln!(buf, "{KAKOUNE_INIT}")?;
 
     if alias {
-        buf.push_str("alias global connect kamp-connect\n");
+        writeln!(buf, "alias global connect kamp-connect")?;
     }
 
-    Ok(buf)
+    String::from_utf8(buf.into_inner()).map_err(From::from)
 }
