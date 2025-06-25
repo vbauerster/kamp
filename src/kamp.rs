@@ -96,7 +96,7 @@ impl Dispatcher for SubCommand {
                 let body = if opt.verbatim {
                     opt.command.join(" ")
                 } else {
-                    opt.command.into_iter().fold(String::new(), |mut buf, x| {
+                    opt.command.iter().fold(String::new(), |mut buf, x| {
                         if !buf.is_empty() {
                             buf.push(' ');
                         }
@@ -107,10 +107,10 @@ impl Dispatcher for SubCommand {
                             buf.push('\'');
                         } else if x.is_empty() {
                             buf.push('\'');
-                            buf.push_str(&x);
+                            buf.push_str(x);
                             buf.push('\'');
                         } else {
-                            buf.push_str(&x);
+                            buf.push_str(x);
                         }
                         buf
                     })
