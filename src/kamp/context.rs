@@ -1,6 +1,5 @@
 use super::kak;
 use super::{Error, Result};
-use std::borrow::Cow;
 use std::io::{Cursor, prelude::*};
 use std::path::Path;
 use std::rc::Rc;
@@ -79,27 +78,28 @@ impl Context {
     }
 
     pub fn send(&self, buffer_ctx: Option<(String, i32)>, body: impl AsRef<str>) -> Result<String> {
-        let mut body = Cow::from(body.as_ref());
+        let body = body.as_ref();
         let mut buf = Cursor::new(Vec::with_capacity(512));
         writeln!(buf, "try %🐪")?;
         match (buffer_ctx, self.client()) {
             (Some((b, n)), _) => {
                 writeln!(buf, "eval -buffer {b} %🐫")?;
+                writeln!(buf, "{body}")?;
                 if n != 1 {
-                    body.to_mut()
-                        .push_str("; echo -end-of-line -to-file %opt<kamp_out>");
+                    writeln!(buf, "echo -end-of-line -to-file %opt<kamp_out>")?;
                 }
+                writeln!(buf, "🐫")?;
             }
             (_, Some(c)) => {
                 writeln!(buf, "eval -client {c} %🐫")?;
+                writeln!(buf, "{body}")?;
+                writeln!(buf, "🐫")?;
             }
             _ => {
                 // 'get val client_list' for example need neither buffer nor client
-                writeln!(buf, "eval %🐫")?;
+                writeln!(buf, "{body}")?;
             }
         }
-        writeln!(buf, "{body}")?;
-        writeln!(buf, "🐫")?;
         writeln!(buf, "echo -to-file %opt<kamp_out> {END_TOKEN}")?;
         writeln!(buf, "🐪 catch %{{")?;
         writeln!(buf, "echo -debug kamp: %val<error>")?;
