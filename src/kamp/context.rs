@@ -118,7 +118,8 @@ impl Context {
             (Some((b, n)), _) => {
                 writeln!(buf, "eval -buffer {b} %🐫")?;
                 if n != 1 {
-                    body.to_mut().push_str("\necho -to-file %opt{kamp_out} ' '");
+                    body.to_mut()
+                        .push_str("; echo -end-of-line -to-file %opt{kamp_out}");
                 }
             }
             (_, Some(c)) => {
