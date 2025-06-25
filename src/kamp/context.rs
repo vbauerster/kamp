@@ -87,7 +87,7 @@ impl Context {
                 writeln!(buf, "eval -buffer {b} %🐫")?;
                 if n != 1 {
                     body.to_mut()
-                        .push_str("; echo -end-of-line -to-file %opt{kamp_out}");
+                        .push_str("; echo -end-of-line -to-file %opt<kamp_out>");
                 }
             }
             (_, Some(c)) => {
@@ -100,10 +100,10 @@ impl Context {
         }
         writeln!(buf, "{body}")?;
         writeln!(buf, "🐫")?;
-        writeln!(buf, "echo -to-file %opt{{kamp_out}} {END_TOKEN}")?;
+        writeln!(buf, "echo -to-file %opt<kamp_out> {END_TOKEN}")?;
         writeln!(buf, "🐪 catch %{{")?;
-        writeln!(buf, "echo -debug kamp: %val{{error}}")?;
-        writeln!(buf, "echo -to-file %opt{{kamp_err}} %val{{error}}")?;
+        writeln!(buf, "echo -debug kamp: %val<error>")?;
+        writeln!(buf, "echo -to-file %opt<kamp_err> %val<error>")?;
         writeln!(buf, "}}")?;
 
         let cmd = String::from_utf8(buf.into_inner())?;
@@ -133,16 +133,16 @@ impl Context {
         let mut buf = Cursor::new(Vec::with_capacity(512));
 
         if body.is_empty() {
-            write!(buf, "echo -to-file %opt{{kamp_out}} {END_TOKEN}")?;
+            write!(buf, "echo -to-file %opt<kamp_out> {END_TOKEN}")?;
         } else {
             writeln!(buf, "try %🐪")?;
             writeln!(buf, "eval %🐫")?;
             writeln!(buf, "{body}")?;
             writeln!(buf, "🐫")?;
-            writeln!(buf, "echo -to-file %opt{{kamp_out}} {END_TOKEN}")?;
+            writeln!(buf, "echo -to-file %opt<kamp_out> {END_TOKEN}")?;
             writeln!(buf, "🐪 catch %{{")?;
-            writeln!(buf, "echo -debug kamp: %val{{error}}")?;
-            writeln!(buf, "echo -to-file %opt{{kamp_err}} %val{{error}}")?;
+            writeln!(buf, "echo -debug kamp: %val<error>")?;
+            writeln!(buf, "echo -to-file %opt<kamp_err> %val<error>")?;
             writeln!(buf, "quit")?;
             writeln!(buf, "}}")?;
         }

@@ -40,7 +40,7 @@ pub(crate) fn init(export: Vec<KeyValue>, alias: bool) -> Result<String> {
         buf,
         r#"
 define-command -override kamp-connect -params 1.. -command-completion %{{
-    %arg{{1}} sh -c %{{
+    %arg<1> sh -c %{{
         {user_exports}export KAKOUNE_SESSION="$1"
         export KAKOUNE_CLIENT="$2"
         shift 3
@@ -48,7 +48,7 @@ define-command -override kamp-connect -params 1.. -command-completion %{{
         [ $# -eq 0 ] && set "$SHELL"
 
         "$@"
-    }} -- %val{{session}} %val{{client}} %arg{{@}}
+    }} -- %val<session> %val<client> %arg<@>
 }} -docstring 'run Kakoune command in connected context'"#
     )?;
 
