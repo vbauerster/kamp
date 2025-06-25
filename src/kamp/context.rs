@@ -1,46 +1,14 @@
 use super::kak;
 use super::{Error, Result};
 use std::borrow::Cow;
-use std::io::{prelude::*, Cursor};
+use std::io::{Cursor, prelude::*};
 use std::path::Path;
 use std::rc::Rc;
-use std::sync::mpsc::{sync_channel, SyncSender};
 use std::sync::Arc;
+use std::sync::mpsc::{SyncSender, sync_channel};
 use std::thread;
 
 const END_TOKEN: &str = "<<EEND>>";
-
-enum QuotingStyle {
-    Raw,
-    Kakoune,
-}
-
-enum ParseType {
-    None(QuotingStyle),
-    Kakoune,
-}
-
-impl ParseType {
-    fn new(quote: bool, split: bool) -> Self {
-        match (quote, split) {
-            (true, _) => ParseType::None(QuotingStyle::Kakoune),
-            (_, false) => ParseType::None(QuotingStyle::Raw),
-            _ => ParseType::Kakoune,
-        }
-    }
-    fn quoting(&self) -> &'static str {
-        match self {
-            ParseType::None(QuotingStyle::Raw) => "raw",
-            _ => "kakoune",
-        }
-    }
-    fn parse(&self, s: String) -> Vec<String> {
-        match self {
-            ParseType::Kakoune => parse_kak_style_quoting(&s),
-            _ => vec![s],
-        }
-    }
-}
 
 #[derive(Debug, Clone)]
 pub(crate) struct Context {
@@ -139,6 +107,7 @@ impl Context {
         writeln!(buf, "}}")?;
 
         let cmd = String::from_utf8(buf.into_inner())?;
+        println!("{cmd}");
         let (tx, rx) = sync_channel(0);
         let err_h = self.read_fifo_err(tx.clone());
         let out_h = self.read_fifo_out(tx);
@@ -179,6 +148,7 @@ impl Context {
         }
 
         let cmd = String::from_utf8(buf.into_inner())?;
+        // println!("{cmd}");
         let (tx, rx) = sync_channel(1);
         let err_h = self.read_fifo_err(tx.clone());
         let out_h = self.read_fifo_out(tx);
@@ -220,60 +190,31 @@ impl Context {
         }
     }
 
-    pub fn query_val(
+    pub fn query_kak(
         &self,
+        query_ctx: impl Into<super::cmd::QueryContext>,
         buffer_ctx: Option<(String, i32)>,
-        name: impl AsRef<str>,
-        quote: bool,
-        split: bool,
     ) -> Result<Vec<String>> {
-        self.query_kak(buffer_ctx, ("val", name.as_ref()), quote, split)
-    }
-
-    pub fn query_opt(
-        &self,
-        buffer_ctx: Option<(String, i32)>,
-        name: impl AsRef<str>,
-        quote: bool,
-        split: bool,
-    ) -> Result<Vec<String>> {
-        self.query_kak(buffer_ctx, ("opt", name.as_ref()), quote, split)
-    }
-
-    pub fn query_reg(
-        &self,
-        buffer_ctx: Option<(String, i32)>,
-        name: impl AsRef<str>,
-        quote: bool,
-        split: bool,
-    ) -> Result<Vec<String>> {
-        self.query_kak(buffer_ctx, ("reg", name.as_ref()), quote, split)
-    }
-
-    pub fn query_sh(
-        &self,
-        buffer_ctx: Option<(String, i32)>,
-        cmd: impl AsRef<str>,
-    ) -> Result<Vec<String>> {
-        self.query_kak(buffer_ctx, ("sh", cmd.as_ref()), false, false)
-    }
-
-    fn query_kak(
-        &self,
-        buffer_ctx: Option<(String, i32)>,
-        (key, val): (&str, &str),
-        quote: bool,
-        split: bool,
-    ) -> Result<Vec<String>> {
-        let parse_type = ParseType::new(quote, split);
+        let ctx = query_ctx.into();
         let mut buf = Cursor::new(Vec::with_capacity(64));
         write!(
             buf,
-            "echo -quoting {} -to-file %opt{{kamp_out}} %{key}{{{val}}}",
-            parse_type.quoting()
+            "echo -quoting {} -to-file %opt<kamp_out> {}",
+            ctx.quoting, ctx.key_val
         )?;
         let body = String::from_utf8(buf.into_inner())?;
-        self.send(buffer_ctx, &body).map(|s| parse_type.parse(s))
+        self.send(buffer_ctx, &body).map(|output| {
+            let split_by = ctx.output_delimiter();
+            if ctx.verbatim {
+                let v = output.split(split_by).map(String::from).collect();
+                dbg!(&v);
+                v
+            } else {
+                let v = output.split(split_by).map(unquote_kakoune_string).collect();
+                dbg!(&v);
+                v
+            }
+        })
     }
 
     fn check_status(&self, status: std::process::ExitStatus) -> Result<()> {
@@ -326,32 +267,21 @@ impl Context {
     }
 }
 
-fn parse_kak_style_quoting(input: &str) -> Vec<String> {
-    let mut res = Vec::new();
+fn unquote_kakoune_string(input: &str) -> String {
     let mut buf = String::new();
     let mut state_is_open = false;
     let mut iter = input.chars().peekable();
     loop {
-        match iter.next() {
-            Some('\'') => {
-                if state_is_open {
-                    if let Some('\'') = iter.peek() {
-                        buf.push('\'');
-                    } else {
-                        res.push(buf);
-                        buf = String::new();
-                    }
-                    state_is_open = false;
-                } else {
-                    state_is_open = true;
+        match (iter.next(), state_is_open) {
+            (Some('\''), false) => state_is_open = true,
+            (Some('\''), true) => {
+                if let Some('\'') = iter.peek() {
+                    buf.push('\'');
                 }
+                state_is_open = false;
             }
-            Some(c) => {
-                if state_is_open {
-                    buf.push(c)
-                }
-            }
-            None => return res,
+            (Some(c), _) => buf.push(c),
+            (None, _) => return buf,
         }
     }
 }
@@ -369,11 +299,9 @@ mod tests {
             .map(String::from)
             .collect::<Vec<_>>();
 
-        assert_eq!(parse_kak_style_quoting(&test.join(" ")), expected);
-
         let map = test.into_iter().zip(expected).collect::<HashMap<_, _>>();
         for (test, expected) in map {
-            assert_eq!(parse_kak_style_quoting(test), vec![expected]);
+            assert_eq!(unquote_kakoune_string(test), expected);
         }
     }
 }

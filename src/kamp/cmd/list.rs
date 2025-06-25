@@ -1,5 +1,10 @@
 use std::rc::Rc;
 
+use super::QueryContext;
+use super::QueryKeyVal;
+use super::QueryType;
+use super::Quoting;
+
 use super::Context;
 use super::Result;
 
@@ -35,16 +40,30 @@ pub(crate) fn list_all<'a>(sessions: impl Iterator<Item = &'a str>) -> Result<Ve
 }
 
 pub(crate) fn list_current(mut ctx: Context) -> Result<Session<'static>> {
-    let clients = ctx.query_val(None, "client_list", false, true)?;
-    let clients = clients
+    let qctx = QueryContext::new(
+        QueryKeyVal::Val("client_list".into()),
+        QueryType::List,
+        Quoting::Kakoune,
+        false,
+    );
+    let clients = ctx
+        .query_kak(qctx, None)?
         .into_iter()
         .flat_map(|name| {
             ctx.set_client(name);
-            ctx.query_val(None, "bufname", false, false)
-                .map(|mut v| Client::new(ctx.client().unwrap(), v.pop().unwrap_or_default()))
+            ctx.query_kak(
+                QueryContext::new(
+                    QueryKeyVal::Val("bufname".into()),
+                    QueryType::Plain,
+                    Quoting::Kakoune,
+                    false,
+                ),
+                None,
+            )
+            .map(|mut v| Client::new(ctx.client().unwrap(), v.pop().unwrap_or_default()))
         })
         .collect();
     ctx.unset_client();
-    ctx.query_sh(None, "pwd")
+    ctx.query_kak(QueryContext::new_sh(vec!["pwd".into()], true), None)
         .map(|mut pwd| Session::new(ctx.session(), pwd.pop().unwrap_or_default(), clients))
 }

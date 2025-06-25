@@ -149,6 +149,10 @@ pub(super) mod get {
         #[argh(option, short = 'b', long = "buffer", arg_name = "buffer")]
         pub buffers: Vec<String>,
 
+        /// split by null character instead of new line
+        #[argh(switch, short = 'z')]
+        pub zplit: bool,
+
         #[argh(subcommand)]
         pub subcommand: SubCommand,
     }
@@ -162,23 +166,43 @@ pub(super) mod get {
         Shell(shell::Options),
     }
 
+    #[derive(PartialEq, Debug)]
+    pub enum QuotingMethod {
+        Raw,
+        Kakoune,
+        Shell,
+    }
+
+    impl argh::FromArgValue for QuotingMethod {
+        fn from_arg_value(value: &str) -> Result<Self, String> {
+            Ok(match value {
+                "raw" => QuotingMethod::Raw,
+                "kakoune" => QuotingMethod::Kakoune,
+                "shell" => QuotingMethod::Shell,
+                _ => {
+                    return Err("expected one of 'raw', 'kakoune', 'shell'".to_owned());
+                }
+            })
+        }
+    }
+
     mod value {
         use super::*;
         /// get value as %val(name)
         #[derive(FromArgs, PartialEq, Debug)]
         #[argh(subcommand, name = "val")]
         pub struct Options {
-            /// quoting style kakoune, discards any --split
-            #[argh(switch, short = 'q')]
-            pub quote: bool,
+            /// quote output (raw|kakoune|shell) default=kakoune
+            #[argh(option, short = 'q', default = "QuotingMethod::Kakoune")]
+            pub quoting: QuotingMethod,
 
-            /// split by new line, for example 'buflist' value
-            #[argh(switch, short = 's')]
-            pub split: bool,
+            /// split list type value like buflist or client_list
+            #[argh(switch, short = 'l')]
+            pub list: bool,
 
-            /// split by null character
-            #[argh(switch, short = 'z')]
-            pub zplit: bool,
+            /// don't parse output
+            #[argh(switch, short = 'v')]
+            pub verbatim: bool,
 
             /// value name to query (required)
             #[argh(positional)]
@@ -192,17 +216,21 @@ pub(super) mod get {
         #[derive(FromArgs, PartialEq, Debug)]
         #[argh(subcommand, name = "opt")]
         pub struct Options {
-            /// quoting style kakoune, discards any --split
-            #[argh(switch, short = 'q')]
-            pub quote: bool,
+            /// quote output (raw|kakoune|shell) default=kakoune
+            #[argh(option, short = 'q', default = "QuotingMethod::Kakoune")]
+            pub quoting: QuotingMethod,
 
-            /// split by new line, for example 'str-list' type option
-            #[argh(switch, short = 's')]
-            pub split: bool,
+            /// split list type value like ui_options
+            #[argh(switch, short = 'l')]
+            pub list: bool,
 
-            /// split by null character
+            /// split by null character instead of new line
             #[argh(switch, short = 'z')]
             pub zplit: bool,
+
+            /// don't unquote output
+            #[argh(switch, short = 'v')]
+            pub verbatim: bool,
 
             /// option name to query (required)
             #[argh(positional)]
@@ -216,17 +244,21 @@ pub(super) mod get {
         #[derive(FromArgs, PartialEq, Debug)]
         #[argh(subcommand, name = "reg")]
         pub struct Options {
-            /// quoting style kakoune, discards any --split
-            #[argh(switch, short = 'q')]
-            pub quote: bool,
+            /// quote output (raw|kakoune|shell) default=kakoune
+            #[argh(option, short = 'q', default = "QuotingMethod::Kakoune")]
+            pub quoting: QuotingMethod,
 
-            /// split by new line, for example ':' register
-            #[argh(switch, short = 's')]
-            pub split: bool,
+            /// split list type register like colon or slash
+            #[argh(switch, short = 'l')]
+            pub list: bool,
 
-            /// split by null character
+            /// split by null character instead of new line
             #[argh(switch, short = 'z')]
             pub zplit: bool,
+
+            /// don't parse output
+            #[argh(switch, short = 'v')]
+            pub verbatim: bool,
 
             /// register name to query, " is default
             #[argh(positional, default = r#"String::from("dquote")"#)]
@@ -240,6 +272,10 @@ pub(super) mod get {
         #[derive(FromArgs, PartialEq, Eq, Debug)]
         #[argh(subcommand, name = "sh")]
         pub struct Options {
+            /// do not parse/escape command
+            #[argh(switch, short = 'v')]
+            pub verbatim: bool,
+
             /// shell command to evaluate
             #[argh(positional, greedy)]
             pub command: Vec<String>,

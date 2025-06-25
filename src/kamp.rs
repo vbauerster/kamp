@@ -121,33 +121,14 @@ impl Dispatcher for SubCommand {
                 .and_then(|session| writeln!(writer, "{session:#?}").map_err(From::from)),
             SubCommand::Kill(opt) => ctx.send_kill(opt.exit_status),
             SubCommand::Get(opt) => {
-                use argv::get::SubCommand;
-                let buffer_ctx = to_buffer_ctx(opt.buffers);
-                let res = match opt.subcommand {
-                    SubCommand::Value(o) => ctx
-                        .query_val(buffer_ctx, o.name, o.quote, o.split || o.zplit)
-                        .map(|v| (v, !o.quote && o.zplit)),
-                    SubCommand::Option(o) => ctx
-                        .query_opt(buffer_ctx, o.name, o.quote, o.split || o.zplit)
-                        .map(|v| (v, !o.quote && o.zplit)),
-                    SubCommand::Register(o) => ctx
-                        .query_reg(buffer_ctx, o.name, o.quote, o.split || o.zplit)
-                        .map(|v| (v, !o.quote && o.zplit)),
-                    SubCommand::Shell(o) => {
-                        if o.command.is_empty() {
-                            return Err(Error::CommandRequired);
-                        }
-                        ctx.query_sh(buffer_ctx, o.command.join(" "))
-                            .map(|v| (v, false))
-                    }
-                };
-                res.and_then(|(items, zplit)| {
-                    let split_char = if zplit { '\0' } else { '\n' };
-                    items
-                        .into_iter()
-                        .try_for_each(|item| write!(writer, "{item}{split_char}"))
-                        .map_err(From::from)
-                })
+                let split_by = if opt.zplit { '\0' } else { '\n' };
+                ctx.query_kak(opt.subcommand, to_buffer_ctx(opt.buffers))
+                    .and_then(|items| {
+                        items
+                            .into_iter()
+                            .try_for_each(|item| write!(writer, "{item}{split_by}"))
+                            .map_err(From::from)
+                    })
             }
             SubCommand::Cat(opt) => cmd::cat(ctx, to_buffer_ctx(opt.buffers))
                 .and_then(|res| write!(writer, "{res}").map_err(From::from)),
