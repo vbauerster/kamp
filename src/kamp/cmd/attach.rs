@@ -9,5 +9,5 @@ pub(crate) fn attach(ctx: Context, buffer: Option<String>) -> Result<()> {
         cmd.push_str(buffer);
         cmd.push('\'');
     }
-    ctx.connect(&cmd)
+    ctx.connect(cmd)
 }

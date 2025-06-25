@@ -203,7 +203,7 @@ impl Context {
             ctx.quoting, ctx.key_val
         )?;
         let body = String::from_utf8(buf.into_inner())?;
-        self.send(buffer_ctx, &body).map(|output| {
+        self.send(buffer_ctx, body).map(|output| {
             let split_by = ctx.output_delimiter();
             if ctx.verbatim {
                 let v = output.split(split_by).map(String::from).collect();
