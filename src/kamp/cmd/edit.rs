@@ -59,7 +59,7 @@ pub(crate) fn edit(ctx: Context, focus: bool, files: Vec<String>) -> Result<bool
         if focus {
             buf.push_str("\nfocus");
         }
-        ctx.send(None, buf).map(|_| is_scratch)
+        ctx.send(buf, None).map(|_| is_scratch)
     } else {
         // this one acts like attach
         ctx.connect(buf).map(|_| is_scratch)

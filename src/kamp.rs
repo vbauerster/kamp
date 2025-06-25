@@ -114,7 +114,7 @@ impl Dispatcher for SubCommand {
                         buf
                     })
                 };
-                ctx.send(to_buffer_ctx(opt.buffers), body).map(drop)
+                ctx.send(body, to_buffer_ctx(opt.buffers)).map(drop)
             }
             SubCommand::List(_) => cmd::list_current(ctx)
                 .and_then(|session| writeln!(writer, "{session:#?}").map_err(From::from)),

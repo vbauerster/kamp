@@ -5,5 +5,5 @@ pub(crate) fn cat(ctx: Context, buffer_ctx: Option<(String, i32)>) -> Result<Str
     if ctx.is_draft() && buffer_ctx.is_none() {
         return Err(Error::InvalidContext("either client or buffer is required"));
     }
-    ctx.send(buffer_ctx, "write %opt{kamp_out}")
+    ctx.send("write %opt{kamp_out}", buffer_ctx)
 }

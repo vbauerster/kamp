@@ -77,7 +77,7 @@ impl Context {
             .and_then(|status| self.check_status(status))
     }
 
-    pub fn send(&self, buffer_ctx: Option<(String, i32)>, body: impl AsRef<str>) -> Result<String> {
+    pub fn send(&self, body: impl AsRef<str>, buffer_ctx: Option<(String, i32)>) -> Result<String> {
         let body = body.as_ref();
         let mut buf = Cursor::new(Vec::with_capacity(512));
         writeln!(buf, "try %🐪")?;
@@ -203,7 +203,7 @@ impl Context {
             ctx.quoting, ctx.key_val
         )?;
         let body = String::from_utf8(buf.into_inner())?;
-        self.send(buffer_ctx, body).map(|output| {
+        self.send(body, buffer_ctx).map(|output| {
             let split_by = ctx.output_delimiter();
             if ctx.verbatim {
                 let v = output.split(split_by).map(String::from).collect();
