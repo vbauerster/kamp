@@ -1,10 +1,9 @@
-mod argv;
 mod cmd;
 mod context;
 mod error;
 mod kak;
 
-use argv::SubCommand;
+use super::argv::{Kampliment, SubCommand};
 use context::Context;
 use error::{Error, Result};
 use std::io::Write;
@@ -17,7 +16,7 @@ pub(crate) trait Dispatcher {
 }
 
 pub(super) fn run() -> Result<()> {
-    let kamp: argv::Kampliment = argh::from_env();
+    let kamp: Kampliment = argh::from_env();
     if kamp.version {
         println!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
         return Ok(());

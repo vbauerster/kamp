@@ -1,3 +1,4 @@
+mod argv;
 mod kamp;
 
 use anyhow::Result;
