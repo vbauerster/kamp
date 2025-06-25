@@ -57,7 +57,7 @@ pub(super) fn run() -> Result<()> {
         SubCommand::List(opt) if opt.all => {
             let sessions = kak::list_sessions()?;
             let sessions = String::from_utf8(sessions).map_err(anyhow::Error::new)?;
-            cmd::list_all(sessions.lines()).and_then(|v| {
+            cmd::list_all(sessions.lines(), kamp.debug).and_then(|v| {
                 v.into_iter()
                     .try_for_each(|session| writeln!(output, "{session:#?}"))
                     .map_err(From::from)
@@ -66,7 +66,7 @@ pub(super) fn run() -> Result<()> {
         SubCommand::Edit(opt) if session.is_none() => kak::proxy(opt.files).map_err(From::from),
         _ => session
             .ok_or_else(|| Error::InvalidContext("session is required"))
-            .map(|s| Context::new(Box::leak(s.into_boxed_str()), client))
+            .map(|s| Context::new(Box::leak(s.into_boxed_str()), client, kamp.debug))
             .and_then(|ctx| ctx.dispatch(command, output)),
     }
 }

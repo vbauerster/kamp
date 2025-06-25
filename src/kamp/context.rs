@@ -15,17 +15,18 @@ pub(crate) struct Context {
     client: Option<Rc<str>>,
     fifo_out: Arc<Path>,
     fifo_err: Arc<Path>,
+    debug: bool,
 }
 
 impl From<&str> for Context {
     fn from(s: &str) -> Self {
         let s = String::from(s);
-        Context::new(Box::leak(s.into_boxed_str()), None)
+        Context::new(Box::leak(s.into_boxed_str()), None, false)
     }
 }
 
 impl Context {
-    pub fn new(session: &'static str, client: Option<String>) -> Self {
+    pub fn new(session: &'static str, client: Option<String>, debug: bool) -> Self {
         let mut path = std::env::temp_dir();
         path.push(format!("kamp-{session}"));
 
@@ -34,6 +35,7 @@ impl Context {
             client: client.map(|s| s.into()),
             fifo_out: path.with_extension("out").into(),
             fifo_err: path.with_extension("err").into(),
+            debug,
         }
     }
 
@@ -107,7 +109,9 @@ impl Context {
         writeln!(buf, "}}")?;
 
         let cmd = String::from_utf8(buf.into_inner())?;
-        println!("{cmd}");
+        if self.debug {
+            eprintln!("{cmd}");
+        }
         let (tx, rx) = sync_channel(0);
         let err_h = self.read_fifo_err(tx.clone());
         let out_h = self.read_fifo_out(tx);
@@ -148,7 +152,9 @@ impl Context {
         }
 
         let cmd = String::from_utf8(buf.into_inner())?;
-        // println!("{cmd}");
+        if self.debug {
+            eprintln!("{cmd}");
+        }
         let (tx, rx) = sync_channel(1);
         let err_h = self.read_fifo_err(tx.clone());
         let out_h = self.read_fifo_out(tx);
@@ -206,13 +212,9 @@ impl Context {
         self.send(body, buffer_ctx).map(|output| {
             let split_by = ctx.output_delimiter();
             if ctx.verbatim {
-                let v = output.split(split_by).map(String::from).collect();
-                dbg!(&v);
-                v
+                output.split(split_by).map(String::from).collect()
             } else {
-                let v = output.split(split_by).map(unquote_kakoune_string).collect();
-                dbg!(&v);
-                v
+                output.split(split_by).map(unquote_kakoune_string).collect()
             }
         })
     }

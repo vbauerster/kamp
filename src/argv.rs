@@ -11,9 +11,13 @@ pub(super) struct Kampliment {
     #[argh(option, short = 'c')]
     pub client: Option<String>,
 
-    /// display version and exit
+    /// print version and exit
     #[argh(switch, short = 'v')]
     pub version: bool,
+
+    /// print command passed to kakoune
+    #[argh(switch, short = 'd')]
+    pub debug: bool,
 
     #[argh(subcommand)]
     pub subcommand: Option<SubCommand>,

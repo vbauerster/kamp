@@ -35,7 +35,10 @@ impl Client {
     }
 }
 
-pub(crate) fn list_all<'a>(sessions: impl Iterator<Item = &'a str>) -> Result<Vec<Session<'a>>> {
+pub(crate) fn list_all<'a>(
+    sessions: impl Iterator<Item = &'a str>,
+    debug: bool,
+) -> Result<Vec<Session<'a>>> {
     sessions.map(|s| list_current(Context::from(s))).collect()
 }
 
