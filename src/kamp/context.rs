@@ -103,23 +103,42 @@ impl Context {
             eprintln!("{cmd}");
             eprintln!("cmd.len: {}", cmd.len());
         }
-        let (tx, rx) = sync_channel(0);
+        let (tx, rx) = sync_channel(1);
         let err_h = self.read_fifo_err(tx.clone());
         let out_h = self.read_fifo_out(tx);
 
-        kak::pipe(self.session.as_ref(), cmd)
-            .map_err(From::from)
-            .and_then(|status| self.check_status(status))?;
+        let err_path = self.fifo_err.clone();
+        let handle = thread::spawn(move || {
+            match rx.recv().map_err(anyhow::Error::new)? {
+                Err(kak_err) => err_h
+                    .join()
+                    .unwrap()
+                    .map_err(From::from)
+                    .and_then(|_| Err(kak_err)),
+                Ok(s) => {
+                    // need to write to err pipe in order to complete its read thread
+                    // send on read_fifo_err side is going to be non blocking because of channel's bound = 1
+                    out_h
+                        .join()
+                        .unwrap()
+                        .map_err(From::from)
+                        .and_then(|_| {
+                            std::fs::OpenOptions::new()
+                                .write(true)
+                                .open(err_path)
+                                .and_then(|mut f| f.write_all(b"\n"))
+                                .map_err(From::from)
+                        })
+                        .map(|_| s)
+                }
+            }
+        });
 
-        match rx.recv().map_err(anyhow::Error::new)? {
-            Err(e) => {
-                err_h.join().unwrap()?;
-                Err(e)
-            }
-            Ok(s) => {
-                out_h.join().unwrap()?;
-                Ok(s)
-            }
+        let status = kak::pipe(self.session.as_ref(), cmd)?;
+        match (self.check_status(status), handle.join().unwrap()) {
+            (Ok(_), Ok(s)) => Ok(s),
+            (Ok(_), Err(e)) => Err(e),
+            (Err(e), _) => Err(e),
         }
     }
 
