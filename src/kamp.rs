@@ -64,14 +64,14 @@ pub(super) fn run() -> Result<()> {
             })
         }
         SubCommand::Edit(opt) if session.is_none() => kak::proxy(opt.files).map_err(From::from),
-        _ => session
-            .ok_or_else(|| Error::InvalidContext("session is required"))
-            .map(|s| {
-                let mut ctx = Context::new(s.into_boxed_str(), kamp.debug);
-                ctx.set_client(client.map(|s| Rc::new(s.into_boxed_str())));
-                ctx
-            })
-            .and_then(|ctx| ctx.dispatch(command, output)),
+        _ => {
+            let Some(session) = session else {
+                return Err(Error::InvalidContext("session is required"));
+            };
+            let mut ctx = Context::new(session.into_boxed_str(), kamp.debug);
+            ctx.set_client(client.map(|s| Rc::new(s.into_boxed_str())));
+            ctx.dispatch(command, output)
+        }
     }
 }
 
