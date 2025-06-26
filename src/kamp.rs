@@ -39,7 +39,8 @@ pub(super) fn run() -> Result<()> {
         .subcommand
         .unwrap_or_else(|| SubCommand::Ctx(Default::default()));
 
-    let mut output = std::io::stdout();
+    let stdout = std::io::stdout();
+    let mut output = stdout.lock();
 
     match command {
         SubCommand::Init(opt) => {
