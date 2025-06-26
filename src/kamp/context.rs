@@ -106,7 +106,9 @@ impl Context {
 
         let cmd = String::from_utf8(buf.into_inner())?;
         if self.debug {
+            eprintln!("send: {self:#?}");
             eprintln!("{cmd}");
+            eprintln!("cmd.len: {}", cmd.len());
         }
         let (tx, rx) = sync_channel(0);
         let err_h = self.read_fifo_err(tx.clone());
@@ -149,7 +151,9 @@ impl Context {
 
         let cmd = String::from_utf8(buf.into_inner())?;
         if self.debug {
+            eprintln!("connect: {self:#?}");
             eprintln!("{cmd}");
+            eprintln!("cmd.len: {}", cmd.len());
         }
         let (tx, rx) = sync_channel(1);
         let err_h = self.read_fifo_err(tx.clone());
