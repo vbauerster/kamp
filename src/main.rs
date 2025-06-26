@@ -1,8 +1,6 @@
 mod argv;
 mod kamp;
 
-use anyhow::Result;
-
-fn main() -> Result<()> {
+fn main() -> anyhow::Result<()> {
     kamp::run().map_err(From::from)
 }
