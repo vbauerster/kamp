@@ -56,8 +56,8 @@ pub(super) fn run() -> Result<()> {
         }
         SubCommand::List(opt) if opt.all => {
             let sessions = kak::list_sessions()?;
-            let sessions = String::from_utf8(sessions).map_err(anyhow::Error::new)?;
-            cmd::list_all(sessions.lines(), kamp.debug).and_then(|v| {
+            let sessions = String::from_utf8(sessions)?;
+            cmd::list_all(sessions.lines().map(String::from), kamp.debug).and_then(|v| {
                 v.into_iter()
                     .try_for_each(|session| writeln!(output, "{session:#?}"))
                     .map_err(From::from)
@@ -67,7 +67,7 @@ pub(super) fn run() -> Result<()> {
         _ => session
             .ok_or_else(|| Error::InvalidContext("session is required"))
             .map(|s| {
-                let mut ctx = Context::new(Box::leak(s.into_boxed_str()), kamp.debug);
+                let mut ctx = Context::new(s.into_boxed_str(), kamp.debug);
                 ctx.set_client(client.map(|s| Rc::new(s.into_boxed_str())));
                 ctx
             })

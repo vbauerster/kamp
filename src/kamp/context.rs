@@ -13,27 +13,20 @@ const END_TOKEN: &str = "<<EEND>>";
 pub(crate) struct Context {
     fifo_out: Arc<Path>,
     fifo_err: Arc<Path>,
-    session: &'static str,
+    session: Rc<Box<str>>,
     client: Option<Rc<Box<str>>>,
     debug: bool,
 }
 
-impl From<&str> for Context {
-    fn from(s: &str) -> Self {
-        let s = String::from(s);
-        Context::new(Box::leak(s.into_boxed_str()), false)
-    }
-}
-
 impl Context {
-    pub fn new(session: &'static str, debug: bool) -> Self {
+    pub fn new(session: Box<str>, debug: bool) -> Self {
         let mut path = std::env::temp_dir();
         path.push(format!("kamp-{session}"));
 
         Context {
             fifo_out: path.with_extension("out").into(),
             fifo_err: path.with_extension("err").into(),
-            session,
+            session: session.into(),
             client: None,
             debug,
         }
@@ -47,8 +40,8 @@ impl Context {
         self.client.clone()
     }
 
-    pub fn session(&self) -> &'static str {
-        self.session
+    pub fn session(&self) -> Rc<Box<str>> {
+        self.session.clone()
     }
 
     pub fn is_draft(&self) -> bool {
@@ -70,7 +63,7 @@ impl Context {
             cmd.push_str(&status.to_string());
         }
 
-        kak::pipe(self.session, cmd)
+        kak::pipe(self.session.as_ref(), cmd)
             .map_err(From::from)
             .and_then(|status| self.check_status(status))
     }
@@ -114,7 +107,7 @@ impl Context {
         let err_h = self.read_fifo_err(tx.clone());
         let out_h = self.read_fifo_out(tx);
 
-        kak::pipe(self.session, cmd)
+        kak::pipe(self.session.as_ref(), cmd)
             .map_err(From::from)
             .and_then(|status| self.check_status(status))?;
 
@@ -179,7 +172,7 @@ impl Context {
             }
         });
 
-        let status = kak::connect(self.session, cmd)?;
+        let status = kak::connect(self.session.as_ref(), cmd)?;
         match (self.check_status(status), handle.join().unwrap()) {
             (Ok(_), Ok(_)) => Ok(()),
             (Ok(_), Err(e)) => Err(e),

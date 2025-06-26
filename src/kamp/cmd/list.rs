@@ -10,14 +10,14 @@ use super::Result;
 
 #[allow(unused)]
 #[derive(Debug)]
-pub struct Session<'a> {
-    name: &'a str,
+pub struct Session {
+    name: Rc<Box<str>>,
     pwd: String,
     clients: Vec<Client>,
 }
 
-impl<'a> Session<'a> {
-    fn new(name: &'a str, pwd: String, clients: Vec<Client>) -> Self {
+impl Session {
+    fn new(name: Rc<Box<str>>, pwd: String, clients: Vec<Client>) -> Self {
         Session { name, pwd, clients }
     }
 }
@@ -35,14 +35,16 @@ impl Client {
     }
 }
 
-pub(crate) fn list_all<'a>(
-    sessions: impl Iterator<Item = &'a str>,
+pub(crate) fn list_all(
+    sessions: impl Iterator<Item = String>,
     debug: bool,
-) -> Result<Vec<Session<'a>>> {
-    sessions.map(|s| list_current(Context::from(s))).collect()
+) -> Result<Vec<Session>> {
+    sessions
+        .map(|s| list_current(Context::new(s.into_boxed_str(), debug)))
+        .collect()
 }
 
-pub(crate) fn list_current(mut ctx: Context) -> Result<Session<'static>> {
+pub(crate) fn list_current(mut ctx: Context) -> Result<Session> {
     let qctx = QueryContext::new(
         QueryKeyVal::Val("client_list".into()),
         QueryType::List,
