@@ -11,43 +11,39 @@ const END_TOKEN: &str = "<<EEND>>";
 
 #[derive(Debug, Clone)]
 pub(crate) struct Context {
-    session: &'static str,
-    client: Option<Rc<str>>,
     fifo_out: Arc<Path>,
     fifo_err: Arc<Path>,
+    session: &'static str,
+    client: Option<Rc<Box<str>>>,
     debug: bool,
 }
 
 impl From<&str> for Context {
     fn from(s: &str) -> Self {
         let s = String::from(s);
-        Context::new(Box::leak(s.into_boxed_str()), None, false)
+        Context::new(Box::leak(s.into_boxed_str()), false)
     }
 }
 
 impl Context {
-    pub fn new(session: &'static str, client: Option<String>, debug: bool) -> Self {
+    pub fn new(session: &'static str, debug: bool) -> Self {
         let mut path = std::env::temp_dir();
         path.push(format!("kamp-{session}"));
 
         Context {
-            session,
-            client: client.map(|s| s.into()),
             fifo_out: path.with_extension("out").into(),
             fifo_err: path.with_extension("err").into(),
+            session,
+            client: None,
             debug,
         }
     }
 
-    pub fn set_client(&mut self, client: String) {
-        self.client = Some(Rc::from(client.into_boxed_str()));
+    pub fn set_client(&mut self, client: Option<Rc<Box<str>>>) {
+        self.client = client;
     }
 
-    pub fn unset_client(&mut self) {
-        self.client = None;
-    }
-
-    pub fn client(&self) -> Option<Rc<str>> {
+    pub fn client(&self) -> Option<Rc<Box<str>>> {
         self.client.clone()
     }
 

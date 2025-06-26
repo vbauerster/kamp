@@ -6,7 +6,7 @@ mod kak;
 use super::argv::{Kampliment, SubCommand};
 use context::Context;
 use error::{Error, Result};
-use std::io::Write;
+use std::{io::Write, rc::Rc};
 
 const KAKOUNE_SESSION: &str = "KAKOUNE_SESSION";
 const KAKOUNE_CLIENT: &str = "KAKOUNE_CLIENT";
@@ -66,7 +66,11 @@ pub(super) fn run() -> Result<()> {
         SubCommand::Edit(opt) if session.is_none() => kak::proxy(opt.files).map_err(From::from),
         _ => session
             .ok_or_else(|| Error::InvalidContext("session is required"))
-            .map(|s| Context::new(Box::leak(s.into_boxed_str()), client, kamp.debug))
+            .map(|s| {
+                let mut ctx = Context::new(Box::leak(s.into_boxed_str()), kamp.debug);
+                ctx.set_client(client.map(|s| Rc::new(s.into_boxed_str())));
+                ctx
+            })
             .and_then(|ctx| ctx.dispatch(command, output)),
     }
 }

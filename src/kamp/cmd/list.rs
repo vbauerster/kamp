@@ -25,12 +25,12 @@ impl<'a> Session<'a> {
 #[allow(unused)]
 #[derive(Debug)]
 pub struct Client {
-    name: Rc<str>,
+    name: Rc<Box<str>>,
     bufname: String,
 }
 
 impl Client {
-    fn new(name: Rc<str>, bufname: String) -> Client {
+    fn new(name: Rc<Box<str>>, bufname: String) -> Client {
         Client { name, bufname }
     }
 }
@@ -53,7 +53,7 @@ pub(crate) fn list_current(mut ctx: Context) -> Result<Session<'static>> {
         .query_kak(qctx, None)?
         .into_iter()
         .flat_map(|name| {
-            ctx.set_client(name);
+            ctx.set_client(Some(Rc::new(name.into_boxed_str())));
             ctx.query_kak(
                 QueryContext::new(
                     QueryKeyVal::Val("bufname".into()),
@@ -66,7 +66,7 @@ pub(crate) fn list_current(mut ctx: Context) -> Result<Session<'static>> {
             .map(|mut v| Client::new(ctx.client().unwrap(), v.pop().unwrap_or_default()))
         })
         .collect();
-    ctx.unset_client();
+    ctx.set_client(None);
     ctx.query_kak(QueryContext::new_sh(vec!["pwd".into()], true), None)
         .map(|mut pwd| Session::new(ctx.session(), pwd.pop().unwrap_or_default(), clients))
 }
