@@ -212,13 +212,23 @@ impl Context {
             ctx.quoting, ctx.key_val
         )?;
         let body = String::from_utf8(buf.into_inner())?;
-        self.send(body, buffer_ctx).map(|output| {
-            let split_by = ctx.output_delimiter();
-            if ctx.verbatim {
-                output.split(split_by).map(String::from).collect()
-            } else {
-                output.split(split_by).map(unquote_kakoune_string).collect()
+        self.send(body, buffer_ctx).map(|raw_output| {
+            if self.debug {
+                dbg!(&raw_output);
             }
+            let split_by = ctx.output_delimiter();
+            let parsed_output = if ctx.verbatim {
+                raw_output.split(split_by).map(String::from).collect()
+            } else {
+                raw_output
+                    .split(split_by)
+                    .map(unquote_kakoune_string)
+                    .collect()
+            };
+            if self.debug {
+                dbg!(&parsed_output);
+            }
+            parsed_output
         })
     }
 
