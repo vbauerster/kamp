@@ -95,7 +95,7 @@ impl Context {
         writeln!(buf, "🐪 catch %{{")?;
         writeln!(buf, "echo -debug kamp: %val<error>")?;
         writeln!(buf, "echo -to-file %opt<kamp_err> %val<error>")?;
-        writeln!(buf, "}}")?;
+        write!(buf, "}}")?;
 
         let cmd = String::from_utf8(buf.into_inner())?;
         if self.debug {
@@ -156,7 +156,7 @@ impl Context {
             writeln!(buf, "echo -debug kamp: %val<error>")?;
             writeln!(buf, "echo -to-file %opt<kamp_err> %val<error>")?;
             writeln!(buf, "quit")?;
-            writeln!(buf, "}}")?;
+            write!(buf, "}}")?;
         }
 
         let cmd = String::from_utf8(buf.into_inner())?;
