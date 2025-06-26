@@ -138,9 +138,7 @@ impl Context {
             write!(buf, "echo -to-file %opt<kamp_out> {END_TOKEN}")?;
         } else {
             writeln!(buf, "try %🐪")?;
-            writeln!(buf, "eval %🐫")?;
             writeln!(buf, "{body}")?;
-            writeln!(buf, "🐫")?;
             writeln!(buf, "echo -to-file %opt<kamp_out> {END_TOKEN}")?;
             writeln!(buf, "🐪 catch %{{")?;
             writeln!(buf, "echo -debug kamp: %val<error>")?;
