@@ -192,7 +192,7 @@ pub(super) mod get {
 
     mod value {
         use super::*;
-        /// get value as %val(name)
+        /// get value as %val<name>
         #[derive(FromArgs, PartialEq, Debug)]
         #[argh(subcommand, name = "val")]
         pub struct Options {
@@ -216,7 +216,7 @@ pub(super) mod get {
 
     mod option {
         use super::*;
-        /// get option as %opt(name)
+        /// get option as %opt<name>
         #[derive(FromArgs, PartialEq, Debug)]
         #[argh(subcommand, name = "opt")]
         pub struct Options {
@@ -240,7 +240,7 @@ pub(super) mod get {
 
     mod register {
         use super::*;
-        /// get register as %reg(name)
+        /// get register as %reg<name>
         #[derive(FromArgs, PartialEq, Debug)]
         #[argh(subcommand, name = "reg")]
         pub struct Options {
@@ -264,7 +264,7 @@ pub(super) mod get {
 
     mod shell {
         use super::*;
-        /// evaluate shell command as %sh(command)
+        /// evaluate shell command as %sh<command>
         #[derive(FromArgs, PartialEq, Eq, Debug)]
         #[argh(subcommand, name = "sh")]
         pub struct Options {
