@@ -228,10 +228,6 @@ pub(super) mod get {
             #[argh(switch, short = 'l')]
             pub list: bool,
 
-            /// split by null character instead of new line
-            #[argh(switch, short = 'z')]
-            pub zplit: bool,
-
             /// don't unquote output
             #[argh(switch, short = 'v')]
             pub verbatim: bool,
@@ -255,10 +251,6 @@ pub(super) mod get {
             /// split list type register like colon or slash
             #[argh(switch, short = 'l')]
             pub list: bool,
-
-            /// split by null character instead of new line
-            #[argh(switch, short = 'z')]
-            pub zplit: bool,
 
             /// don't parse output
             #[argh(switch, short = 'v')]
