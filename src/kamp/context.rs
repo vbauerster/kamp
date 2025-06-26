@@ -116,13 +116,14 @@ impl Context {
                     .map_err(From::from)
                     .and_then(|_| Err(kak_err)),
                 Ok(s) => {
-                    // need to write to err pipe in order to complete its read thread
-                    // send on read_fifo_err side is going to be non blocking because of channel's bound = 1
                     out_h
                         .join()
                         .unwrap()
                         .map_err(From::from)
                         .and_then(|_| {
+                            // need to write to err pipe in order to complete its read thread
+                            // send to tx on read_fifo_err side is going to be non blocking
+                            // because of buffered sync_channel (bound = 1)
                             std::fs::OpenOptions::new()
                                 .write(true)
                                 .open(err_path)
@@ -178,9 +179,10 @@ impl Context {
                     .map_err(From::from)
                     .and_then(|_| Err(kak_err)),
                 Ok(_) => {
-                    // need to write to err pipe in order to complete its read thread
-                    // send on read_fifo_err side is going to be non blocking because of channel's bound = 1
                     out_h.join().unwrap().map_err(From::from).and_then(|_| {
+                        // need to write to err pipe in order to complete its read thread
+                        // send to tx on read_fifo_err side is going to be non blocking
+                        // because of buffered sync_channel (bound = 1)
                         std::fs::OpenOptions::new()
                             .write(true)
                             .open(err_path)
