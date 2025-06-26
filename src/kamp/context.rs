@@ -155,40 +155,33 @@ impl Context {
         let err_h = self.read_fifo_err(tx.clone());
         let out_h = self.read_fifo_out(tx);
 
-        let kak_h = thread::spawn(move || kak::connect(self.session, cmd));
-
-        let res = match rx.recv().map_err(anyhow::Error::new) {
-            Err(e) => {
-                return kak_h
+        let err_path = self.fifo_err.clone();
+        let handle = thread::spawn(move || {
+            match rx.recv().map_err(anyhow::Error::new)? {
+                Err(kak_err) => err_h
                     .join()
                     .unwrap()
                     .map_err(From::from)
-                    .and_then(|status| self.check_status(status))
-                    .and(Err(e.into())); // fallback to recv error
+                    .and_then(|_| Err(kak_err)),
+                Ok(_) => {
+                    // need to write to err pipe in order to complete its read thread
+                    // send on read_fifo_err side is going to be non blocking because of channel's bound = 1
+                    out_h.join().unwrap().map_err(From::from).and_then(|_| {
+                        std::fs::OpenOptions::new()
+                            .write(true)
+                            .open(err_path)
+                            .and_then(|mut f| f.write_all(b"\n"))
+                            .map_err(From::from)
+                    })
+                }
             }
-            Ok(res) => res,
-        };
+        });
 
-        match res {
-            Err(e) => {
-                err_h.join().unwrap()?;
-                kak_h.join().unwrap()?;
-                Err(e)
-            }
-            Ok(_) => {
-                // need to write to err pipe in order to complete its read thread
-                // send on read_fifo_err side is going to be non blocking because of channel's bound = 1
-                std::fs::OpenOptions::new()
-                    .write(true)
-                    .open(&self.fifo_err)
-                    .and_then(|mut f| f.write_all(b""))?;
-                out_h.join().unwrap()?;
-                kak_h
-                    .join()
-                    .unwrap()
-                    .map_err(From::from)
-                    .and_then(|status| self.check_status(status))
-            }
+        let status = kak::connect(self.session, cmd)?;
+        match (self.check_status(status), handle.join().unwrap()) {
+            (Ok(_), Ok(_)) => Ok(()),
+            (Ok(_), Err(e)) => Err(e),
+            (Err(e), _) => Err(e),
         }
     }
 
