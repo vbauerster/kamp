@@ -13,9 +13,11 @@ usage() {
     exit 2
 }
 
-while getopts 's:h' OPTION; do
+sflag=
+while getopts hs: OPTION; do
     case "$OPTION" in
     s)
+        sflag=1
         session="$OPTARG"
         ;;
     h|?)
@@ -25,7 +27,9 @@ while getopts 's:h' OPTION; do
 done
 shift $((OPTIND - 1))
 
-: ${session:=$KAKOUNE_SESSION}
+if [ ! "$sflag" ]; then
+    session="$KAKOUNE_SESSION"
+fi
 
 if kamp ctx -c >/dev/null 2>/dev/null; then
     exec_cmd="kamp -s $session send buffer {}"
@@ -33,12 +37,12 @@ else
     exec_cmd="kamp -s $session attach -b {}"
 fi
 
-buffers_cmd="kamp -s $session get -b \* val -s bufname"
+buffers_cmd="kamp -s $session get -b \* val bufname"
 preview_cmd="kamp -s $session cat -b {} | bat --color=always --line-range=:500 --file-name {}"
 delete_cmd="kamp -s $session send -b {} delete-buffer"
 
 eval "$buffers_cmd" |
     fzf --prompt 'buf> ' --preview "$preview_cmd" \
-        --header '[c-x] delete' \
+        --header '<c-x> delete' \
         --bind "ctrl-x:execute-silent($delete_cmd)+reload($buffers_cmd)" \
-        --bind "enter:become($exec_cmd)"
+        --bind "enter:become:$exec_cmd"
