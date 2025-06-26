@@ -208,10 +208,7 @@ impl Context {
             return Ok(());
         }
         Err(match status.code() {
-            Some(code) => Error::InvalidSession {
-                session: self.session,
-                exit_code: code,
-            },
+            Some(code) => Error::KakUnexpectedExit(code),
             None => anyhow::Error::msg("kak terminated by signal").into(),
         })
     }

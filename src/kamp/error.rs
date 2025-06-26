@@ -3,23 +3,20 @@ pub enum Error {
     #[error("invalid context: {0}")]
     InvalidContext(&'static str),
 
-    #[error("invalid session {session:?} kak exited with code: {exit_code}")]
-    InvalidSession {
-        session: &'static str,
-        exit_code: i32,
-    },
+    #[error("command is required")]
+    CommandRequired,
+
+    #[error("kak exited with code: {0}")]
+    KakUnexpectedExit(i32),
+
+    #[error("kak eval error: {0}")]
+    KakEvalCatch(String),
 
     #[error("invalid coordinates: {coord:?}")]
     InvalidCoordinates {
         coord: String,
         source: anyhow::Error,
     },
-
-    #[error("command is required")]
-    CommandRequired,
-
-    #[error("kak eval error: {0}")]
-    KakEvalCatch(String),
 
     #[error(transparent)]
     IO(#[from] std::io::Error),
