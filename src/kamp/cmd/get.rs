@@ -35,7 +35,7 @@ impl QueryContext {
 }
 
 #[derive(Debug, Clone)]
-pub enum QueryKeyVal {
+pub(crate) enum QueryKeyVal {
     Val(String),
     Opt(String),
     Reg(String),
@@ -104,7 +104,7 @@ impl Display for QueryKeyVal {
 }
 
 #[derive(Debug, Clone)]
-pub enum QueryType {
+pub(crate) enum QueryType {
     List,
     Plain,
 }
@@ -120,7 +120,7 @@ impl QueryType {
 }
 
 #[derive(Debug, Clone)]
-pub enum Quoting {
+pub(crate) enum Quoting {
     Raw,
     Kakoune,
     Shell,
