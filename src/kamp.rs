@@ -42,43 +42,55 @@ pub(super) fn run() -> Result<()> {
     let mut output = std::io::stdout();
 
     match command {
-        SubCommand::Init(opt) => cmd::init(opt.export, opt.alias)
-            .and_then(|res| write!(output, "{res}").map_err(From::from)),
+        SubCommand::Init(opt) => {
+            let init = cmd::init(opt.export, opt.alias)?;
+            write!(output, "{init}")?;
+        }
         SubCommand::Ctx(opt) => {
             let Some(session) = session else {
                 return Err(Error::InvalidContext("session is required"));
             };
             match (opt.client, client) {
-                (true, None) => Err(Error::InvalidContext("client is required")),
-                (true, Some(client)) => writeln!(output, "client: {client}").map_err(From::from),
-                (false, _) => writeln!(output, "session: {session}").map_err(From::from),
+                (true, None) => {
+                    return Err(Error::InvalidContext("client is required"));
+                }
+                (true, Some(client)) => {
+                    writeln!(output, "client: {client}")?;
+                }
+                (false, _) => {
+                    writeln!(output, "session: {session}")?;
+                }
             }
         }
         SubCommand::List(opt) if opt.all => {
             let sessions = kak::list_sessions()?;
             let sessions = String::from_utf8(sessions)?;
-            cmd::list_all(sessions.lines().map(String::from), kamp.debug).and_then(|v| {
-                v.into_iter()
-                    .try_for_each(|session| writeln!(output, "{session:#?}"))
-                    .map_err(From::from)
-            })
+            let sessions = cmd::list_all(sessions.lines().map(String::from), kamp.debug)?;
+            for session in sessions {
+                writeln!(output, "{session:#?}")?;
+            }
         }
-        SubCommand::Edit(opt) if session.is_none() => kak::proxy(opt.files).map_err(From::from),
+        SubCommand::Edit(opt) if session.is_none() => {
+            kak::proxy(opt.files)?;
+        }
         _ => {
             let Some(session) = session else {
                 return Err(Error::InvalidContext("session is required"));
             };
             let mut ctx = Context::new(session.into_boxed_str(), kamp.debug);
             ctx.set_client(client.map(|s| Rc::new(s.into_boxed_str())));
-            ctx.dispatch(command, output)
+            ctx.dispatch(command, output)?;
         }
-    }
+    };
+    Ok(())
 }
 
 impl Dispatcher for SubCommand {
     fn dispatch<W: Write>(self, ctx: Context, mut writer: W) -> Result<()> {
         match self {
-            SubCommand::Attach(opt) => cmd::attach(ctx, opt.buffer),
+            SubCommand::Attach(opt) => {
+                cmd::attach(ctx, opt.buffer)?;
+            }
             SubCommand::Edit(opt) => {
                 let session = ctx.session();
                 let client = ctx.client();
@@ -90,7 +102,6 @@ impl Dispatcher for SubCommand {
                         if scratch { "scratch" } else { "file" }
                     )?;
                 }
-                Ok(())
             }
             SubCommand::Send(opt) => {
                 if opt.command.is_empty() {
@@ -118,25 +129,29 @@ impl Dispatcher for SubCommand {
                         buf
                     })
                 };
-                ctx.send(body, to_buffer_ctx(opt.buffers)).map(drop)
+                ctx.send(body, to_buffer_ctx(opt.buffers)).map(drop)?;
             }
-            SubCommand::List(_) => cmd::list_current(ctx)
-                .and_then(|session| writeln!(writer, "{session:#?}").map_err(From::from)),
-            SubCommand::Kill(opt) => ctx.send_kill(opt.exit_status),
+            SubCommand::List(_) => {
+                let session = cmd::list_current(ctx)?;
+                writeln!(writer, "{session:#?}")?;
+            }
+            SubCommand::Kill(opt) => {
+                ctx.send_kill(opt.exit_status)?;
+            }
             SubCommand::Get(opt) => {
                 let split_by = if opt.zplit { '\0' } else { '\n' };
-                ctx.query_kak(opt.subcommand, to_buffer_ctx(opt.buffers))
-                    .and_then(|items| {
-                        items
-                            .into_iter()
-                            .try_for_each(|item| write!(writer, "{item}{split_by}"))
-                            .map_err(From::from)
-                    })
+                let items = ctx.query_kak(opt.subcommand, to_buffer_ctx(opt.buffers))?;
+                for item in items {
+                    write!(writer, "{item}{split_by}")?;
+                }
             }
-            SubCommand::Cat(opt) => cmd::cat(ctx, to_buffer_ctx(opt.buffers))
-                .and_then(|res| write!(writer, "{res}").map_err(From::from)),
+            SubCommand::Cat(opt) => {
+                let res = cmd::cat(ctx, to_buffer_ctx(opt.buffers))?;
+                write!(writer, "{res}")?;
+            }
             _ => unreachable!(),
-        }
+        };
+        Ok(())
     }
 }
 
