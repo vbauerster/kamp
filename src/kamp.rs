@@ -51,15 +51,16 @@ pub(super) fn run() -> Result<()> {
             let Some(session) = session else {
                 return Err(Error::InvalidContext("session is required"));
             };
-            match (opt.client, client) {
-                (true, None) => {
+            match client {
+                None if opt.client => {
                     return Err(Error::InvalidContext("client is required"));
                 }
-                (true, Some(client)) => {
-                    writeln!(output, "client: {client}")?;
-                }
-                (false, _) => {
+                None => {
                     writeln!(output, "session: {session}")?;
+                }
+                Some(client) => {
+                    writeln!(output, "session: {session}")?;
+                    writeln!(output, "client: {client}")?;
                 }
             }
         }

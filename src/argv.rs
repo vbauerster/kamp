@@ -297,7 +297,7 @@ mod ctx {
     #[derive(FromArgs, PartialEq, Debug, Default)]
     #[argh(subcommand, name = "ctx")]
     pub struct Options {
-        /// print client if any otherwise throw an error
+        /// check client if none exit with error
         #[argh(switch, short = 'c')]
         pub client: bool,
     }
