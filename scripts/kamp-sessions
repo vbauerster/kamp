@@ -14,6 +14,6 @@ kill_cmd='kamp -s {} kill'
 
 eval "$sessions_cmd" |
     fzf --prompt 'session> ' --preview "$preview_cmd" \
-        --header '[c-x] kill' \
+        --header '<c-x> kill' \
         --bind "ctrl-x:execute-silent($kill_cmd)+reload($sessions_cmd)" \
-        --bind 'enter:become(kamp-buffers -s {})'
+        --bind 'enter:become:kamp-buffers -s {}'
