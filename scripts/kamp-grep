@@ -28,10 +28,10 @@ while getopts hq: OPTION; do
     q)
         qflag=1
         query="$OPTARG"
-    ;;
+        ;;
     h|?)
         usage
-    ;;
+        ;;
     esac
 done
 shift $((OPTIND - 1))
@@ -40,10 +40,10 @@ ctrlx_bind=
 case "$*" in
     *-F*)
         ctrlx_bind="ctrl-x:become:$0 -q {q} -- ${*%-F*}"
-    ;;
+        ;;
     *)
         ctrlx_bind="ctrl-x:become:$0 -q {q} -- $* -F"
-    ;;
+        ;;
 esac
 
 rg_cmd="rg --column --color=always $*"
