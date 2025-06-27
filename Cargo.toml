@@ -7,7 +7,7 @@ repository = "https://github.com/vbauerster/kamp"
 keywords = ["kakoune"]
 categories = ["command-line-utilities"]
 license = "Unlicense"
-edition = "2021"
+edition = "2024"
 
 [[bin]]
 path = "src/main.rs"
