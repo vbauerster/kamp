@@ -5,6 +5,11 @@
 # requires:
 # - fzf (https://github.com/junegunn/fzf)
 
+set -euf
+
+# fail early if there is no session or client
+kamp ctx -c >/dev/null
+
 kamp cat |
     nl -ba -s' │ ' |
     fzf --no-preview --prompt 'lines> ' |
