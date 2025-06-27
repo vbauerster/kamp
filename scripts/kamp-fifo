@@ -12,7 +12,7 @@ usage() {
 }
 
 cflag=
-while getopts 'c:h' OPTION; do
+while getopts hc: OPTION; do
     case "$OPTION" in
     c)
         cflag=1
