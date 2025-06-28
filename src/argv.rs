@@ -85,10 +85,15 @@ mod attach {
 
 mod edit {
     use super::*;
-    /// edit a file
+    /// Edit a file in context client or create new one if
+    /// client isn't specified or -n switch is provided.
     #[derive(FromArgs, PartialEq, Debug)]
     #[argh(subcommand, name = "edit")]
     pub struct Options {
+        /// create new client and wait for it to exit
+        #[argh(switch, short = 'n')]
+        pub new: bool,
+
         /// focus client in context
         #[argh(switch, short = 'f')]
         pub focus: bool,

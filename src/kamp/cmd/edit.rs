@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use super::{Context, Error, Result};
 
-pub(crate) fn edit(ctx: Context, focus: bool, files: Vec<String>) -> Result<bool> {
+pub(crate) fn edit(ctx: Context, new: bool, focus: bool, files: Vec<String>) -> Result<bool> {
     if focus && ctx.is_draft() {
         return Err(anyhow::Error::msg("focus needs some client in context").into());
     }
@@ -56,14 +56,13 @@ pub(crate) fn edit(ctx: Context, focus: bool, files: Vec<String>) -> Result<bool
         false
     };
 
-    if !ctx.is_draft() {
+    if new || ctx.is_draft() {
+        ctx.connect(buf).map(|_| is_scratch)
+    } else {
         if focus {
             buf.push_str("\nfocus");
         }
         ctx.send(buf, None).map(|_| is_scratch)
-    } else {
-        // this one acts like attach
-        ctx.connect(buf).map(|_| is_scratch)
     }
 }
 

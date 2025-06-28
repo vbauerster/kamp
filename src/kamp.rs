@@ -96,7 +96,7 @@ impl Dispatcher for SubCommand {
             SubCommand::Edit(opt) => {
                 let session = ctx.session();
                 let client = ctx.client();
-                let scratch = cmd::edit(ctx, opt.focus, opt.files)?;
+                let scratch = cmd::edit(ctx, opt.new, opt.focus, opt.files)?;
                 if let (Some(client), false) = (client, opt.focus) {
                     writeln!(
                         writer,
