@@ -135,7 +135,7 @@ impl Context {
             }
         });
 
-        let status = kak::pipe(self.session.as_ref(), cmd)?;
+        let status = kak::pipe(self.session.as_ref(), cmd.as_bytes())?;
         match (self.check_status(status), handle.join().unwrap()) {
             (Ok(_), Ok(s)) => Ok(s),
             (Ok(_), Err(e)) => Err(e),
