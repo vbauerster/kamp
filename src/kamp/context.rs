@@ -99,7 +99,7 @@ impl Context {
 
         let cmd = String::from_utf8(buf.into_inner())?;
         if self.debug {
-            dbg!(&self);
+            dbg!(self);
             eprintln!("{cmd}");
             eprintln!("cmd.len: {}", cmd.len());
         }
@@ -162,7 +162,7 @@ impl Context {
 
         let cmd = String::from_utf8(buf.into_inner())?;
         if self.debug {
-            dbg!(&self);
+            dbg!(self);
             eprintln!("{cmd}");
             eprintln!("cmd.len: {}", cmd.len());
         }
