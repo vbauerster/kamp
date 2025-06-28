@@ -12,6 +12,9 @@ pub enum Error {
     #[error("kak eval error: {0}")]
     KakEvalCatch(String),
 
+    #[error("unexpected coordinates position: {0}")]
+    UnexpectedCoordPosition(String),
+
     #[error("invalid coordinates: {coord:?}")]
     InvalidCoordinates {
         coord: String,

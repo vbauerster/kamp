@@ -13,14 +13,10 @@ pub(crate) fn edit(ctx: Context, new: bool, focus: bool, files: Vec<String>) -> 
             pair[1 - i] = Some(item);
             continue;
         }
-        if coord.is_none() {
-            coord = Some(parse(item)?);
-        } else {
-            return Err(Error::InvalidCoordinates {
-                coord: item.clone(),
-                source: anyhow::Error::msg("invalid position"),
-            });
+        if coord.is_some() {
+            return Err(Error::UnexpectedCoordPosition(item.clone()));
         }
+        coord = Some(parse(item)?);
     }
 
     for (i, item) in iter.rev().chain(pair.into_iter().flatten()).enumerate() {
