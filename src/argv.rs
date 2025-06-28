@@ -39,7 +39,7 @@ pub(super) enum SubCommand {
 
 pub(super) mod init {
     use super::*;
-    /// kakoune init
+    /// Print init script for kakrc.
     #[derive(FromArgs, PartialEq, Debug)]
     #[argh(subcommand, name = "init")]
     pub struct Options {
@@ -73,7 +73,7 @@ pub(super) mod init {
 
 mod attach {
     use super::*;
-    /// attach to a session in context
+    /// Attach to a session in context by creating new client.
     #[derive(FromArgs, PartialEq, Debug)]
     #[argh(subcommand, name = "attach")]
     pub struct Options {
@@ -106,7 +106,7 @@ mod edit {
 
 mod send {
     use super::*;
-    /// send command to a session in context
+    /// Send command to a session in context.
     #[derive(FromArgs, PartialEq, Debug)]
     #[argh(subcommand, name = "send")]
     pub struct Options {
@@ -126,7 +126,7 @@ mod send {
 
 mod kill {
     use super::*;
-    /// kill session
+    /// Kill a session in context.
     #[derive(FromArgs, PartialEq, Debug)]
     #[argh(subcommand, name = "kill")]
     pub struct Options {
@@ -138,7 +138,7 @@ mod kill {
 
 mod list {
     use super::*;
-    /// list session(s)
+    /// List a session in context.
     #[derive(FromArgs, PartialEq, Debug)]
     #[argh(subcommand, name = "list")]
     pub struct Options {
@@ -150,7 +150,7 @@ mod list {
 
 pub(super) mod get {
     use super::*;
-    /// get state from a session in context
+    /// Get state from a session in context.
     #[derive(FromArgs, PartialEq, Debug)]
     #[argh(subcommand, name = "get")]
     pub struct Options {
@@ -197,7 +197,7 @@ pub(super) mod get {
 
     mod value {
         use super::*;
-        /// get value as %val<name>
+        /// Get value as %val<name>.
         #[derive(FromArgs, PartialEq, Debug)]
         #[argh(subcommand, name = "val")]
         pub struct Options {
@@ -221,7 +221,7 @@ pub(super) mod get {
 
     mod option {
         use super::*;
-        /// get option as %opt<name>
+        /// Get option as %opt<name>.
         #[derive(FromArgs, PartialEq, Debug)]
         #[argh(subcommand, name = "opt")]
         pub struct Options {
@@ -269,7 +269,7 @@ pub(super) mod get {
 
     mod shell {
         use super::*;
-        /// evaluate shell command as %sh<command>
+        /// Evaluate shell command as %sh<command>.
         #[derive(FromArgs, PartialEq, Eq, Debug)]
         #[argh(subcommand, name = "sh")]
         pub struct Options {
@@ -286,7 +286,7 @@ pub(super) mod get {
 
 mod cat {
     use super::*;
-    /// print buffer content
+    /// Print buffer content.
     #[derive(FromArgs, PartialEq, Debug)]
     #[argh(subcommand, name = "cat")]
     pub struct Options {
@@ -298,7 +298,7 @@ mod cat {
 
 mod ctx {
     use super::*;
-    /// print session context (default)
+    /// Print session context (default).
     #[derive(FromArgs, PartialEq, Debug, Default)]
     #[argh(subcommand, name = "ctx")]
     pub struct Options {
