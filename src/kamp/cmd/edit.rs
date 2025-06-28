@@ -4,9 +4,6 @@ use std::path::PathBuf;
 use super::{Context, Error, Result};
 
 pub(crate) fn edit(ctx: Context, new: bool, focus: bool, files: Vec<String>) -> Result<bool> {
-    if focus && ctx.is_draft() {
-        return Err(anyhow::Error::msg("focus needs some client in context").into());
-    }
     let mut buf = String::new();
     let mut pair = [None; 2];
     let mut coord = None;
