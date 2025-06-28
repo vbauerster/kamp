@@ -1,5 +1,4 @@
 use std::path::Path;
-use std::path::PathBuf;
 
 use super::{Context, Error, Result};
 
@@ -24,19 +23,23 @@ pub(crate) fn edit(ctx: Context, new: bool, focus: bool, files: Vec<String>) -> 
         }
     }
 
-    for (i, file) in iter.rev().chain(pair.into_iter().flatten()).enumerate() {
-        let p = std::fs::canonicalize(file).unwrap_or_else(|_| PathBuf::from(file));
-        if let Some(p) = p.as_path().to_str() {
+    for (i, item) in iter.rev().chain(pair.into_iter().flatten()).enumerate() {
+        let path = Path::new(item);
+        let pbuf = if path.is_relative() {
+            path.canonicalize()?
+        } else {
+            path.to_path_buf()
+        };
+        if let Some(p) = pbuf.as_path().to_str() {
             if i != 0 {
                 buf.push('\n');
             }
-            buf.push_str("edit -existing '");
-            if p.contains('\'') {
-                buf.push_str(&p.replace('\'', "''"));
+            buf.push_str("edit -existing ");
+            if p.contains(' ') {
+                buf.push_str(&p.replace(' ', "\\ "));
             } else {
                 buf.push_str(p);
             }
-            buf.push('\'');
         }
     }
 
