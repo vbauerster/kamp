@@ -28,16 +28,17 @@ pub(crate) fn edit(ctx: Context, new: bool, focus: bool, files: Vec<String>) -> 
                 Cow::Borrowed(path)
             }
         };
-        if let Some(p) = path.to_str() {
-            if i != 0 {
-                buf.push('\n');
-            }
-            buf.push_str("edit -existing ");
-            if p.contains(' ') {
-                buf.push_str(&p.replace(' ', "\\ "));
-            } else {
-                buf.push_str(p);
-            }
+        let path = path
+            .to_str()
+            .expect("expected valid path to str conversion");
+        if i != 0 {
+            buf.push('\n');
+        }
+        buf.push_str("edit -existing ");
+        if path.contains(' ') {
+            buf.push_str(&path.replace(' ', "\\ "));
+        } else {
+            buf.push_str(path);
         }
     }
 
