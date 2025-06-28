@@ -33,12 +33,12 @@ where
     child.wait()
 }
 
-pub(crate) fn connect<S: AsRef<str>>(session: S, cmd: String) -> Result<ExitStatus> {
+pub(crate) fn connect<S: AsRef<str>>(session: S, cmd: S) -> Result<ExitStatus> {
     Command::new("kak")
         .arg("-c")
         .arg(session.as_ref())
         .arg("-e")
-        .arg(&cmd)
+        .arg(cmd.as_ref())
         .status()
 }
 

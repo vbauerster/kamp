@@ -193,7 +193,7 @@ impl Context {
             }
         });
 
-        let status = kak::connect(self.session.as_ref(), cmd)?;
+        let status = kak::connect(self.session.as_ref(), &cmd.into_boxed_str())?;
         match (self.check_status(status), handle.join().unwrap()) {
             (Ok(_), Ok(_)) => Ok(()),
             (Ok(_), Err(e)) => Err(e),
