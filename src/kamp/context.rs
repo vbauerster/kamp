@@ -143,7 +143,7 @@ impl Context {
         }
     }
 
-    pub fn connect(self, body: impl AsRef<str>) -> Result<()> {
+    pub fn connect(&self, body: impl AsRef<str>) -> Result<()> {
         let body = body.as_ref();
         let mut buf = Cursor::new(Vec::with_capacity(512));
 
