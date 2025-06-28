@@ -43,17 +43,18 @@ pub(crate) fn edit(ctx: Context, focus: bool, files: Vec<String>) -> Result<bool
         }
     }
 
-    if let Some(v) = coord {
-        for item in v {
-            buf.push(' ');
-            buf.push_str(&item.to_string());
-        }
-    }
-
-    let is_scratch = buf.is_empty();
-    if is_scratch {
+    let is_scratch = if buf.is_empty() {
         buf.push_str("edit -scratch");
-    }
+        true
+    } else {
+        if let Some(coord) = coord {
+            for n in coord {
+                buf.push(' ');
+                buf.push_str(&n.to_string());
+            }
+        }
+        false
+    };
 
     if !ctx.is_draft() {
         if focus {
