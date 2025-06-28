@@ -9,7 +9,7 @@ pub(crate) fn edit(ctx: Context, new: bool, focus: bool, files: Vec<String>) -> 
     let mut iter = files.iter();
 
     for (i, item) in iter.by_ref().take(2).enumerate() {
-        if Path::new(item).exists() || !item.starts_with('+') {
+        if Path::new(item).is_file() || !item.starts_with('+') {
             pair[1 - i] = Some(item);
             continue;
         }
