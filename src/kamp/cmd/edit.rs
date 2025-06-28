@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{borrow::Cow, path::Path};
 
 use super::{Context, Error, Result};
 
@@ -20,13 +20,15 @@ pub(crate) fn edit(ctx: Context, new: bool, focus: bool, files: Vec<String>) -> 
     }
 
     for (i, item) in iter.rev().chain(pair.into_iter().flatten()).enumerate() {
-        let path = Path::new(item);
-        let pbuf = if path.is_relative() {
-            path.canonicalize()?
-        } else {
-            path.to_path_buf()
+        let path = {
+            let path = Path::new(item);
+            if path.is_relative() {
+                Cow::Owned(path.canonicalize()?)
+            } else {
+                Cow::Borrowed(path)
+            }
         };
-        if let Some(p) = pbuf.as_path().to_str() {
+        if let Some(p) = path.to_str() {
             if i != 0 {
                 buf.push('\n');
             }
