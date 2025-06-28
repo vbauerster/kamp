@@ -43,7 +43,7 @@ pub(crate) fn edit(ctx: Context, new: bool, focus: bool, files: Vec<String>) -> 
         }
     }
 
-    let is_scratch = if buf.is_empty() {
+    let scratch = if buf.is_empty() {
         buf.push_str("edit -scratch");
         true
     } else {
@@ -57,12 +57,12 @@ pub(crate) fn edit(ctx: Context, new: bool, focus: bool, files: Vec<String>) -> 
     };
 
     if new || ctx.is_draft() {
-        ctx.connect(buf).map(|_| is_scratch)
+        ctx.connect(buf).map(|_| scratch)
     } else {
         if focus {
             buf.push_str("\nfocus");
         }
-        ctx.send(buf, None).map(|_| is_scratch)
+        ctx.send(buf, None).map(|_| scratch)
     }
 }
 
