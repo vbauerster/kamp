@@ -11,8 +11,8 @@ const END_TOKEN: &str = "<<EEND>>";
 
 #[derive(Debug, Clone)]
 pub(crate) struct Context {
-    fifo_out: Arc<Path>,
-    fifo_err: Arc<Path>,
+    fifo_out: Arc<Box<Path>>,
+    fifo_err: Arc<Box<Path>>,
     session: Rc<Box<str>>,
     client: Option<Rc<Box<str>>>,
     debug: bool,
@@ -20,12 +20,15 @@ pub(crate) struct Context {
 
 impl Context {
     pub fn new(session: Box<str>, debug: bool) -> Self {
-        let mut path = std::env::temp_dir();
-        path.push(format!("kamp-{session}"));
+        let mut out = std::env::temp_dir();
+        out.push(format!("kamp-{session}"));
+        let mut err = out.clone();
+        out.set_extension("out");
+        err.set_extension("err");
 
         Context {
-            fifo_out: path.with_extension("out").into(),
-            fifo_err: path.with_extension("err").into(),
+            fifo_out: Arc::new(out.into_boxed_path()),
+            fifo_err: Arc::new(err.into_boxed_path()),
             session: session.into(),
             client: None,
             debug,
@@ -130,7 +133,7 @@ impl Context {
                             // because of buffered sync_channel (bound = 1)
                             std::fs::OpenOptions::new()
                                 .write(true)
-                                .open(err_path)
+                                .open(err_path.as_ref())
                                 .and_then(|mut f| f.write_all(b"\n"))
                                 .map_err(From::from)
                         })
@@ -189,7 +192,7 @@ impl Context {
                         // because of buffered sync_channel (bound = 1)
                         std::fs::OpenOptions::new()
                             .write(true)
-                            .open(err_path)
+                            .open(err_path.as_ref())
                             .and_then(|mut f| f.write_all(b"\n"))
                             .map_err(From::from)
                     })
@@ -257,7 +260,7 @@ impl Context {
             let mut buf = String::new();
             std::fs::OpenOptions::new()
                 .read(true)
-                .open(path)
+                .open(path.as_ref())
                 .and_then(|mut f| f.read_to_string(&mut buf))?;
             send_ch
                 .send(Err(Error::KakEvalCatch(buf)))
@@ -272,7 +275,7 @@ impl Context {
         let path = self.fifo_out.clone();
         thread::spawn(move || {
             let mut buf = String::new();
-            let mut f = std::fs::OpenOptions::new().read(true).open(path)?;
+            let mut f = std::fs::OpenOptions::new().read(true).open(path.as_ref())?;
             // END_TOKEN comes appended to the payload
             let res = loop {
                 f.read_to_string(&mut buf)?;
