@@ -32,8 +32,12 @@ impl Context {
         }
     }
 
-    pub fn set_client(&mut self, client: Option<Rc<Box<str>>>) {
-        self.client = client;
+    pub fn set_client(&mut self, client: Box<str>) {
+        if client.is_empty() {
+            self.client = None;
+        } else {
+            self.client = Some(Rc::new(client));
+        }
     }
 
     pub fn client(&self) -> Option<Rc<Box<str>>> {

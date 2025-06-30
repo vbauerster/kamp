@@ -6,7 +6,7 @@ mod kak;
 use super::argv::{Kampliment, SubCommand};
 use context::Context;
 use error::{Error, Result};
-use std::{io::Write, rc::Rc};
+use std::io::Write;
 
 const KAKOUNE_SESSION: &str = "KAKOUNE_SESSION";
 const KAKOUNE_CLIENT: &str = "KAKOUNE_CLIENT";
@@ -54,13 +54,10 @@ pub(super) fn run() -> Result<()> {
             let Some(session) = session else {
                 return Err(Error::InvalidContext("session is required"));
             };
-            let client = kamp
-                .client
-                .filter(|s| !s.is_empty())
-                .or_else(|| std::env::var(KAKOUNE_CLIENT).ok())
-                .map(|s| Rc::new(s.into_boxed_str()));
             let mut ctx = Context::new(session.into_boxed_str(), kamp.debug);
-            ctx.set_client(client);
+            if let Some(client) = kamp.client.or_else(|| std::env::var(KAKOUNE_CLIENT).ok()) {
+                ctx.set_client(client.into_boxed_str());
+            }
             ctx.dispatch(command, output)?;
         }
     };

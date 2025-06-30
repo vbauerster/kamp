@@ -55,7 +55,7 @@ pub(crate) fn list_current(mut ctx: Context) -> Result<Session> {
         .query_kak(qctx, None)?
         .into_iter()
         .flat_map(|name| {
-            ctx.set_client(Some(Rc::new(name.into_boxed_str())));
+            ctx.set_client(name.into_boxed_str());
             ctx.query_kak(
                 QueryContext::new(
                     QueryKeyVal::Val("bufname".into()),
@@ -68,7 +68,7 @@ pub(crate) fn list_current(mut ctx: Context) -> Result<Session> {
             .map(|mut v| Client::new(ctx.client().unwrap(), v.pop().unwrap_or_default()))
         })
         .collect();
-    ctx.set_client(None);
+    ctx.set_client("".into());
     ctx.query_kak(QueryContext::new_sh(vec!["pwd".into()], true), None)
         .map(|mut pwd| Session::new(ctx.session(), pwd.pop().unwrap_or_default(), clients))
 }
