@@ -27,14 +27,6 @@ pub(super) fn run() -> Result<()> {
         .filter(|s| !s.is_empty())
         .or_else(|| std::env::var(KAKOUNE_SESSION).ok());
 
-    let client = match session {
-        None => None,
-        Some(_) => kamp
-            .client
-            .filter(|s| !s.is_empty())
-            .or_else(|| std::env::var(KAKOUNE_CLIENT).ok()),
-    };
-
     let command = kamp
         .subcommand
         .unwrap_or_else(|| SubCommand::Ctx(Default::default()));
@@ -46,23 +38,6 @@ pub(super) fn run() -> Result<()> {
         SubCommand::Init(opt) => {
             let init = cmd::init(opt.export, opt.alias)?;
             write!(output, "{init}")?;
-        }
-        SubCommand::Ctx(opt) => {
-            let Some(session) = session else {
-                return Err(Error::InvalidContext("session is required"));
-            };
-            match client {
-                None if opt.client => {
-                    return Err(Error::InvalidContext("client is required"));
-                }
-                None => {
-                    writeln!(output, "session: {session}")?;
-                }
-                Some(client) => {
-                    writeln!(output, "session: {session}")?;
-                    writeln!(output, "client: {client}")?;
-                }
-            }
         }
         SubCommand::List(opt) if opt.all => {
             let sessions = kak::list_sessions()?;
@@ -79,8 +54,13 @@ pub(super) fn run() -> Result<()> {
             let Some(session) = session else {
                 return Err(Error::InvalidContext("session is required"));
             };
+            let client = kamp
+                .client
+                .filter(|s| !s.is_empty())
+                .or_else(|| std::env::var(KAKOUNE_CLIENT).ok())
+                .map(|s| Rc::new(s.into_boxed_str()));
             let mut ctx = Context::new(session.into_boxed_str(), kamp.debug);
-            ctx.set_client(client.map(|s| Rc::new(s.into_boxed_str())));
+            ctx.set_client(client);
             ctx.dispatch(command, output)?;
         }
     };
@@ -90,6 +70,18 @@ pub(super) fn run() -> Result<()> {
 impl Dispatcher for SubCommand {
     fn dispatch<W: Write>(self, ctx: Context, mut writer: W) -> Result<()> {
         match self {
+            SubCommand::Ctx(opt) => match ctx.client() {
+                None if opt.client => {
+                    return Err(Error::InvalidContext("client is required"));
+                }
+                None => {
+                    writeln!(writer, "session: {}", ctx.session())?;
+                }
+                Some(client) => {
+                    writeln!(writer, "session: {}", ctx.session())?;
+                    writeln!(writer, "client: {client}")?;
+                }
+            },
             SubCommand::Attach(opt) => {
                 cmd::attach(ctx, opt.buffer)?;
             }
