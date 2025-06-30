@@ -54,9 +54,9 @@ pub(super) fn run() -> Result<()> {
             let Some(session) = session else {
                 return Err(Error::InvalidContext("session is required"));
             };
-            let mut ctx = Context::new(session.into_boxed_str(), kamp.debug);
+            let mut ctx = Context::new(session, kamp.debug);
             if let Some(client) = kamp.client.or_else(|| std::env::var(KAKOUNE_CLIENT).ok()) {
-                ctx.set_client(client.into_boxed_str());
+                ctx.set_client(client);
             }
             ctx.dispatch(command, output)?;
         }

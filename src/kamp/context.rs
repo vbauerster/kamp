@@ -19,7 +19,8 @@ pub(crate) struct Context {
 }
 
 impl Context {
-    pub fn new(session: Box<str>, debug: bool) -> Self {
+    pub fn new<S: AsRef<str>>(session: S, debug: bool) -> Self {
+        let session = session.as_ref();
         let mut out = std::env::temp_dir();
         out.push(format!("kamp-{session}"));
         let mut err = out.clone();
@@ -29,17 +30,18 @@ impl Context {
         Context {
             fifo_out: Arc::new(out.into_boxed_path()),
             fifo_err: Arc::new(err.into_boxed_path()),
-            session: session.into(),
+            session: Rc::new(session.into()),
             client: None,
             debug,
         }
     }
 
-    pub fn set_client(&mut self, client: Box<str>) {
+    pub fn set_client<S: AsRef<str>>(&mut self, client: S) {
+        let client = client.as_ref();
         if client.is_empty() {
             self.client = None;
         } else {
-            self.client = Some(Rc::new(client));
+            self.client = Some(Rc::new(client.into()));
         }
     }
 
