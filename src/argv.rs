@@ -197,15 +197,16 @@ pub(super) mod get {
 
     mod value {
         use super::*;
-        /// Get value as %val<name>.
+        /// Get value as %val<name>
         #[derive(FromArgs, PartialEq, Debug)]
         #[argh(subcommand, name = "val")]
         pub struct Options {
-            /// quote output (raw|kakoune|shell) default=kakoune
+            /// quote output (raw|kakoune|shell) default=kakoune;
+            /// choosing one other than kakoune will produce verbatim output
             #[argh(option, short = 'q', default = "QuotingMethod::Kakoune")]
             pub quoting: QuotingMethod,
 
-            /// get value of key of type map, overrides verbatim
+            /// get value of key of type map, implies quoting=kakoune
             #[argh(option, short = 'm')]
             pub map_key: Option<String>,
 
@@ -221,15 +222,16 @@ pub(super) mod get {
 
     mod option {
         use super::*;
-        /// Get option as %opt<name>.
+        /// Get option as %opt<name>
         #[derive(FromArgs, PartialEq, Debug)]
         #[argh(subcommand, name = "opt")]
         pub struct Options {
-            /// quote output (raw|kakoune|shell) default=kakoune
+            /// quote output (raw|kakoune|shell) default=kakoune;
+            /// choosing one other than kakoune will produce verbatim output
             #[argh(option, short = 'q', default = "QuotingMethod::Kakoune")]
             pub quoting: QuotingMethod,
 
-            /// get value of key of type map, overrides verbatim
+            /// get value of key of type map, implies quoting=kakoune
             #[argh(option, short = 'm')]
             pub map_key: Option<String>,
 
@@ -249,7 +251,8 @@ pub(super) mod get {
         #[derive(FromArgs, PartialEq, Debug)]
         #[argh(subcommand, name = "reg")]
         pub struct Options {
-            /// quote output (raw|kakoune|shell) default=kakoune
+            /// quote output (raw|kakoune|shell) default=kakoune;
+            /// choosing one other than kakoune will produce verbatim output
             #[argh(option, short = 'q', default = "QuotingMethod::Kakoune")]
             pub quoting: QuotingMethod,
 
