@@ -1,4 +1,4 @@
-use super::cmd::{QueryContext, QueryType};
+use super::cmd::{QueryContext, QueryType, Quoting};
 use super::kak;
 use super::{Error, Result};
 use std::io::{Cursor, prelude::*};
@@ -230,9 +230,8 @@ impl Context {
                     dbg!(raw_output);
                 }
             })
-            .map(|output| match ctx.qtype {
-                QueryType::List => split_kak_list(&output),
-                QueryType::Map(lookup) => {
+            .map(|output| match (ctx.qtype, ctx.quoting) {
+                (QueryType::Map(lookup), Quoting::Kakoune) => {
                     let mut res = Vec::new();
                     for item in split_kak_list(&output) {
                         if let Some((key, val)) = item.split_once('=')
@@ -244,7 +243,7 @@ impl Context {
                     }
                     res
                 }
-                _ if !ctx.verbatim => output.split('\n').map(String::from).collect(),
+                (QueryType::List, Quoting::Kakoune) if !ctx.verbatim => split_kak_list(&output),
                 _ => vec![output],
             })
             .inspect(|parsed_output| {
