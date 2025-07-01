@@ -26,12 +26,6 @@ impl QueryContext {
             verbatim: true,
         }
     }
-    pub fn output_delimiter(&self) -> char {
-        match self.qtype {
-            QueryType::List => ' ',
-            QueryType::Plain => '\n',
-        }
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -47,19 +41,19 @@ impl From<SubCommand> for QueryContext {
         match value {
             SubCommand::Value(o) => QueryContext::new(
                 QueryKeyVal::Val(o.name),
-                QueryType::new(o.list),
+                QueryType::new(o.list, o.map_key),
                 o.quoting.into(),
                 o.verbatim,
             ),
             SubCommand::Option(o) => QueryContext::new(
                 QueryKeyVal::Opt(o.name),
-                QueryType::new(o.list),
+                QueryType::new(o.list, o.map_key),
                 o.quoting.into(),
                 o.verbatim,
             ),
             SubCommand::Register(o) => QueryContext::new(
                 QueryKeyVal::Reg(o.name),
-                QueryType::new(o.list),
+                QueryType::new(o.list, None),
                 o.quoting.into(),
                 o.verbatim,
             ),
@@ -105,13 +99,16 @@ impl Display for QueryKeyVal {
 
 #[derive(Debug, Clone)]
 pub(crate) enum QueryType {
-    List,
     Plain,
+    List,
+    Map(String),
 }
 
 impl QueryType {
-    pub fn new(list: bool) -> Self {
-        if list {
+    pub fn new(list: bool, map: Option<String>) -> Self {
+        if let Some(key) = map {
+            QueryType::Map(key)
+        } else if list {
             QueryType::List
         } else {
             QueryType::Plain

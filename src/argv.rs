@@ -205,11 +205,15 @@ pub(super) mod get {
             #[argh(option, short = 'q', default = "QuotingMethod::Kakoune")]
             pub quoting: QuotingMethod,
 
-            /// split list type value like buflist or client_list
+            /// get value of key of type map, implies -l overrides verbatim
+            #[argh(option, short = 'm')]
+            pub map_key: Option<String>,
+
+            /// split list type value like buflist, overrides verbatim
             #[argh(switch, short = 'l')]
             pub list: bool,
 
-            /// don't parse output
+            /// print raw output as it is
             #[argh(switch, short = 'v')]
             pub verbatim: bool,
 
@@ -229,11 +233,15 @@ pub(super) mod get {
             #[argh(option, short = 'q', default = "QuotingMethod::Kakoune")]
             pub quoting: QuotingMethod,
 
-            /// split list type value like ui_options
+            /// get value of key of type map, implies -l overrides verbatim
+            #[argh(option, short = 'm')]
+            pub map_key: Option<String>,
+
+            /// split list type value like ui_options, overrides verbatim
             #[argh(switch, short = 'l')]
             pub list: bool,
 
-            /// don't unquote output
+            /// print raw output as it is
             #[argh(switch, short = 'v')]
             pub verbatim: bool,
 
@@ -253,11 +261,11 @@ pub(super) mod get {
             #[argh(option, short = 'q', default = "QuotingMethod::Kakoune")]
             pub quoting: QuotingMethod,
 
-            /// split list type register like colon or slash
+            /// split list type register like colon or slash, overrides verbatim
             #[argh(switch, short = 'l')]
             pub list: bool,
 
-            /// don't parse output
+            /// print raw output as it is
             #[argh(switch, short = 'v')]
             pub verbatim: bool,
 
