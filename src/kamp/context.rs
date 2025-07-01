@@ -306,12 +306,12 @@ fn split_kak_list(input: &str) -> Vec<String> {
     let mut buf = String::new();
     let mut open = false;
     let mut iter = input.chars().peekable();
-    loop {
-        match iter.next() {
-            Some('\'') => {
+    while let Some(c) = iter.next() {
+        match c {
+            '\'' => {
                 if open {
                     if let Some('\'') = iter.peek() {
-                        buf.push('\'');
+                        buf.push(c);
                     } else {
                         res.push(buf);
                         buf = String::new();
@@ -321,14 +321,14 @@ fn split_kak_list(input: &str) -> Vec<String> {
                     open = true;
                 }
             }
-            Some(c) => {
+            _ => {
                 if open {
-                    buf.push(c)
+                    buf.push(c);
                 }
             }
-            None => return res,
         }
     }
+    res
 }
 
 #[cfg(test)]
