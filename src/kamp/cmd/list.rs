@@ -2,8 +2,6 @@ use std::rc::Rc;
 
 use super::QueryContext;
 use super::QueryKeyVal;
-use super::QueryType;
-use super::Quoting;
 
 use super::Context;
 use super::Result;
@@ -47,8 +45,8 @@ pub(crate) fn list_all(
 pub(crate) fn list_current(mut ctx: Context) -> Result<Session> {
     let qctx = QueryContext::new(
         QueryKeyVal::Val("client_list".into()),
-        QueryType::List,
-        Quoting::Kakoune,
+        Default::default(),
+        Default::default(),
         false,
     );
     let clients = ctx
@@ -59,8 +57,8 @@ pub(crate) fn list_current(mut ctx: Context) -> Result<Session> {
             ctx.query_kak(
                 QueryContext::new(
                     QueryKeyVal::Val("bufname".into()),
-                    QueryType::Plain,
-                    Quoting::Kakoune,
+                    Default::default(),
+                    Default::default(),
                     false,
                 ),
                 None,
