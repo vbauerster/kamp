@@ -1,3 +1,5 @@
+mod lex;
+
 use super::cmd::{QueryContext, QueryType, Quoting};
 use super::kak;
 use super::{Error, Result};
@@ -233,7 +235,7 @@ impl Context {
             .map(|output| match (ctx.qtype, ctx.quoting) {
                 (QueryType::Map(lookup), Quoting::Kakoune) => {
                     let mut res = Vec::new();
-                    for item in split_kak_list(&output) {
+                    for item in lex::split(&output).unwrap() {
                         if let Some((key, val)) = item.split_once('=')
                             && key == lookup
                         {
@@ -243,7 +245,9 @@ impl Context {
                     }
                     res
                 }
-                (QueryType::List, Quoting::Kakoune) if !ctx.verbatim => split_kak_list(&output),
+                (QueryType::List, Quoting::Kakoune) if !ctx.verbatim => {
+                    lex::split(&output).unwrap()
+                }
                 _ => vec![output],
             })
             .inspect(|parsed_output| {
@@ -297,62 +301,5 @@ impl Context {
             };
             send_ch.send(Ok(res.into())).map_err(anyhow::Error::new)
         })
-    }
-}
-
-fn split_kak_list(input: &str) -> Vec<String> {
-    let mut res = Vec::new();
-    let mut buf = String::new();
-    let mut open = false;
-    let mut iter = input.chars().peekable();
-    while let Some(c) = iter.next() {
-        match c {
-            '\'' => {
-                if open {
-                    if let Some('\'') = iter.peek() {
-                        buf.push(c);
-                    } else {
-                        res.push(buf);
-                        buf = String::new();
-                    }
-                    open = false;
-                } else {
-                    open = true;
-                }
-            }
-            _ => {
-                if open {
-                    buf.push(c);
-                }
-            }
-        }
-    }
-    res
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_split_kak_list_1() {
-        let input = r#"'''a''' '''a' 'b' 'echo pop' 'echo "''ok''"'"#;
-        let expected = vec!["'a'", "'a", "b", "echo pop", r#"echo "'ok'""#]
-            .into_iter()
-            .map(String::from)
-            .collect::<Vec<_>>();
-
-        assert_eq!(split_kak_list(input), expected);
-    }
-
-    #[test]
-    fn test_split_kak_list_2() {
-        let input = r#"'enter-user-mode pokemon' 'edit ''sp buf.txt'''"#;
-        let expected = vec!["enter-user-mode pokemon", "edit 'sp buf.txt'"]
-            .into_iter()
-            .map(String::from)
-            .collect::<Vec<_>>();
-
-        assert_eq!(split_kak_list(input), expected);
     }
 }
