@@ -8,6 +8,7 @@ keywords = ["kakoune"]
 categories = ["command-line-utilities"]
 license = "Unlicense"
 edition = "2024"
+rust-version = "1.88" # let chains
 
 [[bin]]
 path = "src/main.rs"
