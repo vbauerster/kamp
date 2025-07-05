@@ -38,7 +38,7 @@ shift $((OPTIND - 1))
 
 ctrlx_bind=
 case "$*" in
-    *-F*)
+    *-F)
         ctrlx_bind="ctrl-x:become:$0 -q {q} -- ${*%-F*}"
         ;;
     *)
