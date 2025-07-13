@@ -85,12 +85,12 @@ mod attach {
 
 mod edit {
     use super::*;
-    /// Edit a file in context client or create new one if
-    /// client isn't specified or -n switch is provided.
+    /// Edit a file by opening it in a client in context.
+    /// If there is no client specified a new one will be created.
     #[derive(FromArgs, PartialEq, Debug)]
     #[argh(subcommand, name = "edit")]
     pub struct Options {
-        /// create new client and wait for it to exit
+        /// force creating new client regardless of context
         #[argh(switch, short = 'n')]
         pub new: bool,
 
