@@ -6,7 +6,6 @@ use super::{Error, Result};
 use std::io::{Cursor, prelude::*};
 use std::path::Path;
 use std::rc::Rc;
-use std::sync::Arc;
 use std::sync::mpsc::{SyncSender, sync_channel};
 use std::thread;
 
@@ -14,8 +13,8 @@ const END_TOKEN: &str = "<<EEND>>";
 
 #[derive(Debug, Clone)]
 pub(crate) struct Context {
-    fifo_out: Arc<Box<Path>>,
-    fifo_err: Arc<Box<Path>>,
+    fifo_out: &'static Path,
+    fifo_err: &'static Path,
     session: Rc<Box<str>>,
     client: Option<Rc<Box<str>>>,
     debug: bool,
@@ -31,8 +30,8 @@ impl Context {
         err.set_extension("err");
 
         Context {
-            fifo_out: Arc::new(out.into_boxed_path()),
-            fifo_err: Arc::new(err.into_boxed_path()),
+            fifo_out: Box::leak(out.into_boxed_path()),
+            fifo_err: Box::leak(err.into_boxed_path()),
             session: Rc::new(session.into()),
             client: None,
             debug,
@@ -119,7 +118,7 @@ impl Context {
         let err_h = self.read_fifo_err(tx.clone());
         let out_h = self.read_fifo_out(tx);
 
-        let err_path = self.fifo_err.clone();
+        let err_path = self.fifo_err;
         let handle = thread::spawn(move || {
             match rx.recv().map_err(anyhow::Error::new)? {
                 Err(kak_err) => err_h
@@ -138,7 +137,7 @@ impl Context {
                             // because of buffered sync_channel (bound = 1)
                             std::fs::OpenOptions::new()
                                 .write(true)
-                                .open(err_path.as_ref())
+                                .open(err_path)
                                 .and_then(|mut f| f.write_all(b"\n"))
                                 .map_err(From::from)
                         })
@@ -182,7 +181,7 @@ impl Context {
         let err_h = self.read_fifo_err(tx.clone());
         let out_h = self.read_fifo_out(tx);
 
-        let err_path = self.fifo_err.clone();
+        let err_path = self.fifo_err;
         let handle = thread::spawn(move || {
             match rx.recv().map_err(anyhow::Error::new)? {
                 Err(kak_err) => err_h
@@ -197,7 +196,7 @@ impl Context {
                         // because of buffered sync_channel (bound = 1)
                         std::fs::OpenOptions::new()
                             .write(true)
-                            .open(err_path.as_ref())
+                            .open(err_path)
                             .and_then(|mut f| f.write_all(b"\n"))
                             .map_err(From::from)
                     })
@@ -271,12 +270,12 @@ impl Context {
         &self,
         send_ch: SyncSender<Result<String>>,
     ) -> thread::JoinHandle<anyhow::Result<()>> {
-        let path = self.fifo_err.clone();
+        let path = self.fifo_err;
         thread::spawn(move || {
             let mut buf = String::new();
             std::fs::OpenOptions::new()
                 .read(true)
-                .open(path.as_ref())
+                .open(path)
                 .and_then(|mut f| f.read_to_string(&mut buf))?;
             send_ch
                 .send(Err(Error::KakEvalCatch(buf)))
@@ -288,10 +287,10 @@ impl Context {
         &self,
         send_ch: SyncSender<Result<String>>,
     ) -> thread::JoinHandle<anyhow::Result<()>> {
-        let path = self.fifo_out.clone();
+        let path = self.fifo_out;
         thread::spawn(move || {
             let mut buf = String::new();
-            let mut f = std::fs::OpenOptions::new().read(true).open(path.as_ref())?;
+            let mut f = std::fs::OpenOptions::new().read(true).open(path)?;
             // END_TOKEN comes appended to the payload
             let res = loop {
                 f.read_to_string(&mut buf)?;
