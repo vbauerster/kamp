@@ -271,8 +271,8 @@ impl Context {
         send_ch: SyncSender<Result<String>>,
     ) -> thread::JoinHandle<anyhow::Result<()>> {
         let path = self.fifo_err;
+        let mut buf = String::new();
         thread::spawn(move || {
-            let mut buf = String::new();
             std::fs::OpenOptions::new()
                 .read(true)
                 .open(path)
@@ -288,8 +288,8 @@ impl Context {
         send_ch: SyncSender<Result<String>>,
     ) -> thread::JoinHandle<anyhow::Result<()>> {
         let path = self.fifo_out;
+        let mut buf = String::new();
         thread::spawn(move || {
-            let mut buf = String::new();
             let mut f = std::fs::OpenOptions::new().read(true).open(path)?;
             // END_TOKEN comes appended to the payload
             let res = loop {
