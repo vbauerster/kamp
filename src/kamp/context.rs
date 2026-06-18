@@ -5,7 +5,6 @@ use super::kak;
 use super::{Error, Result};
 use std::io::{Cursor, prelude::*};
 use std::path::Path;
-use std::rc::Rc;
 use std::sync::mpsc::{SyncSender, sync_channel};
 use std::thread;
 
@@ -15,14 +14,13 @@ const END_TOKEN: &str = "<<EEND>>";
 pub(crate) struct Context {
     fifo_out: &'static Path,
     fifo_err: &'static Path,
-    session: Rc<Box<str>>,
-    client: Option<Rc<Box<str>>>,
+    session: &'static str,
+    client: Option<Box<str>>,
     debug: bool,
 }
 
 impl Context {
-    pub fn new<S: AsRef<str>>(session: S, debug: bool) -> Self {
-        let session = session.as_ref();
+    pub fn new(session: &'static str, debug: bool) -> Self {
         let mut out = std::env::temp_dir();
         out.push(format!("kamp-{session}"));
         let mut err = out.clone();
@@ -32,27 +30,22 @@ impl Context {
         Context {
             fifo_out: Box::leak(out.into_boxed_path()),
             fifo_err: Box::leak(err.into_boxed_path()),
-            session: Rc::new(session.into()),
+            session,
             client: None,
             debug,
         }
     }
 
-    pub fn set_client<S: AsRef<str>>(&mut self, client: S) {
-        let client = client.as_ref();
-        if client.is_empty() {
-            self.client = None;
-        } else {
-            self.client = Some(Rc::new(client.into()));
-        }
+    pub fn set_client(&mut self, client: Option<Box<str>>) {
+        self.client = client;
     }
 
-    pub fn client(&self) -> Option<Rc<Box<str>>> {
+    pub fn client(&self) -> Option<Box<str>> {
         self.client.clone()
     }
 
-    pub fn session(&self) -> Rc<Box<str>> {
-        self.session.clone()
+    pub fn session(&self) -> &'static str {
+        self.session
     }
 
     pub fn is_draft(&self) -> bool {
@@ -74,7 +67,7 @@ impl Context {
             cmd.push_str(&status.to_string());
         }
 
-        kak::pipe(self.session.as_ref(), cmd)
+        kak::pipe(self.session, cmd)
             .map_err(From::from)
             .and_then(|status| self.check_status(status))
     }
@@ -146,7 +139,7 @@ impl Context {
             }
         });
 
-        let status = kak::pipe(self.session.as_ref(), cmd.as_bytes())?;
+        let status = kak::pipe(self.session, cmd.as_bytes())?;
         match (self.check_status(status), handle.join().unwrap()) {
             (Ok(_), Ok(s)) => Ok(s),
             (Ok(_), Err(e)) => Err(e),
@@ -204,7 +197,7 @@ impl Context {
             }
         });
 
-        let status = kak::connect(self.session.as_ref(), &cmd.into_boxed_str())?;
+        let status = kak::connect(self.session, &cmd.into_boxed_str())?;
         match (self.check_status(status), handle.join().unwrap()) {
             (Ok(_), Ok(_)) => Ok(()),
             (Ok(_), Err(e)) => Err(e),

@@ -42,8 +42,8 @@ pub(super) fn run() -> Result<()> {
         SubCommand::List(opt) if opt.all => {
             let sessions = kak::list_sessions()?;
             let sessions = String::from_utf8(sessions)?;
-            let sessions = cmd::list_all(sessions.lines().map(String::from), kamp.debug)?;
-            for session in sessions {
+            for s in sessions.lines().map(Box::from) {
+                let session = cmd::list_current(Context::new(Box::leak(s), kamp.debug))?;
                 writeln!(output, "{session:#?}")?;
             }
         }
@@ -54,10 +54,13 @@ pub(super) fn run() -> Result<()> {
             let Some(session) = session else {
                 return Err(Error::InvalidContext("session is required"));
             };
-            let mut ctx = Context::new(session, kamp.debug);
-            if let Some(client) = kamp.client.or_else(|| std::env::var(KAKOUNE_CLIENT).ok()) {
-                ctx.set_client(client);
-            }
+            let client = kamp
+                .client
+                .or_else(|| std::env::var(KAKOUNE_CLIENT).ok())
+                .filter(|client| !client.is_empty())
+                .map(|client| client.into_boxed_str());
+            let mut ctx = Context::new(Box::leak(session.into_boxed_str()), kamp.debug);
+            ctx.set_client(client);
             ctx.dispatch(command, output)?;
         }
     };

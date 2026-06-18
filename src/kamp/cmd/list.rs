@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use super::QueryContext;
 use super::QueryKeyVal;
 
@@ -9,13 +7,13 @@ use super::Result;
 #[allow(unused)]
 #[derive(Debug)]
 pub struct Session {
-    name: Rc<Box<str>>,
-    pwd: String,
+    name: &'static str,
+    pwd: Box<str>,
     clients: Vec<Client>,
 }
 
 impl Session {
-    fn new(name: Rc<Box<str>>, pwd: String, clients: Vec<Client>) -> Self {
+    fn new(name: &'static str, pwd: Box<str>, clients: Vec<Client>) -> Self {
         Session { name, pwd, clients }
     }
 }
@@ -23,23 +21,14 @@ impl Session {
 #[allow(unused)]
 #[derive(Debug)]
 pub struct Client {
-    name: Rc<Box<str>>,
+    name: Box<str>,
     bufname: String,
 }
 
 impl Client {
-    fn new(name: Rc<Box<str>>, bufname: String) -> Client {
+    fn new(name: Box<str>, bufname: String) -> Client {
         Client { name, bufname }
     }
-}
-
-pub(crate) fn list_all(
-    sessions: impl Iterator<Item = String>,
-    debug: bool,
-) -> Result<Vec<Session>> {
-    sessions
-        .map(|s| list_current(Context::new(s, debug)))
-        .collect()
 }
 
 pub(crate) fn list_current(mut ctx: Context) -> Result<Session> {
@@ -53,7 +42,8 @@ pub(crate) fn list_current(mut ctx: Context) -> Result<Session> {
         .query_kak(qctx, None)?
         .into_iter()
         .flat_map(|name| {
-            ctx.set_client(name);
+            let name = name.into_boxed_str();
+            ctx.set_client(Some(name.clone()));
             ctx.query_kak(
                 QueryContext::new(
                     QueryKeyVal::Val("bufname".into()),
@@ -63,10 +53,13 @@ pub(crate) fn list_current(mut ctx: Context) -> Result<Session> {
                 ),
                 None,
             )
-            .map(|mut v| Client::new(ctx.client().unwrap(), v.pop().unwrap_or_default()))
+            .map(|mut v| Client::new(name, v.pop().unwrap_or_default()))
         })
         .collect();
-    ctx.set_client("");
+    ctx.set_client(None);
     ctx.query_kak(QueryContext::new_sh(vec!["pwd".into()], true), None)
-        .map(|mut pwd| Session::new(ctx.session(), pwd.pop().unwrap_or_default(), clients))
+        .map(|mut pwd| {
+            let pwd = pwd.pop().unwrap_or_default().into_boxed_str();
+            Session::new(ctx.session(), pwd, clients)
+        })
 }
