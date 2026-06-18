@@ -76,7 +76,7 @@ impl Context {
         let body = body.as_ref();
         let mut buf = Cursor::new(Vec::with_capacity(512));
         writeln!(buf, "try %🐪")?;
-        match (buffer_ctx, self.client()) {
+        match (buffer_ctx, self.client.as_deref()) {
             (Some((b, n)), _) => {
                 writeln!(buf, "eval -buffer {b} %🐫")?;
                 writeln!(buf, "{body}")?;
