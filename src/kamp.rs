@@ -42,8 +42,9 @@ pub(super) fn run() -> Result<()> {
         SubCommand::List(opt) if opt.all => {
             let sessions = kak::list_sessions()?;
             let sessions = String::from_utf8(sessions)?;
-            for s in sessions.lines().map(Box::from) {
-                let session = cmd::list_current(Context::new(Box::leak(s), kamp.debug))?;
+            for s in sessions.lines() {
+                let ctx = Context::new(unsafe { (s as *const str).as_ref().unwrap() }, kamp.debug);
+                let session = cmd::list_current(ctx)?;
                 writeln!(output, "{session:#?}")?;
             }
         }
